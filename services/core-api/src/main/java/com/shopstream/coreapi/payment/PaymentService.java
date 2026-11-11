@@ -149,6 +149,9 @@ public class PaymentService {
      * Called by webhooks (or the mock confirm endpoint). Safe to call many times with the same event.
      * The event de-dup row, the payment update, the order update and the stock change
      * commit together or not at all.
+     *
+     * Anything a person must look at (held, wrong amount, double charge, late payment)
+     * is written on the payment row, so the admin review list can find it.
      */
     public void handleEvent(PaymentProvider provider, PaymentGateway.PaymentEvent event) {
         UUID paidOrderId = tx.execute(s -> {
@@ -174,11 +177,11 @@ public class PaymentService {
             Order order = orders.findWithLockById(payment.getOrderId()).orElseThrow();
 
             if (event.outcome() == PaymentGateway.PaymentEvent.Outcome.HELD) {
+                // The provider flagged this payment as risky. The order stays unpaid.
+                payment.requestReview(PaymentReviewReason.HELD);
                 log.error("RISKY PAYMENT HOLD: {} flagged payment {} (order {}) as risky. "
-                        + "Order NOT marked paid. MANUAL REVIEW NEEDED.",
+                        + "Order NOT marked paid. Added to the review list.",
                         provider, payment.getId(), order.getId());
-                // Undo the event row too, so the same notification can be judged again later.
-                s.setRollbackOnly();
                 return null;
             }
 
@@ -195,8 +198,13 @@ public class PaymentService {
             boolean currencyWrong = event.currency() != null
                     && !event.currency().equalsIgnoreCase(payment.getCurrency());
             if (amountWrong || currencyWrong) {
+                // The provider did take money, so the payment counts as succeeded (a refund needs that).
+                // The order is NOT marked paid, a person decides what to do.
+                payment.markSucceeded();
+                payment.attachBankDetails(event.bankTranId(), event.valId());
+                payment.requestReview(PaymentReviewReason.AMOUNT_MISMATCH);
                 log.error("AMOUNT MISMATCH: payment {} expected {} {} but {} reported {} {}. "
-                        + "Order NOT marked paid. MANUAL REVIEW NEEDED.",
+                        + "Order NOT marked paid. Added to the review list.",
                         payment.getId(), payment.getAmountCents(), payment.getCurrency(),
                         provider, event.amountCents(), event.currency());
                 return null;
@@ -213,12 +221,16 @@ public class PaymentService {
             }
             if (order.getStatus() == OrderStatus.PAID) {
                 if (!alreadySucceeded) {
+                    payment.requestReview(PaymentReviewReason.DUPLICATE_CHARGE);
                     log.error("DUPLICATE CHARGE: payment {} succeeded but order {} was already PAID by another "
-                            + "payment. REFUND NEEDED.", payment.getId(), order.getId());
+                            + "payment. Added to the review list, refund needed.", payment.getId(), order.getId());
                 }
                 return null;
             }
-            log.error("Payment {} succeeded but order {} is {}. MANUAL REFUND NEEDED.",
+            // Order is CANCELLED or EXPIRED, but the customer paid anyway.
+            payment.requestReview(PaymentReviewReason.LATE_PAYMENT);
+            log.error("LATE PAYMENT: payment {} succeeded but order {} is {}. "
+                    + "Added to the review list, refund needed.",
                     payment.getId(), order.getId(), order.getStatus());
             return null;
         });
