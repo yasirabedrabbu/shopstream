@@ -6,7 +6,30 @@ import java.util.UUID;
 /** One adapter per provider (Stripe, SSLCommerz, bKash, mock). */
 public interface PaymentGateway {
 
-    record CreatedPayment(String providerReference, String clientSecret) {
+    /** Everything a provider may ask for when a payment starts. Built from our own database, never from the browser. */
+    record CheckoutContext(
+            UUID orderId,
+            UUID paymentId,
+            long amountCents,
+            String currency,
+            String customerName,
+            String customerEmail,
+            String phone,
+            String addressLine1,
+            String city,
+            String state,
+            String postalCode,
+            String country,
+            int itemCount,
+            String productSummary) {
+    }
+
+    /** redirectUrl is where the browser goes to pay (hosted pages). It is null when the provider has none. */
+    record CreatedPayment(String providerReference, String clientSecret, String redirectUrl) {
+
+        public CreatedPayment(String providerReference, String clientSecret) {
+            this(providerReference, clientSecret, null);
+        }
     }
 
     /**
@@ -23,14 +46,16 @@ public interface PaymentGateway {
 
         public enum Outcome {
             SUCCEEDED,
-            FAILED
+            FAILED,
+            /** The provider says paid, but flagged it risky. The order stays unpaid and a person reviews it. */
+            HELD
         }
     }
 
     PaymentProvider provider();
 
     /** Ask the provider to start a payment. Remote call, never run inside a DB transaction. */
-    CreatedPayment create(UUID orderId, UUID paymentId, long amountCents, String currency);
+    CreatedPayment create(CheckoutContext context);
 
     /** Verify the signature and translate a webhook body. Throw ApiException(400) when invalid. */
     PaymentEvent parseEvent(String rawBody, Map<String, String> headers);

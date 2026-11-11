@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +22,9 @@ import com.shopstream.coreapi.order.Order;
 import com.shopstream.coreapi.order.OrderItem;
 import com.shopstream.coreapi.order.OrderRepository;
 import com.shopstream.coreapi.order.OrderStatus;
+import com.shopstream.coreapi.order.ShippingAddress;
+import com.shopstream.coreapi.user.User;
+import com.shopstream.coreapi.user.UserRepository;
 
 @Service
 public class PaymentService {
@@ -28,25 +32,26 @@ public class PaymentService {
     private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
 
     /** What the frontend receives after starting a payment. */
-    public record Session(UUID paymentId, PaymentProvider provider, String providerReference, String clientSecret) {
-    }
-
-    private record Draft(UUID paymentId, long amountCents, String currency) {
+    public record Session(UUID paymentId, PaymentProvider provider, String providerReference,
+            String clientSecret, String redirectUrl) {
     }
 
     private final Map<PaymentProvider, PaymentGateway> gateways = new EnumMap<>(PaymentProvider.class);
     private final PaymentRepository payments;
     private final OrderRepository orders;
+    private final UserRepository users;
     private final ProductRepository products;
     private final InventoryClient inventory;
     private final JdbcTemplate jdbc;
     private final TransactionTemplate tx;
 
     public PaymentService(List<PaymentGateway> gatewayList, PaymentRepository payments, OrderRepository orders,
-            ProductRepository products, InventoryClient inventory, JdbcTemplate jdbc, TransactionTemplate tx) {
+            UserRepository users, ProductRepository products, InventoryClient inventory, JdbcTemplate jdbc,
+            TransactionTemplate tx) {
         gatewayList.forEach(g -> gateways.put(g.provider(), g));
         this.payments = payments;
         this.orders = orders;
+        this.users = users;
         this.products = products;
         this.inventory = inventory;
         this.jdbc = jdbc;
@@ -66,7 +71,7 @@ public class PaymentService {
         PaymentGateway gateway = gateway(provider);
 
         // Step 1 (DB): check the order and create a PENDING payment row.
-        Draft draft = Objects.requireNonNull(tx.execute(s -> {
+        PaymentGateway.CheckoutContext context = Objects.requireNonNull(tx.execute(s -> {
             // Ownership check first, so a stranger cannot even lock someone else's order.
             orders.findByIdAndCustomerId(orderId, customerId)
                     .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Order not found"));
@@ -82,6 +87,10 @@ public class PaymentService {
             if (expiresAt != null && expiresAt.isBefore(Instant.now())) {
                 throw new ApiException(HttpStatus.CONFLICT, "Your stock reservation has expired");
             }
+            ShippingAddress address = order.getShippingAddress();
+            if (address == null) {
+                throw new ApiException(HttpStatus.CONFLICT, "This order has no shipping address");
+            }
 
             // Only one live payment per order. Older unfinished attempts are retired.
             for (Payment old : payments.findByOrderIdAndStatus(order.getId(), PaymentStatus.PENDING)) {
@@ -90,26 +99,50 @@ public class PaymentService {
 
             Payment payment = payments.save(
                     new Payment(order.getId(), provider, order.getTotalCents(), order.getCurrency()));
-            return new Draft(payment.getId(), payment.getAmountCents(), payment.getCurrency());
+
+            User customer = users.findById(customerId)
+                    .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
+            int itemCount = order.getItems().stream().mapToInt(OrderItem::getQuantity).sum();
+            String joinedNames = order.getItems().stream()
+                    .map(OrderItem::getProductName)
+                    .collect(Collectors.joining(","));
+            String productSummary = joinedNames.length() > 250 ? joinedNames.substring(0, 250) : joinedNames;
+
+            return new PaymentGateway.CheckoutContext(
+                    order.getId(),
+                    payment.getId(),
+                    payment.getAmountCents(),
+                    payment.getCurrency(),
+                    address.fullName(),
+                    customer.getEmail(),
+                    address.phone(),
+                    address.line1(),
+                    address.city(),
+                    address.state(),
+                    address.postalCode(),
+                    address.country(),
+                    itemCount,
+                    productSummary);
         }));
 
         // Step 2 (remote): ask the provider. Never inside a DB transaction.
         PaymentGateway.CreatedPayment created;
         try {
-            created = gateway.create(orderId, draft.paymentId(), draft.amountCents(), draft.currency());
+            created = gateway.create(context);
         } catch (RuntimeException ex) {
-            log.error("Gateway {} failed to create payment {}", provider, draft.paymentId(), ex);
-            tx.executeWithoutResult(s -> payments.findById(draft.paymentId()).ifPresent(Payment::markFailed));
+            log.error("Gateway {} failed to create payment {}", provider, context.paymentId(), ex);
+            tx.executeWithoutResult(s -> payments.findById(context.paymentId()).ifPresent(Payment::markFailed));
             throw new ApiException(HttpStatus.BAD_GATEWAY, "Payment provider is unavailable. Please try again.");
         }
         final PaymentGateway.CreatedPayment result = created;
 
         // Step 3 (DB): remember the provider's reference so webhooks can find this payment.
-        tx.executeWithoutResult(s -> payments.findById(draft.paymentId())
+        tx.executeWithoutResult(s -> payments.findById(context.paymentId())
                 .orElseThrow()
                 .attachReference(result.providerReference()));
 
-        return new Session(draft.paymentId(), provider, result.providerReference(), result.clientSecret());
+        return new Session(context.paymentId(), provider, result.providerReference(),
+                result.clientSecret(), result.redirectUrl());
     }
 
     /**
@@ -136,6 +169,17 @@ public class PaymentService {
                 return null;
             }
 
+            // Lock the order BEFORE changing the payment. start() uses the same order,
+            // so a payment click and a webhook can never wait on each other forever.
+            Order order = orders.findWithLockById(payment.getOrderId()).orElseThrow();
+
+            if (event.outcome() == PaymentGateway.PaymentEvent.Outcome.HELD) {
+                log.error("RISKY PAYMENT HOLD: {} flagged payment {} (order {}) as risky. "
+                        + "Order NOT marked paid. MANUAL REVIEW NEEDED.",
+                        provider, payment.getId(), order.getId());
+                return null;
+            }
+
             if (event.outcome() == PaymentGateway.PaymentEvent.Outcome.FAILED) {
                 if (payment.getStatus() == PaymentStatus.PENDING) {
                     payment.markFailed();
@@ -155,9 +199,10 @@ public class PaymentService {
                         provider, event.amountCents(), event.currency());
                 return null;
             }
+
+            // Same payment told us twice with a different event id. Nothing new to do.
             boolean alreadySucceeded = payment.getStatus() == PaymentStatus.SUCCEEDED;
             payment.markSucceeded();
-            Order order = orders.findWithLockById(payment.getOrderId()).orElseThrow();
 
             if (order.getStatus() == OrderStatus.AWAITING_PAYMENT) {
                 order.markPaid();

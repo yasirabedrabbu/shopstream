@@ -40,6 +40,7 @@ spring:
 
 app:
   public-url: ${APP_PUBLIC_URL:http://localhost:3000}
+  api-public-url: ${API_PUBLIC_URL:http://localhost:8080}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
   jwt:
@@ -52,6 +53,11 @@ app:
     password: ${ADMIN_PASSWORD:}
   payment:
     mock-enabled: ${PAYMENT_MOCK_ENABLED:false}
+    sslcommerz:
+      enabled: ${SSLCOMMERZ_ENABLED:false}
+      store-id: ${SSLCOMMERZ_STORE_ID:}
+      store-password: ${SSLCOMMERZ_STORE_PASSWORD:}
+      sandbox: ${SSLCOMMERZ_SANDBOX:true}
   inventory:
     mode: ${INVENTORY_MODE:stub}
   mail:

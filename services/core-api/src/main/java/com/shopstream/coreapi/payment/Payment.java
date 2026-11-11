@@ -75,9 +75,7 @@ public class Payment {
     }
 
     public void markSucceeded() {
-        if (status == PaymentStatus.FAILED) {
-            throw new IllegalStateException("A failed payment cannot succeed");
-        }
+        // The provider's word wins. A payment we retired (FAILED) can still be paid late by the customer.
         this.status = PaymentStatus.SUCCEEDED;
     }
 

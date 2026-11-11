@@ -28,7 +28,7 @@ public class MockPaymentGateway implements PaymentGateway {
     }
 
     @Override
-    public CreatedPayment create(UUID orderId, UUID paymentId, long amountCents, String currency) {
+    public CreatedPayment create(CheckoutContext context) {
         return new CreatedPayment("mock_" + UUID.randomUUID(), "mock-client-secret");
     }
 
