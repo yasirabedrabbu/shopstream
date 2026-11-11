@@ -3,24 +3,19 @@ package com.shopstream.coreapi.payment;
 import java.util.Map;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import com.shopstream.coreapi.common.ApiException;
+import org.springframework.http.HttpStatus;
 
-/** Dev-only. Lets anyone mark a payment as paid, so it is OFF unless app.payment.mock-enabled=true. */
+/**
+ * Local-dev only. Enabled when payment.mock.enabled=true.
+ * Webhooks arrive via POST /api/v1/payments/mock/{ref}/confirm (MockPaymentController).
+ */
 @Component
-@ConditionalOnProperty(name = "app.payment.mock-enabled", havingValue = "true")
+@ConditionalOnProperty(name = "payment.mock.enabled", havingValue = "true")
 public class MockPaymentGateway implements PaymentGateway {
-
-    private static final Logger log = LoggerFactory.getLogger(MockPaymentGateway.class);
-
-    public MockPaymentGateway() {
-        log.warn("MockPaymentGateway is ENABLED. Payments can be faked. Never enable this in production.");
-    }
 
     @Override
     public PaymentProvider provider() {
@@ -29,18 +24,23 @@ public class MockPaymentGateway implements PaymentGateway {
 
     @Override
     public CreatedPayment create(CheckoutContext context) {
-        return new CreatedPayment("mock_" + UUID.randomUUID(), "mock-client-secret");
+        return new CreatedPayment(context.paymentId().toString(), null);
     }
 
+    /**
+     * The mock controller calls PaymentService.handleEvent directly,
+     * so this method is never reached in normal local dev.
+     * It is here only so the interface is complete.
+     */
     @Override
     public PaymentEvent parseEvent(String rawBody, Map<String, String> headers) {
-        throw new ApiException(HttpStatus.NOT_FOUND, "Mock gateway has no webhook");
+        throw new ApiException(HttpStatus.BAD_REQUEST, "Mock gateway does not use webhooks");
     }
 
-    public PaymentEvent confirmationEvent(String providerReference, boolean success) {
-        return new PaymentEvent(
-                "mock_evt_" + UUID.randomUUID(),
-                providerReference,
-                success ? PaymentEvent.Outcome.SUCCEEDED : PaymentEvent.Outcome.FAILED);
+    /** Mock refund always succeeds. Returns a fake reference. */
+    @Override
+    public RefundResult refund(String providerReference, long amountCents, String currency,
+            String bankTranId, String valId) {
+        return new RefundResult("MOCK-REFUND-" + UUID.randomUUID());
     }
 }

@@ -58,6 +58,10 @@ public interface PaymentGateway {
         }
     }
 
+    /** What the gateway returns after a refund call. */
+    record RefundResult(String refundReference) {
+    }
+
     PaymentProvider provider();
 
     /** Ask the provider to start a payment. Remote call, never run inside a DB transaction. */
@@ -65,4 +69,13 @@ public interface PaymentGateway {
 
     /** Verify the signature and translate a webhook body. Throw ApiException(400) when invalid. */
     PaymentEvent parseEvent(String rawBody, Map<String, String> headers);
+
+    /**
+     * Ask the provider to refund a payment. Remote call, never run inside a DB transaction.
+     * amountCents is the full payment amount (partial refunds not supported yet).
+     * bankTranId and valId come from the payment row (SSLCOMMERZ needs them).
+     * Throw ApiException on failure.
+     */
+    RefundResult refund(String providerReference, long amountCents, String currency,
+            String bankTranId, String valId);
 }
