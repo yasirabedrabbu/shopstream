@@ -30,28 +30,25 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shopstream.coreapi.common.ApiException;
 
-/**
- * SSLCOMMERZ hosted checkout. Only exists when app.payment.sslcommerz.enabled=true.
- * The browser is sent to the hosted page. We never trust what the browser or the notification says
- * about money: every success is re-checked with SSLCOMMERZ's own validation API.
- */
 @Component
 @ConditionalOnProperty(name = "app.payment.sslcommerz.enabled", havingValue = "true")
 public class SslCommerzGateway implements PaymentGateway {
 
     private static final Logger log = LoggerFactory.getLogger(SslCommerzGateway.class);
 
-    private static final String SANDBOX_BASE = "https://sandbox.sslcommerz.com";
-    private static final String LIVE_BASE = "https://securepay.sslcommerz.com";
-    private static final String SESSION_PATH = "/gwprocess/v4/api.php";
+    private static final String SANDBOX_BASE  = "https://sandbox.sslcommerz.com";
+    private static final String LIVE_BASE     = "https://securepay.sslcommerz.com";
+    private static final String SESSION_PATH  = "/gwprocess/v4/api.php";
     private static final String VALIDATE_PATH = "/validator/api/validationserverAPI.php";
+    private static final String REFUND_PATH   = "/merchant/backrequest.php";
 
     private final String storeId;
     private final String storePassword;
     private final String baseUrl;
     private final String apiPublicUrl;
     private final ObjectMapper json;
-    private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
+    private final HttpClient http = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(10)).build();
 
     public SslCommerzGateway(
             @Value("${app.payment.sslcommerz.store-id}") String storeId,
@@ -83,41 +80,40 @@ public class SslCommerzGateway implements PaymentGateway {
 
     @Override
     public CreatedPayment create(CheckoutContext c) {
-        // SSLCOMMERZ allows at most 30 characters for tran_id, so a full UUID does not fit.
         String tranId = "SS" + UUID.randomUUID().toString().replace("-", "").substring(0, 28);
         String country = countryName(c.country());
 
         Map<String, String> form = new LinkedHashMap<>();
-        form.put("store_id", storeId);
-        form.put("store_passwd", storePassword);
-        form.put("total_amount", BigDecimal.valueOf(c.amountCents(), 2).toPlainString());
-        form.put("currency", c.currency());
-        form.put("tran_id", tranId);
-        form.put("success_url", apiPublicUrl + "/api/v1/payments/sslcommerz/success");
-        form.put("fail_url", apiPublicUrl + "/api/v1/payments/sslcommerz/fail");
-        form.put("cancel_url", apiPublicUrl + "/api/v1/payments/sslcommerz/cancel");
-        form.put("ipn_url", apiPublicUrl + "/api/v1/payments/webhooks/sslcommerz");
-        form.put("cus_name", cut(c.customerName(), 50));
-        form.put("cus_email", c.customerEmail());
-        form.put("cus_add1", cut(c.addressLine1(), 50));
-        form.put("cus_city", cut(c.city(), 50));
-        form.put("cus_state", cut(c.state(), 50));
-        form.put("cus_postcode", cut(c.postalCode(), 30));
-        form.put("cus_country", cut(country, 50));
-        form.put("cus_phone", cut(c.phone(), 20));
-        form.put("shipping_method", "Courier");
-        form.put("ship_name", cut(c.customerName(), 50));
-        form.put("ship_add1", cut(c.addressLine1(), 50));
-        form.put("ship_city", cut(c.city(), 50));
-        form.put("ship_state", cut(c.state(), 50));
-        form.put("ship_postcode", cut(c.postalCode(), 50));
-        form.put("ship_country", cut(country, 50));
-        form.put("num_of_item", String.valueOf(c.itemCount()));
-        form.put("product_name", cut(c.productSummary(), 255));
+        form.put("store_id",         storeId);
+        form.put("store_passwd",     storePassword);
+        form.put("total_amount",     BigDecimal.valueOf(c.amountCents(), 2).toPlainString());
+        form.put("currency",         c.currency());
+        form.put("tran_id",          tranId);
+        form.put("success_url",      apiPublicUrl + "/api/v1/payments/sslcommerz/success");
+        form.put("fail_url",         apiPublicUrl + "/api/v1/payments/sslcommerz/fail");
+        form.put("cancel_url",       apiPublicUrl + "/api/v1/payments/sslcommerz/cancel");
+        form.put("ipn_url",          apiPublicUrl + "/api/v1/payments/webhooks/sslcommerz");
+        form.put("cus_name",         cut(c.customerName(), 50));
+        form.put("cus_email",        c.customerEmail());
+        form.put("cus_add1",         cut(c.addressLine1(), 50));
+        form.put("cus_city",         cut(c.city(), 50));
+        form.put("cus_state",        cut(c.state(), 50));
+        form.put("cus_postcode",     cut(c.postalCode(), 30));
+        form.put("cus_country",      cut(country, 50));
+        form.put("cus_phone",        cut(c.phone(), 20));
+        form.put("shipping_method",  "Courier");
+        form.put("ship_name",        cut(c.customerName(), 50));
+        form.put("ship_add1",        cut(c.addressLine1(), 50));
+        form.put("ship_city",        cut(c.city(), 50));
+        form.put("ship_state",       cut(c.state(), 50));
+        form.put("ship_postcode",    cut(c.postalCode(), 50));
+        form.put("ship_country",     cut(country, 50));
+        form.put("num_of_item",      String.valueOf(c.itemCount()));
+        form.put("product_name",     cut(c.productSummary(), 255));
         form.put("product_category", "ecommerce");
-        form.put("product_profile", "physical-goods");
-        form.put("value_a", c.orderId().toString());
-        form.put("value_b", c.paymentId().toString());
+        form.put("product_profile",  "physical-goods");
+        form.put("value_a",          c.orderId().toString());
+        form.put("value_b",          c.paymentId().toString());
 
         JsonNode answer = readJson(post(baseUrl + SESSION_PATH, form));
         String pageUrl = text(answer, "GatewayPageURL");
@@ -127,7 +123,6 @@ public class SslCommerzGateway implements PaymentGateway {
         return new CreatedPayment(tranId, null, pageUrl);
     }
 
-    /** Called for the server-to-server notification. The body is a form, not JSON. */
     @Override
     public PaymentEvent parseEvent(String rawBody, Map<String, String> headers) {
         try {
@@ -137,14 +132,10 @@ public class SslCommerzGateway implements PaymentGateway {
         }
     }
 
-    /**
-     * Turns a notification or a browser return into an event.
-     * Only val_id is used from the request. Everything about the money comes from the validation answer.
-     */
     public PaymentEvent eventFromParams(Map<String, String> params) {
-        String status = params.getOrDefault("status", "");
+        String status       = params.getOrDefault("status", "");
         String claimedTranId = params.getOrDefault("tran_id", "");
-        String valId = params.getOrDefault("val_id", "");
+        String valId        = params.getOrDefault("val_id", "");
 
         boolean claimsPaid = "VALID".equalsIgnoreCase(status) || "VALIDATED".equalsIgnoreCase(status);
         if (!claimsPaid) {
@@ -188,12 +179,63 @@ public class SslCommerzGateway implements PaymentGateway {
                 text(checked, "bank_tran_id"), valId);
     }
 
+    /**
+     * Ask SSLCOMMERZ to refund a payment. This call is async on SSLCOMMERZ's side:
+     * they return "initiated" immediately and process the actual bank transfer later.
+     * We record refunded_at once they accept the request.
+     */
+    @Override
+    public RefundResult refund(String providerReference, long amountCents, String currency,
+            String bankTranId, String valId) {
+        if (!StringUtils.hasText(bankTranId) || !StringUtils.hasText(valId)) {
+            throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY,
+                    "Cannot refund: bank_tran_id or val_id is missing on this payment");
+        }
+
+        String amount = BigDecimal.valueOf(amountCents, 2).toPlainString();
+        Map<String, String> form = new LinkedHashMap<>();
+        form.put("store_id",        storeId);
+        form.put("store_passwd",    storePassword);
+        form.put("refund_amount",   amount);
+        form.put("refund_remarks",  "ShopStream admin refund");
+        form.put("bank_tran_id",    bankTranId);
+        form.put("v_id",            valId);
+        form.put("format",          "json");
+
+        JsonNode answer;
+        try {
+            answer = readJson(post(baseUrl + REFUND_PATH, form));
+        } catch (IllegalStateException ex) {
+            log.error("SSLCOMMERZ refund call failed for tran_id {}", providerReference, ex);
+            throw new ApiException(HttpStatus.BAD_GATEWAY, "Could not reach the payment provider for refund");
+        }
+
+        String status = text(answer, "status");
+        if (!"initiated".equalsIgnoreCase(status)) {
+            String errorCode = text(answer, "errorCode");
+            String errorReason = text(answer, "errorReason");
+            log.error("SSLCOMMERZ refund rejected for tran_id {}: {} - {}", providerReference, errorCode, errorReason);
+            throw new ApiException(HttpStatus.BAD_GATEWAY,
+                    "Payment provider rejected the refund: " + errorReason);
+        }
+
+        // SSLCOMMERZ does not return a unique refund reference in the initiation response.
+        // We use refund_ref_id if present, otherwise generate a local one.
+        String refId = text(answer, "refund_ref_id");
+        if (!StringUtils.hasText(refId)) {
+            refId = "SSLCZ-REFUND-" + providerReference;
+        }
+        return new RefundResult(refId);
+    }
+
+    // ---------- private helpers ----------
+
     private JsonNode validate(String valId) {
         Map<String, String> query = new LinkedHashMap<>();
-        query.put("val_id", valId);
-        query.put("store_id", storeId);
+        query.put("val_id",       valId);
+        query.put("store_id",     storeId);
         query.put("store_passwd", storePassword);
-        query.put("format", "json");
+        query.put("format",       "json");
         try {
             return readJson(get(baseUrl + VALIDATE_PATH, query));
         } catch (IllegalStateException ex) {
@@ -201,8 +243,6 @@ public class SslCommerzGateway implements PaymentGateway {
             throw new ApiException(HttpStatus.BAD_GATEWAY, "Could not verify the payment right now");
         }
     }
-
-    // ---------- small helpers ----------
 
     private String post(String url, Map<String, String> form) {
         HttpRequest request = HttpRequest.newBuilder(URI.create(url))
@@ -249,17 +289,14 @@ public class SslCommerzGateway implements PaymentGateway {
     }
 
     private static String cut(String value, int max) {
-        if (value == null) {
-            return null;
-        }
+        if (value == null) return null;
         return value.length() > max ? value.substring(0, max) : value;
     }
 
     private static String countryName(String code) {
-        if (!StringUtils.hasText(code)) {
-            return code;
-        }
-        String name = Locale.of("", code.trim().toUpperCase(Locale.ROOT)).getDisplayCountry(Locale.ENGLISH);
+        if (!StringUtils.hasText(code)) return code;
+        String name = Locale.of("", code.trim().toUpperCase(Locale.ROOT))
+                .getDisplayCountry(Locale.ENGLISH);
         return StringUtils.hasText(name) ? name : code;
     }
 
@@ -273,15 +310,11 @@ public class SslCommerzGateway implements PaymentGateway {
 
     private static Map<String, String> parseForm(String body) {
         Map<String, String> map = new LinkedHashMap<>();
-        if (!StringUtils.hasText(body)) {
-            return map;
-        }
+        if (!StringUtils.hasText(body)) return map;
         for (String pair : body.split("&")) {
-            if (pair.isEmpty()) {
-                continue;
-            }
+            if (pair.isEmpty()) continue;
             int eq = pair.indexOf('=');
-            String key = eq < 0 ? pair : pair.substring(0, eq);
+            String key   = eq < 0 ? pair : pair.substring(0, eq);
             String value = eq < 0 ? "" : pair.substring(eq + 1);
             map.put(URLDecoder.decode(key, StandardCharsets.UTF_8),
                     URLDecoder.decode(value, StandardCharsets.UTF_8));
