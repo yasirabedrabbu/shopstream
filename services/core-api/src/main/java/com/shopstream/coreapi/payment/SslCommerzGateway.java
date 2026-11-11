@@ -184,7 +184,8 @@ public class SslCommerzGateway implements PaymentGateway {
                 ? PaymentEvent.Outcome.HELD
                 : PaymentEvent.Outcome.SUCCEEDED;
 
-        return new PaymentEvent("sslcz_val_" + valId, tranId, outcome, cents, currency);
+        return new PaymentEvent("sslcz_val_" + valId, tranId, outcome, cents, currency,
+                text(checked, "bank_tran_id"), valId);
     }
 
     private JsonNode validate(String valId) {

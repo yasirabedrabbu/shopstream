@@ -42,6 +42,12 @@ public class Payment {
     @Column(nullable = false, updatable = false, length = 3)
     private String currency;
 
+    @Column(name = "bank_tran_id", length = 80)
+    private String bankTranId;
+
+    @Column(name = "val_id", length = 50)
+    private String valId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -72,6 +78,16 @@ public class Payment {
 
     public void attachReference(String providerReference) {
         this.providerReference = providerReference;
+    }
+
+    /** Empty values never overwrite what we already know. */
+    public void attachBankDetails(String bankTranId, String valId) {
+        if (bankTranId != null && !bankTranId.isBlank()) {
+            this.bankTranId = bankTranId;
+        }
+        if (valId != null && !valId.isBlank()) {
+            this.valId = valId;
+        }
     }
 
     public void markSucceeded() {
@@ -112,6 +128,14 @@ public class Payment {
 
     public String getCurrency() {
         return currency;
+    }
+
+    public String getBankTranId() {
+        return bankTranId;
+    }
+
+    public String getValId() {
+        return valId;
     }
 
     public Instant getCreatedAt() {

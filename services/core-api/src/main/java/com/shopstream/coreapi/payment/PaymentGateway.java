@@ -36,12 +36,18 @@ public interface PaymentGateway {
      * amountCents and currency are what the provider says the customer really paid.
      * Real gateways must fill them (from the provider's own verified response, never from the
      * browser). They stay null only for the mock gateway, which skips the amount check.
+     * The bank and validation ids are kept on the payment because a refund needs them.
      */
     record PaymentEvent(String eventId, String providerReference, Outcome outcome,
-            Long amountCents, String currency) {
+            Long amountCents, String currency, String bankTranId, String valId) {
 
         public PaymentEvent(String eventId, String providerReference, Outcome outcome) {
-            this(eventId, providerReference, outcome, null, null);
+            this(eventId, providerReference, outcome, null, null, null, null);
+        }
+
+        public PaymentEvent(String eventId, String providerReference, Outcome outcome,
+                Long amountCents, String currency) {
+            this(eventId, providerReference, outcome, amountCents, currency, null, null);
         }
 
         public enum Outcome {

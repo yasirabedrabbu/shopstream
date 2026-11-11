@@ -201,9 +201,9 @@ public class PaymentService {
             }
 
             // Same payment told us twice with a different event id. Nothing new to do.
-            boolean alreadySucceeded = payment.getStatus() == PaymentStatus.SUCCEEDED;
+             boolean alreadySucceeded = payment.getStatus() == PaymentStatus.SUCCEEDED;
             payment.markSucceeded();
-
+            payment.attachBankDetails(event.bankTranId(), event.valId());
             if (order.getStatus() == OrderStatus.AWAITING_PAYMENT) {
                 order.markPaid();
                 deductStock(order);
