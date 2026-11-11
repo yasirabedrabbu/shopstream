@@ -1,5 +1,6 @@
 package com.shopstream.coreapi.catalog;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -11,6 +12,10 @@ public record PublicProductResponse(
         String slug,
         String description,
         long priceCents,
+        Long salePriceCents,
+        Instant saleEndsAt,
+        boolean flashSaleActive,
+        long effectivePriceCents,
         String currency,
         boolean inStock,
         CategoryResponse category,
@@ -18,12 +23,18 @@ public record PublicProductResponse(
         List<String> imageUrls) {
 
     public static PublicProductResponse from(Product p) {
+        Instant now = Instant.now();
+        boolean onSale = p.isFlashSaleActive(now);
         return new PublicProductResponse(
                 p.getId(),
                 p.getName(),
                 p.getSlug(),
                 p.getDescription(),
                 p.getPriceCents(),
+                onSale ? p.getSalePriceCents() : null,
+                onSale ? p.getSaleEndsAt() : null,
+                onSale,
+                p.effectivePriceCents(now),
                 p.getCurrency(),
                 p.getStockQuantity() > 0,
                 CategoryResponse.from(p.getCategory()),

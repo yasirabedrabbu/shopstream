@@ -1,5 +1,7 @@
 package com.shopstream.coreapi.catalog;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -19,6 +21,8 @@ import com.shopstream.coreapi.vendor.VendorStatus;
 
 @Service
 public class ProductService {
+
+    private static final Duration MAX_SALE_DURATION = Duration.ofDays(30);
 
     public record Filter(String q, String category, String store, Long minPrice, Long maxPrice) {
     }
@@ -62,6 +66,11 @@ public class ProductService {
         Product product = findOwned(ownerId, productId);
         Category category = requireCategory(request.categoryId());
 
+        if (product.hasFlashSale() && request.priceCents() <= product.getSalePriceCents()) {
+            throw new ApiException(HttpStatus.CONFLICT,
+                    "Regular price must stay above the flash sale price. Remove the flash sale first.");
+        }
+
         if (request.status() != null) {
             ensurePublishable(product.getVendor(), request.status());
             product.setStatus(request.status());
@@ -81,6 +90,42 @@ public class ProductService {
     public Product archive(UUID ownerId, UUID productId) {
         Product product = findOwned(ownerId, productId);
         product.setStatus(ProductStatus.ARCHIVED);
+        return product;
+    }
+
+    @Transactional
+    public Product setFlashSale(UUID ownerId, UUID productId, FlashSaleRequest request) {
+        Product product = findOwned(ownerId, productId);
+        if (product.getStatus() == ProductStatus.ARCHIVED) {
+            throw new ApiException(HttpStatus.CONFLICT, "Archived products cannot have a flash sale");
+        }
+
+        long salePrice = request.salePriceCents();
+        Instant startsAt = request.startsAt();
+        Instant endsAt = request.endsAt();
+
+        if (salePrice >= product.getPriceCents()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "Sale price must be lower than the regular price");
+        }
+        if (!endsAt.isAfter(startsAt)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Sale end must be after sale start");
+        }
+        if (!endsAt.isAfter(Instant.now())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Sale end must be in the future");
+        }
+        if (Duration.between(startsAt, endsAt).compareTo(MAX_SALE_DURATION) > 0) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "A flash sale can run for 30 days at most");
+        }
+
+        product.scheduleFlashSale(salePrice, startsAt, endsAt);
+        return product;
+    }
+
+    @Transactional
+    public Product clearFlashSale(UUID ownerId, UUID productId) {
+        Product product = findOwned(ownerId, productId);
+        product.clearFlashSale();
         return product;
     }
 
@@ -118,6 +163,13 @@ public class ProductService {
         if (filter.maxPrice() != null) {
             spec = spec.and(ProductSpecs.maxPrice(filter.maxPrice()));
         }
+        return products.findAll(spec, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Product> activeFlashSales(Pageable pageable) {
+        Specification<Product> spec = ProductSpecs.publiclyVisible()
+                .and(ProductSpecs.flashSaleActive(Instant.now()));
         return products.findAll(spec, pageable);
     }
 

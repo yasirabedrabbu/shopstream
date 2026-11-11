@@ -1,5 +1,6 @@
 package com.shopstream.coreapi.catalog;
 
+import java.time.Instant;
 import java.util.Locale;
 
 import org.springframework.data.jpa.domain.Specification;
@@ -15,6 +16,14 @@ public final class ProductSpecs {
         return (root, query, cb) -> cb.and(
                 cb.equal(root.get("status"), ProductStatus.ACTIVE),
                 cb.equal(root.get("vendor").get("status"), VendorStatus.APPROVED));
+    }
+
+    /** Sale window is open: start inclusive, end exclusive. Same rule as Product.isFlashSaleActive. */
+    public static Specification<Product> flashSaleActive(Instant now) {
+        return (root, query, cb) -> cb.and(
+                cb.isNotNull(root.get("salePriceCents")),
+                cb.lessThanOrEqualTo(root.<Instant>get("saleStartsAt"), now),
+                cb.greaterThan(root.<Instant>get("saleEndsAt"), now));
     }
 
     public static Specification<Product> nameContains(String text) {

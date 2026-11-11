@@ -40,6 +40,20 @@ public class ProductController {
         return PageResponse.of(productService.search(filter, pageable), PublicProductResponse::from);
     }
 
+    /** Sales that are live right now, the ones ending soonest first. */
+    @GetMapping("/flash-sales")
+    public PageResponse<PublicProductResponse> flashSales(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        PageRequest pageable = PageRequest.of(
+                Math.max(page, 0),
+                Math.min(Math.max(size, 1), 100),
+                Sort.by("saleEndsAt").ascending());
+
+        return PageResponse.of(productService.activeFlashSales(pageable), PublicProductResponse::from);
+    }
+
     @GetMapping("/{slug}")
     public PublicProductResponse bySlug(@PathVariable String slug) {
         return PublicProductResponse.from(productService.getPublicBySlug(slug));

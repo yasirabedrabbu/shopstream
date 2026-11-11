@@ -10,6 +10,11 @@ public record ProductResponse(
         String slug,
         String description,
         long priceCents,
+        Long salePriceCents,
+        Instant saleStartsAt,
+        Instant saleEndsAt,
+        boolean flashSaleActive,
+        long effectivePriceCents,
         String currency,
         int stockQuantity,
         ProductStatus status,
@@ -20,12 +25,18 @@ public record ProductResponse(
         Instant updatedAt) {
 
     public static ProductResponse from(Product p) {
+        Instant now = Instant.now();
         return new ProductResponse(
                 p.getId(),
                 p.getName(),
                 p.getSlug(),
                 p.getDescription(),
                 p.getPriceCents(),
+                p.getSalePriceCents(),
+                p.getSaleStartsAt(),
+                p.getSaleEndsAt(),
+                p.isFlashSaleActive(now),
+                p.effectivePriceCents(now),
                 p.getCurrency(),
                 p.getStockQuantity(),
                 p.getStatus(),

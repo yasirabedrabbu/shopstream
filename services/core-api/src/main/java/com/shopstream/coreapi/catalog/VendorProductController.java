@@ -67,6 +67,17 @@ public class VendorProductController {
         return ProductResponse.from(productService.archive(userId(jwt), id));
     }
 
+    @PutMapping("/{id}/flash-sale")
+    public ProductResponse setFlashSale(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id,
+            @Valid @RequestBody FlashSaleRequest request) {
+        return ProductResponse.from(productService.setFlashSale(userId(jwt), id, request));
+    }
+
+    @DeleteMapping("/{id}/flash-sale")
+    public ProductResponse clearFlashSale(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
+        return ProductResponse.from(productService.clearFlashSale(userId(jwt), id));
+    }
+
     private static UUID userId(Jwt jwt) {
         return UUID.fromString(jwt.getSubject());
     }

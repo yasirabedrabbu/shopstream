@@ -1,6 +1,7 @@
 package com.shopstream.coreapi.order;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -121,6 +122,8 @@ public class OrderService {
             throw new ApiException(HttpStatus.BAD_REQUEST, "One or more products were not found");
         }
 
+        // One clock reading for the whole order, so every line sees the same sale window.
+        Instant now = Instant.now();
         String currency = found.get(0).getCurrency();
         Order order = new Order(customerId, currency, address);
 
@@ -132,12 +135,19 @@ public class OrderService {
                 throw new ApiException(HttpStatus.BAD_REQUEST,
                         "All items in one order must use the same currency");
             }
+            int quantity = wanted.get(p.getId());
+            // Cheap early check only. It is not atomic. The inventory engine is the real guard.
+            if (p.getStockQuantity() < quantity) {
+                throw new ApiException(HttpStatus.CONFLICT,
+                        p.getName() + " has only " + p.getStockQuantity() + " left");
+            }
+            // The price is frozen here, so a sale ending later does not change this order.
             order.addItem(new OrderItem(
                     p.getId(),
                     p.getVendor().getId(),
                     p.getName(),
-                    p.getPriceCents(),
-                    wanted.get(p.getId())));
+                    p.effectivePriceCents(now),
+                    quantity));
         }
         return orders.save(order).getId();
     }
