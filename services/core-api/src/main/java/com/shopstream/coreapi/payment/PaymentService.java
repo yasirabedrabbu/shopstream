@@ -67,8 +67,14 @@ public class PaymentService {
 
         // Step 1 (DB): check the order and create a PENDING payment row.
         Draft draft = Objects.requireNonNull(tx.execute(s -> {
-            Order order = orders.findByIdAndCustomerId(orderId, customerId)
+            // Ownership check first, so a stranger cannot even lock someone else's order.
+            orders.findByIdAndCustomerId(orderId, customerId)
                     .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Order not found"));
+
+            // Lock the order row. Two quick "Pay" clicks now run one after the other,
+            // so they cannot both create a payment.
+            Order order = orders.findWithLockById(orderId).orElseThrow();
+
             if (order.getStatus() != OrderStatus.AWAITING_PAYMENT) {
                 throw new ApiException(HttpStatus.CONFLICT, "Order is not awaiting payment");
             }
@@ -76,6 +82,12 @@ public class PaymentService {
             if (expiresAt != null && expiresAt.isBefore(Instant.now())) {
                 throw new ApiException(HttpStatus.CONFLICT, "Your stock reservation has expired");
             }
+
+            // Only one live payment per order. Older unfinished attempts are retired.
+            for (Payment old : payments.findByOrderIdAndStatus(order.getId(), PaymentStatus.PENDING)) {
+                old.markFailed();
+            }
+
             Payment payment = payments.save(
                     new Payment(order.getId(), provider, order.getTotalCents(), order.getCurrency()));
             return new Draft(payment.getId(), payment.getAmountCents(), payment.getCurrency());
@@ -131,6 +143,19 @@ public class PaymentService {
                 return null;
             }
 
+            // Real gateways report what the customer actually paid. It must match what we asked for.
+            boolean amountWrong = event.amountCents() != null
+                    && event.amountCents() != payment.getAmountCents();
+            boolean currencyWrong = event.currency() != null
+                    && !event.currency().equalsIgnoreCase(payment.getCurrency());
+            if (amountWrong || currencyWrong) {
+                log.error("AMOUNT MISMATCH: payment {} expected {} {} but {} reported {} {}. "
+                        + "Order NOT marked paid. MANUAL REVIEW NEEDED.",
+                        payment.getId(), payment.getAmountCents(), payment.getCurrency(),
+                        provider, event.amountCents(), event.currency());
+                return null;
+            }
+            boolean alreadySucceeded = payment.getStatus() == PaymentStatus.SUCCEEDED;
             payment.markSucceeded();
             Order order = orders.findWithLockById(payment.getOrderId()).orElseThrow();
 
@@ -139,10 +164,15 @@ public class PaymentService {
                 deductStock(order);
                 return order.getId();
             }
-            if (order.getStatus() != OrderStatus.PAID) {
-                log.error("Payment {} succeeded but order {} is {}. MANUAL REFUND NEEDED.",
-                        payment.getId(), order.getId(), order.getStatus());
+            if (order.getStatus() == OrderStatus.PAID) {
+                if (!alreadySucceeded) {
+                    log.error("DUPLICATE CHARGE: payment {} succeeded but order {} was already PAID by another "
+                            + "payment. REFUND NEEDED.", payment.getId(), order.getId());
+                }
+                return null;
             }
+            log.error("Payment {} succeeded but order {} is {}. MANUAL REFUND NEEDED.",
+                    payment.getId(), order.getId(), order.getStatus());
             return null;
         });
 

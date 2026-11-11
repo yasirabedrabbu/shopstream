@@ -9,7 +9,18 @@ public interface PaymentGateway {
     record CreatedPayment(String providerReference, String clientSecret) {
     }
 
-    record PaymentEvent(String eventId, String providerReference, Outcome outcome) {
+    /**
+     * amountCents and currency are what the provider says the customer really paid.
+     * Real gateways must fill them (from the provider's own verified response, never from the
+     * browser). They stay null only for the mock gateway, which skips the amount check.
+     */
+    record PaymentEvent(String eventId, String providerReference, Outcome outcome,
+            Long amountCents, String currency) {
+
+        public PaymentEvent(String eventId, String providerReference, Outcome outcome) {
+            this(eventId, providerReference, outcome, null, null);
+        }
+
         public enum Outcome {
             SUCCEEDED,
             FAILED

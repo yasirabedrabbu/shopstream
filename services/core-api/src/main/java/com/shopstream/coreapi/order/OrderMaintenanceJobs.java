@@ -18,6 +18,7 @@ public class OrderMaintenanceJobs {
 
     private static final Logger log = LoggerFactory.getLogger(OrderMaintenanceJobs.class);
     private static final Duration REFINALIZE_WINDOW = Duration.ofMinutes(30);
+    private static final Duration STUCK_PENDING_AFTER = Duration.ofMinutes(5);
 
     private final OrderRepository orders;
     private final InventoryClient inventory;
@@ -53,11 +54,45 @@ public class OrderMaintenanceJobs {
                     return true;
                 });
                 if (Boolean.TRUE.equals(expired)) {
-                    inventory.release(id);
-                    log.info("Order {} expired and stock released", id);
+                    releaseQuietly(id);
+                    log.info("Order {} expired", id);
                 }
             } catch (RuntimeException ex) {
                 log.error("Could not expire order {}. Will retry next run.", id, ex);
+            }
+        }
+    }
+
+    /**
+     * Every 2 minutes: PENDING orders older than 5 minutes are dead. This happens when the app
+     * stopped between saving the order and getting the inventory answer. They get cancelled.
+     */
+    @Scheduled(fixedDelay = 120_000, initialDelay = 90_000)
+    public void cancelStuckPendingOrders() {
+        Instant cutoff = Instant.now().minus(STUCK_PENDING_AFTER);
+        List<UUID> stuckIds = orders
+                .findByStatusAndCreatedAtBefore(OrderStatus.PENDING, cutoff)
+                .stream()
+                .map(Order::getId)
+                .toList();
+
+        for (UUID id : stuckIds) {
+            try {
+                Boolean cancelled = tx.execute(s -> {
+                    // Lock + re-check: the order may have moved on while we were looking.
+                    Order order = orders.findWithLockById(id).orElseThrow();
+                    if (order.getStatus() != OrderStatus.PENDING) {
+                        return false;
+                    }
+                    order.cancel("Order was not completed");
+                    return true;
+                });
+                if (Boolean.TRUE.equals(cancelled)) {
+                    releaseQuietly(id);
+                    log.warn("Stuck PENDING order {} cancelled", id);
+                }
+            } catch (RuntimeException ex) {
+                log.error("Could not cancel stuck order {}. Will retry next run.", id, ex);
             }
         }
     }
@@ -75,6 +110,18 @@ public class OrderMaintenanceJobs {
             } catch (RuntimeException ex) {
                 log.warn("Re-finalize failed for order {}. Will retry next run.", order.getId(), ex);
             }
+        }
+    }
+
+    /**
+     * The order is already cancelled in our database, so a failed release is not retried.
+     * The inventory engine drops the hold by itself when it expires.
+     */
+    private void releaseQuietly(UUID orderId) {
+        try {
+            inventory.release(orderId);
+        } catch (RuntimeException ex) {
+            log.warn("Release failed for order {}. The hold will expire on its own.", orderId, ex);
         }
     }
 }

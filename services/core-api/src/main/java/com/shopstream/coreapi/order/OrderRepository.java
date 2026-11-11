@@ -22,6 +22,8 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
 
     List<Order> findByStatusAndReservationExpiresAtBefore(OrderStatus status, Instant cutoff);
 
+    List<Order> findByStatusAndCreatedAtBefore(OrderStatus status, Instant cutoff);
+
     List<Order> findByStatusAndUpdatedAtAfter(OrderStatus status, Instant since);
 
     /**
