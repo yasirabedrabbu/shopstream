@@ -29,4 +29,11 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
     /** Rows of (rating, how many reviews have that rating). */
     @Query("select r.rating, count(r) from Review r where r.productId = :productId group by r.rating")
     List<Object[]> countByRating(@Param("productId") UUID productId);
+
+    /** Rows of (Review, Product) for every review on this vendor's products, newest first. Pass an unsorted Pageable. */
+    @Query(value = "select r, p from Review r join Product p on p.id = r.productId "
+            + "where p.vendor.id = :vendorId order by r.createdAt desc, r.id",
+            countQuery = "select count(r) from Review r join Product p on p.id = r.productId "
+                    + "where p.vendor.id = :vendorId")
+    Page<Object[]> findForVendor(@Param("vendorId") UUID vendorId, Pageable pageable);
 }
