@@ -47,6 +47,9 @@ public class Order {
     @Column(name = "cancel_reason", length = 255)
     private String cancelReason;
 
+    @Column(name = "paid_at")
+    private Instant paidAt;
+
     @Embedded
     private ShippingAddress shippingAddress;
 
@@ -96,6 +99,7 @@ public class Order {
     public void markPaid() {
         requireStatus(OrderStatus.AWAITING_PAYMENT);
         this.status = OrderStatus.PAID;
+        this.paidAt = Instant.now();
     }
 
     public void cancel(String reason) {
@@ -146,6 +150,10 @@ public class Order {
 
     public String getCancelReason() {
         return cancelReason;
+    }
+
+    public Instant getPaidAt() {
+        return paidAt;
     }
 
     public ShippingAddress getShippingAddress() {
