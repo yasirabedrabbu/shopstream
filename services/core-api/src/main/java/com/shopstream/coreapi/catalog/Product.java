@@ -62,6 +62,15 @@ public class Product {
     @Column(nullable = false, length = 20)
     private ProductStatus status = ProductStatus.DRAFT;
 
+    @Column(name = "sale_price_cents")
+    private Long salePriceCents;
+
+    @Column(name = "sale_starts_at")
+    private Instant saleStartsAt;
+
+    @Column(name = "sale_ends_at")
+    private Instant saleEndsAt;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "product_images", joinColumns = @JoinColumn(name = "product_id"))
     @OrderColumn(name = "sort_order")
@@ -119,6 +128,38 @@ public class Product {
         this.status = status;
     }
 
+    // ---------- flash sale ----------
+
+    public void scheduleFlashSale(long salePriceCents, Instant startsAt, Instant endsAt) {
+        this.salePriceCents = salePriceCents;
+        this.saleStartsAt = startsAt;
+        this.saleEndsAt = endsAt;
+    }
+
+    public void clearFlashSale() {
+        this.salePriceCents = null;
+        this.saleStartsAt = null;
+        this.saleEndsAt = null;
+    }
+
+    public boolean hasFlashSale() {
+        return salePriceCents != null;
+    }
+
+    /** True only while now is inside the window: start inclusive, end exclusive. */
+    public boolean isFlashSaleActive(Instant now) {
+        return salePriceCents != null
+                && !now.isBefore(saleStartsAt)
+                && now.isBefore(saleEndsAt);
+    }
+
+    /** The price a customer pays right now. */
+    public long effectivePriceCents(Instant now) {
+        return isFlashSaleActive(now) ? salePriceCents : priceCents;
+    }
+
+    // ---------- getters ----------
+
     public UUID getId() {
         return id;
     }
@@ -157,6 +198,18 @@ public class Product {
 
     public ProductStatus getStatus() {
         return status;
+    }
+
+    public Long getSalePriceCents() {
+        return salePriceCents;
+    }
+
+    public Instant getSaleStartsAt() {
+        return saleStartsAt;
+    }
+
+    public Instant getSaleEndsAt() {
+        return saleEndsAt;
     }
 
     public List<String> getImageUrls() {

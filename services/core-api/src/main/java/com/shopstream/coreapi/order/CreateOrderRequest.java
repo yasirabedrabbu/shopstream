@@ -11,7 +11,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record CreateOrderRequest(
-        @NotEmpty @Size(max = 50) List<@Valid Line> items) {
+        @NotEmpty @Size(max = 50) List<@Valid Line> items,
+        @NotNull @Valid ShippingAddress shippingAddress) {
 
     public record Line(
             @NotNull UUID productId,

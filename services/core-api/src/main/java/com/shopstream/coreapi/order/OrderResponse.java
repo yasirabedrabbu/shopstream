@@ -12,6 +12,7 @@ public record OrderResponse(
         Instant reservationExpiresAt,
         String cancelReason,
         Instant createdAt,
+        ShippingAddress shippingAddress,
         List<Item> items) {
 
     public record Item(
@@ -46,6 +47,7 @@ public record OrderResponse(
                 order.getReservationExpiresAt(),
                 order.getCancelReason(),
                 order.getCreatedAt(),
+                order.getShippingAddress(),
                 order.getItems().stream().map(Item::from).toList());
     }
 }

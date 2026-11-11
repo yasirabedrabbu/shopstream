@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -46,6 +47,9 @@ public class Order {
     @Column(name = "cancel_reason", length = 255)
     private String cancelReason;
 
+    @Embedded
+    private ShippingAddress shippingAddress;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -58,9 +62,10 @@ public class Order {
     protected Order() {
     }
 
-    public Order(UUID customerId, String currency) {
+    public Order(UUID customerId, String currency, ShippingAddress shippingAddress) {
         this.customerId = customerId;
         this.currency = currency;
+        this.shippingAddress = shippingAddress;
     }
 
     @PrePersist
@@ -141,6 +146,10 @@ public class Order {
 
     public String getCancelReason() {
         return cancelReason;
+    }
+
+    public ShippingAddress getShippingAddress() {
+        return shippingAddress;
     }
 
     public Instant getCreatedAt() {

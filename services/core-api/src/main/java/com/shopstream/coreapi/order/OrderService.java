@@ -3,6 +3,7 @@ package com.shopstream.coreapi.order;
 import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -50,8 +51,9 @@ public class OrderService {
      */
     public OrderResponse create(UUID customerId, CreateOrderRequest request) {
         Map<UUID, Integer> wanted = mergeLines(request);
+        final ShippingAddress address = normalize(request.shippingAddress());
 
-        UUID orderId = Objects.requireNonNull(tx.execute(s -> savePending(customerId, wanted)));
+        UUID orderId = Objects.requireNonNull(tx.execute(s -> savePending(customerId, wanted, address)));
 
         List<InventoryClient.Line> lines = wanted.entrySet().stream()
                 .map(e -> new InventoryClient.Line(e.getKey(), e.getValue()))
@@ -113,14 +115,14 @@ public class OrderService {
 
     // ---------- helpers ----------
 
-    private UUID savePending(UUID customerId, Map<UUID, Integer> wanted) {
+    private UUID savePending(UUID customerId, Map<UUID, Integer> wanted, ShippingAddress address) {
         List<Product> found = products.findAllById(wanted.keySet());
         if (found.size() != wanted.size()) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "One or more products were not found");
         }
 
         String currency = found.get(0).getCurrency();
-        Order order = new Order(customerId, currency);
+        Order order = new Order(customerId, currency, address);
 
         for (Product p : found) {
             if (p.getStatus() != ProductStatus.ACTIVE || p.getVendor().getStatus() != VendorStatus.APPROVED) {
@@ -153,6 +155,18 @@ public class OrderService {
         } catch (RuntimeException ex) {
             log.warn("Release failed for order {}. The reservation will expire on its own.", orderId, ex);
         }
+    }
+
+    private static ShippingAddress normalize(ShippingAddress a) {
+        return new ShippingAddress(
+                a.fullName().trim(),
+                a.phone().trim(),
+                a.line1().trim(),
+                a.line2() == null || a.line2().isBlank() ? null : a.line2().trim(),
+                a.city().trim(),
+                a.state() == null || a.state().isBlank() ? null : a.state().trim(),
+                a.postalCode().trim(),
+                a.country().trim().toUpperCase(Locale.ROOT));
     }
 
     private static Map<UUID, Integer> mergeLines(CreateOrderRequest request) {
