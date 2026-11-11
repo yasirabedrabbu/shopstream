@@ -2,6 +2,7 @@ package com.shopstream.coreapi.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -42,6 +43,10 @@ public class SecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/ping", "/api/v1/auth/**", "/actuator/health").permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/stores/**",
+                                "/api/v1/products/**",
+                                "/api/v1/categories/**").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/vendor/**").hasAnyRole("VENDOR", "ADMIN")
                         .anyRequest().authenticated())
