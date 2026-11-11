@@ -42,14 +42,15 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/ping", "/api/v1/auth/**", "/actuator/health").permitAll()
-                        .requestMatchers(HttpMethod.GET,
+                .requestMatchers("/api/v1/ping", "/api/v1/auth/**", "/actuator/health",
+                                "/api/v1/payments/webhooks/**").permitAll()
+                .requestMatchers(HttpMethod.GET,
                                 "/api/v1/stores/**",
                                 "/api/v1/products/**",
                                 "/api/v1/categories/**").permitAll()
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/vendor/**").hasAnyRole("VENDOR", "ADMIN")
-                        .anyRequest().authenticated())
+                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/v1/vendor/**").hasAnyRole("VENDOR", "ADMIN")
+                .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth -> oauth
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)));
         return http.build();
