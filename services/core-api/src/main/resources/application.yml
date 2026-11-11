@@ -23,6 +23,13 @@ spring:
     enabled: true
     locations: classpath:db/migration
 
+app:
+  jwt:
+    issuer: shopstream-core-api
+    access-token-ttl: 60m
+    private-key-path: ${JWT_PRIVATE_KEY_PATH:}
+    public-key-path: ${JWT_PUBLIC_KEY_PATH:}
+
 management:
   endpoints:
     web:

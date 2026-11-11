@@ -1,12 +1,25 @@
+# env and secrets
 .env
+*.pem
+infra/keys/
+
+# OS / editor
 .DS_Store
 .idea/
 .vscode/
+
+# Node
 node_modules/
 .next/
 dist/
+
+# Java
 target/
 build/
 *.class
+
+# Rust
 /services/inventory-engine/target/
+
+# Docker volumes (local)
 infra/data/
