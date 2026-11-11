@@ -9,6 +9,10 @@ public final class Slugs {
     }
 
     public static String slugify(String input) {
+        return slugify(input, "store");
+    }
+
+    public static String slugify(String input, String fallback) {
         String normalized = Normalizer.normalize(input, Normalizer.Form.NFD).replaceAll("\\p{M}", "");
         String slug = normalized.toLowerCase(Locale.ROOT)
                 .replaceAll("[^a-z0-9]+", "-")
@@ -16,6 +20,6 @@ public final class Slugs {
         if (slug.length() > 100) {
             slug = slug.substring(0, 100).replaceAll("-+$", "");
         }
-        return slug.isEmpty() ? "store" : slug;
+        return slug.isEmpty() ? fallback : slug;
     }
 }
