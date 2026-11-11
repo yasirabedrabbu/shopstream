@@ -64,6 +64,7 @@ public class ProductService {
     @Transactional
     public Product update(UUID ownerId, UUID productId, ProductRequest request) {
         Product product = findOwned(ownerId, productId);
+        requireNotBlocked(product);
         Category category = requireCategory(request.categoryId());
 
         if (product.hasFlashSale() && request.priceCents() <= product.getSalePriceCents()) {
@@ -89,6 +90,7 @@ public class ProductService {
     @Transactional
     public Product archive(UUID ownerId, UUID productId) {
         Product product = findOwned(ownerId, productId);
+        requireNotBlocked(product);
         product.setStatus(ProductStatus.ARCHIVED);
         return product;
     }
@@ -96,6 +98,7 @@ public class ProductService {
     @Transactional
     public Product setFlashSale(UUID ownerId, UUID productId, FlashSaleRequest request) {
         Product product = findOwned(ownerId, productId);
+        requireNotBlocked(product);
         if (product.getStatus() == ProductStatus.ARCHIVED) {
             throw new ApiException(HttpStatus.CONFLICT, "Archived products cannot have a flash sale");
         }
@@ -200,7 +203,16 @@ public class ProductService {
         return product;
     }
 
+    private static void requireNotBlocked(Product product) {
+        if (product.getStatus() == ProductStatus.BLOCKED) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "This product was blocked by an admin. Contact support.");
+        }
+    }
+
     private static void ensurePublishable(Vendor vendor, ProductStatus status) {
+        if (status == ProductStatus.BLOCKED) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Only an admin can set this status");
+        }
         if (status == ProductStatus.ACTIVE && vendor.getStatus() != VendorStatus.APPROVED) {
             throw new ApiException(HttpStatus.CONFLICT,
                     "Your store must be approved before products can go live");

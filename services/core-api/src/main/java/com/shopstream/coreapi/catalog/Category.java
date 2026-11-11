@@ -41,6 +41,11 @@ public class Category {
         this.createdAt = Instant.now();
     }
 
+    /** Only the display name changes. The slug stays the same so existing links keep working. */
+    public void rename(String name) {
+        this.name = name;
+    }
+
     public UUID getId() {
         return id;
     }

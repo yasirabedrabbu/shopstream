@@ -9,5 +9,7 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
 
     boolean existsBySlug(String slug);
 
+    boolean existsByNameIgnoreCaseAndIdNot(String name, UUID id);
+
     List<Category> findAllByOrderByNameAsc();
 }
