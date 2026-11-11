@@ -177,6 +177,8 @@ public class PaymentService {
                 log.error("RISKY PAYMENT HOLD: {} flagged payment {} (order {}) as risky. "
                         + "Order NOT marked paid. MANUAL REVIEW NEEDED.",
                         provider, payment.getId(), order.getId());
+                // Undo the event row too, so the same notification can be judged again later.
+                s.setRollbackOnly();
                 return null;
             }
 
@@ -200,8 +202,8 @@ public class PaymentService {
                 return null;
             }
 
-            // Same payment told us twice with a different event id. Nothing new to do.
-             boolean alreadySucceeded = payment.getStatus() == PaymentStatus.SUCCEEDED;
+            // Remember if this payment was already SUCCEEDED, so a repeat is not reported as a duplicate charge.
+            boolean alreadySucceeded = payment.getStatus() == PaymentStatus.SUCCEEDED;
             payment.markSucceeded();
             payment.attachBankDetails(event.bankTranId(), event.valId());
             if (order.getStatus() == OrderStatus.AWAITING_PAYMENT) {

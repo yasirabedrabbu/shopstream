@@ -48,6 +48,22 @@ public class Payment {
     @Column(name = "val_id", length = 50)
     private String valId;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "review_reason", length = 30)
+    private PaymentReviewReason reviewReason;
+
+    @Column(name = "review_at")
+    private Instant reviewAt;
+
+    @Column(name = "review_resolved_at")
+    private Instant reviewResolvedAt;
+
+    @Column(name = "refunded_at")
+    private Instant refundedAt;
+
+    @Column(name = "refund_ref", length = 80)
+    private String refundRef;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -102,6 +118,43 @@ public class Payment {
         this.status = PaymentStatus.FAILED;
     }
 
+    /**
+     * Puts this payment on the admin review list. If it is already waiting for review,
+     * the first reason is kept so a repeat notification does not rewrite history.
+     */
+    public void requestReview(PaymentReviewReason reason) {
+        if (this.reviewReason != null && this.reviewResolvedAt == null) {
+            return;
+        }
+        this.reviewReason = reason;
+        this.reviewAt = Instant.now();
+        this.reviewResolvedAt = null;
+    }
+
+    public void resolveReview() {
+        if (this.reviewReason == null) {
+            throw new IllegalStateException("This payment is not under review");
+        }
+        if (this.reviewResolvedAt == null) {
+            this.reviewResolvedAt = Instant.now();
+        }
+    }
+
+    /** Only a succeeded, not yet refunded payment can be refunded. Also closes any open review. */
+    public void markRefunded(String refundRef) {
+        if (status != PaymentStatus.SUCCEEDED) {
+            throw new IllegalStateException("Only a succeeded payment can be refunded");
+        }
+        if (this.refundedAt != null) {
+            throw new IllegalStateException("This payment is already refunded");
+        }
+        this.refundedAt = Instant.now();
+        this.refundRef = refundRef;
+        if (this.reviewReason != null && this.reviewResolvedAt == null) {
+            this.reviewResolvedAt = this.refundedAt;
+        }
+    }
+
     public UUID getId() {
         return id;
     }
@@ -136,6 +189,26 @@ public class Payment {
 
     public String getValId() {
         return valId;
+    }
+
+    public PaymentReviewReason getReviewReason() {
+        return reviewReason;
+    }
+
+    public Instant getReviewAt() {
+        return reviewAt;
+    }
+
+    public Instant getReviewResolvedAt() {
+        return reviewResolvedAt;
+    }
+
+    public Instant getRefundedAt() {
+        return refundedAt;
+    }
+
+    public String getRefundRef() {
+        return refundRef;
     }
 
     public Instant getCreatedAt() {
