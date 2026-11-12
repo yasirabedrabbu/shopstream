@@ -1,209 +1,231 @@
-# ShopStream: Handoff v7
+# ShopStream: Handoff v8
 
-Last updated: Core API reviewed by reading (zip snapshot) and 13 fixes applied locally. Next: review batch 2 (see section 13).
-Language for chat with the owner: Banglish (Bangla words in English letters). This document is English.
+Last updated: Phase 2 (setup and first run) mostly done. Backend boots against Neon, Flyway V1 to V13 applied, first vendor store created and approved. Next: categories, product, public listing, mock payment order.
+
+Language for chat with the owner: Banglish. This document is English.
 
 ---
 
-## 1. Working rules (strict, follow every time)
+## 1. Working rules
 
-1. Never create files with tools. Give the full code in chat with the exact file path. The owner pastes it into VS Code. Reading an uploaded zip or file with tools is allowed when the owner asks.
-2. The owner now wants all remaining Java files reviewed and delivered in full (no snippets), in batches. One batch = a few related files. After each batch the owner runs the checks and pastes the PowerShell output.
-3. Every batch includes: exact file paths, the PowerShell checks, and the expected output.
-4. When a file changes, give the full replacement file. Give code in its final form.
-5. Do not assume. Say so when something is wrong. If something is not verified, say "verify kori-ni". Before deploy, ask the owner to check current free tiers and pricing.
-6. The code has never been compiled or run (not by Claude, not by the owner). "Verified" only means the owner pasted PowerShell output proving a file or pattern exists. Claude must never promise "no issues" until `mvn compile` has passed.
-7. Be strategic and decisive, but in code tasks do what the owner says.
-8. No em dashes in written content.
-9. PowerShell on this PC is Windows PowerShell 5. Rules for commands:
-   - Select-String has no -Recurse. Use: `Get-ChildItem <dir> -Recurse -Filter *.java | Select-String -Pattern '<regex>' | ForEach-Object { "$($_.Filename):$($_.LineNumber)" }`
-   - Use single quotes around patterns that contain `\"` or backslashes. Double quotes with escaped quotes break.
-   - Give one command per code block. Pasting several lines at once crashed PSReadLine once.
-   - A wrapped terminal line does not mean a bug in the file.
-10. Select-String is case-insensitive and also matches imports, comments and message strings. Before stating an expected count, check whether the pattern also appears in a comment or an import. If an expected line is missing, treat it as a failure.
-11. Migration listing must be sorted numerically:
-    `Get-ChildItem services/core-api/src/main/resources/db/migration | Sort-Object { [int](($_.Name -split '__')[0].Substring(1)) } | Select-Object -ExpandProperty Name`
-12. Line numbers in expected output can be off by a few lines. What matters is that the expected lines exist.
-13. The zip in the chat is a GitHub snapshot. Local fixes are NOT in it. Before reviewing again, ask the owner to upload a fresh zip, or rely on section 7.
+1. Never create deliverable files with tools. Give full code in chat with the exact file path. Owner pastes into VS Code.
+2. Never ask for, store, or echo secrets (passwords, tokens, connection strings, private keys). The owner runs commands locally and shares only results.
+3. Every step includes the exact PowerShell command and the expected output.
+4. When a file changes, give the full replacement file.
+5. Do not assume. Say "verify kori-ni" when something is not confirmed.
+6. "Compiles" means `mvn clean compile` passed. "Runs" means the app booted and an endpoint answered. Anything else is unverified.
+7. No em dashes in written content.
+8. PowerShell on this PC is Windows PowerShell 5. One command per code block. Use single quotes for patterns containing backslashes.
+9. Select-String is case-insensitive and matches comments and imports too.
 
 ---
 
 ## 2. Project
 
-ShopStream is a multi-vendor e-commerce platform with zero-oversell flash sales and a live vendor sales and stock dashboard. It is a portfolio project built to production-grade standards. The owner is a UI/UX designer who is learning by building it.
+ShopStream: multi-vendor e-commerce with zero-oversell flash sales and a live vendor dashboard. Portfolio project. Owner is a UI/UX designer learning backend by building it.
 
 - Repo: https://github.com/yasirabedrabbu/shopstream (branch main)
 - Local folder: C:\Users\yasir\shopstream
 - Timeline: 12 to 14 weeks (not confirmed)
 
-## 3. Tech stack
+## 3. Tech stack and status
 
 | Part | Tech | Status |
 |---|---|---|
-| apps/web | Next.js (App Router, TypeScript): storefront and vendor/admin dashboard | empty |
-| apps/widgets | SvelteKit live widgets | empty |
-| services/core-api | Java 21, Spring Boot 3.4.1, Maven | code written, never compiled |
-| services/inventory-engine | Rust (Axum, Tokio): atomic reserve, expiry, SSE | empty |
-| Infra | Postgres 16, Redis 7 (Streams), Mailpit (docker-compose.yml) | not running yet |
+| services/core-api | Java 25 (pom says 25), Spring Boot 3.5.16, Maven 3.10.0 | Compiles (`mvn clean compile` BUILD SUCCESS). Boots. Endpoints tested. |
+| services/inventory-engine | Rust (Axum, Tokio) | 10 files written. Never compiled. |
+| apps/web | Next.js storefront and dashboards | Not started (folder does not exist) |
+| apps/widgets | SvelteKit widgets | Not started (folder does not exist) |
+| Database | Neon Postgres 16, Singapore (ap-southeast-1) | Live. Flyway V1 to V13 applied. |
+| Redis | Upstash (planned) | Not set up |
+| Docker | docker-compose.yml exists | Not used. Docker install blocked on owner PC. |
 
-Auth: Java issues RS256 JWT. Rust and Svelte only verify with the public key.
+Auth: core-api issues RS256 JWT. Rust and Svelte only verify with the public key.
 
-Checkout flow: Next.js creates a Java order (PENDING). Java asks Rust to reserve stock (10 minute hold). Payment happens. Java marks the order PAID and emits an event. Rust finalizes the reservation and pushes SSE.
+Checkout flow (design): Next.js creates Java order (PENDING). Java asks Rust to reserve stock (10 minute hold). Payment. Java marks order PAID and emits event. Rust finalizes reservation and pushes SSE.
 
-Seed data: one-time import from DummyJSON (DummyJsonSeeder exists, off by default).
+---
 
 ## 4. Owner's PC
 
-Windows 10, i3-7020U (2 cores), 8GB RAM. Run one service at a time. Docker install is blocked (WSL Ubuntu error 0x8000000d, Docker Desktop installer says it cannot run on this PC, not confirmed why). Plan B: Neon (Postgres) and Upstash (Redis). JDK 21, Maven, Rust and Node are not set up yet.
+Windows 10, i3-7020U, 8GB RAM. Run one service at a time.
+
+Installed:
+- JDK: Temurin 25.0.5 (`java -version` OK)
+- Maven 3.10.0 at `C:\Program Files\apache-maven-3.10.0`
+- OpenSSL via Git for Windows at `C:\Program Files\Git\usr\bin\openssl.exe`
+
+Maven PATH problem: `mvn` is not recognised in new PowerShell windows, even though Machine PATH contains the bin folder. Workaround in use:
+- Per session: `Set-Alias mvn "C:\Program Files\apache-maven-3.10.0\bin\mvn.cmd"`
+- Or the full path: `& "C:\Program Files\apache-maven-3.10.0\bin\mvn.cmd" <args>`
+- Root cause not confirmed. Check later whether Machine PATH has duplicate or broken entries (the Machine PATH length is 487 characters).
+
+Not installed: Rust, Node.js.
 
 ---
 
-## 5. Phase plan (about 150 units, 6 phases)
+## 5. Phase plan
 
 | Phase | Content | Status |
 |---|---|---|
-| 1. Finish Java | Step 5 payment/review/refund, Step 6 auth, Step 7 seed | Code exists for all. Review in progress (about 60 percent of files read). Email verify dropped. |
-| 2. Setup and first run | JDK, Maven, Neon, RSA keys, env, mvn compile, app boot, SQL bug fixes, sandbox refund test | not started |
-| 3. Inventory engine | Rust (reserve, expiry, finalize, SSE, JWT) and Java Step 8 (HttpInventoryClient, Redis Streams) | not started |
-| 4. Quality and packaging | Tests, OpenAPI config, Dockerfile, prod profile, GitHub Actions, README, HANDOFF | not started |
-| 5. Frontend | Design system, Next.js, Svelte widgets | not started |
-| 6. Deploy | Hosting, secrets, domain, SSLCOMMERZ live, final check | not started |
+| 1. Finish Java | Payments, reviews, refunds, auth, seeder | Code complete. Reviewed by reading. |
+| 2. Setup and first run | JDK, Maven, Neon, RSA keys, env, compile, boot, Flyway, first API calls | Mostly done (see section 7) |
+| 3. Inventory engine | Rust reserve/finalize/release/SSE/JWT, Java HttpInventoryClient, Redis Streams | Rust written, not compiled. Java side not started. |
+| 4. Quality and packaging | Tests, OpenAPI config, Dockerfile, prod profile, GitHub Actions, README | Not started |
+| 5. Frontend | Next.js storefront and dashboards, SvelteKit widgets | Not started |
+| 6. Deploy | Hosting, secrets, domain, SSLCOMMERZ live | Not started |
 
 ---
 
-## 6. Java core-api: current state
+## 6. Java core-api
 
-Path: `services/core-api/src/main/java/com/shopstream/coreapi/`. Packages: admin, auth, catalog, common, config, fulfillment, inventory, notification, order, payment, review, stats, user, vendor, web.
+Path: `services/core-api/src/main/java/com/shopstream/coreapi/` (130 files, all reviewed by reading).
 
-### Migrations (V1 to V13, `src/main/resources/db/migration`)
+Migrations: V1 to V13 in `src/main/resources/db/migration`. Applied to Neon on first boot.
 
-V1 users and vendors, V2 categories/products/product_images, V3 orders and order_items, V4 payments and payment_events, V5 shipping address, V6 notifications, V7 flash sale columns, V8 reviews, V9 orders.paid_at (+CHECK), V10 BLOCKED product status (DO block drops old CHECK), V11 payments.bank_tran_id and val_id, V12 payment review and refund columns, V13 refresh_tokens and password_reset_tokens.
-Read against the entities: all columns match, so `ddl-auto: validate` should pass (not run).
+Key endpoints:
+- Public: `/api/v1/ping`, `/products`, `/products/{slug}`, `/products/flash-sales`, `/categories`, `/stores/{slug}`, reviews
+- Auth: `/auth/register`, `/login`, `/refresh`, `/logout`, `/password-reset/request`, `/password-reset/confirm`
+- Customer: `/me`, `/orders` (POST, GET, GET/{id}, POST/{id}/cancel), `/orders/{id}/pay`, notifications, reviews
+- Payment: `/payments/webhooks/{provider}`, `/payments/mock/{ref}/confirm?success=true` (dev only), `/payments/sslcommerz/*`
+- Vendor: `/vendor/store`, `/vendor/products` (CRUD, flash-sale), `/vendor/orders/items`, `/vendor/reviews`, `/vendor/dashboard?period=7d|30d|all`
+- Admin: `/admin/vendors` (list, PATCH status), `/admin/categories` (POST, PUT, DELETE), `/admin/products` (block, unblock), `/admin/users`, `/admin/orders`, `/admin/stats`, `/admin/payments/review`, `/admin/payments/{id}/refund`
 
-### Endpoints
+Enums: OrderStatus (PENDING, AWAITING_PAYMENT, PAID, CANCELLED, EXPIRED), FulfillmentStatus (NEW, PACKED, SHIPPED, DELIVERED, CANCELLED), ProductStatus (DRAFT, ACTIVE, ARCHIVED, BLOCKED), VendorStatus (PENDING, APPROVED, ...), PaymentStatus (PENDING, SUCCEEDED, FAILED), PaymentReviewReason (HELD, LATE_PAYMENT, AMOUNT_MISMATCH, DUPLICATE_CHARGE).
 
-- Public: GET /api/v1/ping, /products, /products/{slug}, /products/flash-sales, /categories, /stores/{slug}, /products/{slug}/reviews, /products/{slug}/reviews/summary.
-- Auth (public): POST /auth/register, /login, /refresh, /logout, /password-reset/request, /password-reset/confirm. Rate limited per IP (10 per minute) on login, refresh, password-reset request and confirm.
-- Customer: GET /me. Orders: POST, GET, GET/{id}, POST/{id}/cancel. POST /orders/{id}/pay. Notifications: list, unread-count, read, read-all. Reviews: POST /products/{slug}/reviews, PUT and DELETE /products/{slug}/reviews/mine.
-- POST /api/v1/orders body: `{ items: [{productId, quantity}], shippingAddress: {fullName, phone, line1, line2?, city, state?, postalCode, country (2-letter)} }`
-- Payment: POST /payments/webhooks/{provider} (public, provider verifies). Mock (needs JWT, owner only): POST /payments/mock/{ref}/confirm?success=true. SSLCOMMERZ browser return: /payments/sslcommerz/success, /fail, /cancel (GET and POST, public).
-- Vendor: /vendor/store (POST, GET, PUT), /vendor/products (CRUD), PUT and DELETE /vendor/products/{id}/flash-sale, /vendor/orders/items (GET, PATCH .../fulfillment), GET /vendor/reviews, GET /vendor/dashboard?period=7d|30d|all.
-- Admin: GET /admin/vendors, PATCH /admin/vendors/{id}/status, POST /admin/categories, PUT and DELETE /admin/categories/{id}, GET /admin/products, POST /admin/products/{id}/block and /unblock, GET /admin/users, PATCH /admin/users/{id}/status, GET /admin/orders, GET /admin/stats, GET /admin/payments/review?reason&page&size (oldest first), POST /admin/payments/review/{paymentId}/resolve, POST /admin/payments/{paymentId}/refund?cancelOrder=true.
+Config: `application.yml` reads env vars. Spring Boot does NOT read `.env` automatically. Variables must be loaded into the PowerShell session (see section 8).
 
-### Other
-
-AdminSeeder, DummyJsonSeeder (@Order(2), runs only if app.seed.enabled=true and products table is empty), StubInventoryClient (stock not enforced), MockPaymentGateway, SslCommerzGateway, OrderMaintenanceJobs (expire overdue orders every 60s, cancel stuck PENDING, re-finalize recent PAID), OrderPaidNotifier (30s), EmailService (@Async, Mailpit), LoginRateLimitFilter (Bucket4j in memory). Commission 10 percent, low stock threshold 5.
-Enums: OrderStatus (PENDING, AWAITING_PAYMENT, PAID, CANCELLED, EXPIRED), FulfillmentStatus (NEW, PACKED, SHIPPED, DELIVERED, CANCELLED), ProductStatus (DRAFT, ACTIVE, ARCHIVED, BLOCKED), PaymentStatus (PENDING, SUCCEEDED, FAILED), PaymentReviewReason (HELD, LATE_PAYMENT, AMOUNT_MISMATCH, DUPLICATE_CHARGE).
-Security: CSRF off, stateless, CORS on, /admin/** needs ADMIN, /vendor/** needs VENDOR or ADMIN, public matchers for ping, auth, webhooks, sslcommerz, GET stores/products/categories.
-pom.xml already has springdoc and bucket4j-core 8.10.1 (groupId com.bucket4j, package io.github.bucket4j).
-
----
-
-## 7. Work log
-
-### Found in the zip but not in v6 (the zip was ahead of the handoff)
-
-Step 5.5 to 5.8 (review controller with resolve endpoint, resolve service, refund controller and service, gateway refund method), Step 6 without email verify (refresh, logout, logoutAll, password reset, rate limit, V13), DummyJsonSeeder.
-
-IMPORTANT: the zip has its own `AdminPaymentReviewController` (list ascending by reviewAt plus resolve). An older version written in chat (descending, list only) must NEVER be pasted over it.
-
-### Fixes applied this session (owner pasted PowerShell output proving each pattern exists; nothing compiled)
-
-| # | File | Fix |
-|---|---|---|
-| 1 | auth/LoginRateLimitFilter | import io.github.bucket4j (was com.bucket4j, compile error); client IP from getRemoteAddr (X-Forwarded-For was spoofable); also limits /auth/refresh and /auth/password-reset/confirm |
-| 2 | payment/MockPaymentGateway | property is app.payment.mock-enabled (was payment.mock.enabled, never matched yml); added confirmationEvent(ref, success) which MockPaymentController calls (was missing, compile error) |
-| 3 | order/Order | added cancelAfterRefund(reason) for PAID orders (cancel() rejects PAID) |
-| 4 | catalog/ProductRepository | added incrementStock (atomic) |
-| 5 | payment/PaymentRepository | added findOrderIdById |
-| 6 | admin/AdminRefundService | rewritten, see decisions below |
-| 7 | admin/AdminUserService | suspending a user revokes all refresh tokens |
-| 8 | payment/SslCommerzGateway | refund now GET /validator/api/merchantTransIDvalidationAPI.php with bank_tran_id, refund_amount, refund_remarks (old POST /merchant/backrequest.php with v_id looked wrong); accepts status success or initiated. UNVERIFIED against the official docs, only taken from 4 third-party client libraries |
-| 9 | payment/SslCommerzCallbackController | catches RuntimeException too, always redirects with ?payment=error |
-| 10 | config/DummyJsonSeeder | Slugs.slugify (Slugs.from did not exist, compile error); exact slug match for categories (old contains() put womens shoes under Mens shoes) |
-| 11 | common/GlobalExceptionHandler | DataIntegrityViolationException returns 409 |
-| 12 | user/User | added setPasswordHash (AuthService called it, compile error) |
-| 13 | auth/PasswordResetTokenRepository | GitHub snapshot had the name PasswordResetTokenRepository.jav. Local folder has .java. Owner must check `git status --short` and commit and push it |
-
-### Read and judged OK by reading (not compiled, not run)
-
-OrderService, OrderMaintenanceJobs, OrderPaidNotifier, OrderController, PaymentController, PaymentService, Payment, MockPaymentController, VendorStatsRepository and AdminReportRepository (SQL read line by line), JwtConfig, TokenService, AuthService, AuthController, EmailService, SecurityConfig matchers, all 13 migrations against the 12 entities, GlobalExceptionHandler.
-
-### NOT read yet (more compile errors are likely, 5 compile errors were found in the files that were read)
-
-ProductService, ReviewService, FulfillmentService, VendorService, AdminCatalogService, NotificationService, VendorStatsService, AdminReportService, controllers (Product, VendorProduct, VendorOrder, Review, VendorReview, Notification, Vendor, AdminVendor, Category, Store, Me, Ping), AdminSeeder, the top of SecurityConfig, request/response DTO records.
+Known behaviour of current boot:
+- `StubInventoryClient` logs a warning: stock is NOT enforced.
+- `AdminSeeder` created the admin user on first boot (role ADMIN). It only creates, never updates.
+- `DummyJsonSeeder` disabled (`SEED_ENABLED=false`).
+- SpringDoc Swagger UI is enabled by default (fine for dev, disable for prod).
+- `LoginRateLimitFilter` is `@Component`, auto-registered. Limit 10 per minute per IP.
 
 ---
 
-## 8. Decisions already made
+## 7. Phase 2 progress (what has been verified by pasted output)
 
-- Flash sale: sale price, start, end all set or all null (DB CHECK). Sale price below regular price. Max 30 days. Active is computed (start <= now < end), no scheduler.
-- Reviews: only a customer with a DELIVERED item in a PAID order. One per customer per product (UNIQUE, race gives 409). Rating 1 to 5, comment max 2000. A vendor cannot review own product.
-- Revenue and GMV: only PAID orders, CANCELLED items excluded, date from orders.paid_at, UTC buckets, commission 10 percent of gross.
-- Vendor dashboard: one endpoint with revenue, pipeline, low stock, top 5, daily calendar, recent 10.
-- Admin: user suspend blocks login and revokes refresh tokens (an existing access token still works until it expires, max 60 minutes). Admin cannot suspend self or another ADMIN. Deleting a category with products returns 409. Unblock sets the product to DRAFT.
-- Currency: "USD" hardcoded in stats. Seeded products are USD.
-- Payment: SSLCOMMERZ is the primary gateway (code exists). Owner has still not confirmed this in writing. Stripe is not available for Bangladesh-registered businesses (third-party source only). Local dev uses MockPaymentGateway.
-- Payment review rules (PaymentService.handleEvent): HELD keeps the payment PENDING and adds a review. AMOUNT_MISMATCH marks the payment SUCCEEDED, order NOT paid, review added. DUPLICATE_CHARGE (order already PAID by another payment) and LATE_PAYMENT (order CANCELLED or EXPIRED) add a review. The first open review reason is kept.
-- Refund rules (AdminRefundService):
-  - Already refunded: 409.
-  - PENDING with a review (HELD): no gateway call, only the review is closed. Not under review: 409.
-  - Only SUCCEEDED goes to the gateway.
-  - AMOUNT_MISMATCH: 409. We do not store the amount really paid, so an API refund could be wrong. Admin refunds in the SSLCOMMERZ panel, then calls /resolve. Option later: V14 migration that stores paid_amount_cents.
-  - DUPLICATE_CHARGE and LATE_PAYMENT never touch the order.
-  - cancelOrder=true (default) on a PAID order cancels it and returns stock via incrementStock, but only if no item is SHIPPED or DELIVERED (else 409, use cancelOrder=false).
-  - The order row is locked first (same lock order as handleEvent), then the gateway is called inside the transaction. If the gateway throws, nothing commits.
-- Email verify: dropped from scope (owner did not answer). Can be added later as its own unit.
-- Rate limit: per IP in memory, 10 per minute. In production behind a proxy set server.forward-headers-strategy=native.
+| Step | Result |
+|---|---|
+| `java -version` | Temurin 25.0.5 |
+| `mvn -version` (full path) | Maven 3.10.0 |
+| `mvn clean compile` | BUILD SUCCESS, 130 files, release 25 |
+| Neon connection | PostgreSQL 16.15, connected |
+| Flyway | Successfully applied 13 migrations, schema v13 |
+| Hibernate validate | Passed (app booted) |
+| JWT keys | Loaded from `services/core-api/keys/` (PKCS#8) |
+| Boot | Started on port 8080 |
+| `GET /api/v1/ping` | `status: ok` |
+| `POST /auth/login` (admin) | Returns tokens, role ADMIN |
+| `POST /auth/register` (vendor1) | Returns user, role CUSTOMER |
+| Role change | Done via Neon SQL editor (`UPDATE users SET role='VENDOR' ...`) |
+| `POST /vendor/store` | Created, slug `test-store`, status PENDING |
+| `PATCH /admin/vendors/{id}/status` | APPROVED |
+| `GET /categories` | Returned nothing printed (empty list or no output, verify) |
 
-## 9. Pending decisions (owner has not answered)
+Open issue (not explained):
+- The first `POST /vendor/store` returned success, but the `vendors` table had 0 rows afterwards. Entity mapping (`@Table(name="vendors")`, `@Column`s) matches migrations. The second store create persisted correctly. Root cause unknown. If it happens again, check the Spring log for the INSERT and any rollback.
 
-1. Confirm SSLCOMMERZ as primary (A), add Stripe test mode (B), or both (C).
+Open issue: `GET /admin/vendors` returned `totalElements: 0` while a vendor row existed in the DB at that time. Re-check after the store is approved. If the list is still empty, check the `AdminVendorController` query path.
+
+---
+
+## 8. Local environment (never commit)
+
+`.env` file at project root (in `.gitignore`). Contains:
+- `DB_URL`, `DB_USER`, `DB_PASSWORD` (Neon, jdbc format with `sslmode=require&channelBinding=require`)
+- `JWT_PRIVATE_KEY_PATH=keys/private.pem`, `JWT_PUBLIC_KEY_PATH=keys/public.pem` (relative to services/core-api)
+- `ADMIN_EMAIL`, `ADMIN_PASSWORD`
+- `PAYMENT_MOCK_ENABLED=true`, `SSLCOMMERZ_ENABLED=false`, `SEED_ENABLED=false`, `INVENTORY_MODE=stub`
+- `CORS_ALLOWED_ORIGINS=http://localhost:3000`, `APP_PUBLIC_URL=http://localhost:3000`, `API_PUBLIC_URL=http://localhost:8080`
+
+Keys: `services/core-api/keys/private.pem` and `public.pem`, generated with OpenSSL `genpkey` (PKCS#8). Folder is covered by `*.pem` in `.gitignore`.
+
+Load env vars into the current session (after every new PowerShell window):
+
+```powershell
+Get-Content C:\Users\yasir\shopstream\.env | Where-Object { $_ -match '^\s*[^#].*=' } | ForEach-Object {
+  $k, $v = $_ -split '=', 2
+  [Environment]::SetEnvironmentVariable($k.Trim(), $v.Trim(), 'Process')
+}
+```
+
+Start the app (from `services\core-api`):
+
+```powershell
+& "C:\Program Files\apache-maven-3.10.0\bin\mvn.cmd" spring-boot:run
+```
+
+Sensitive data handling:
+- Passwords and tokens were pasted into chat several times in this project (Gmail, Neon, admin, test vendor, access and refresh tokens). Treat all of them as exposed. Rotate the Neon password and Gmail password. Log out the test refresh tokens. Do not paste any secret again.
+- Test account `vendor1@test.local` has a throwaway password pasted in chat. Use a new password for any real use.
+
+---
+
+## 9. Next steps
+
+1. Create a category (admin token). Category list was empty. Example:
+
+```powershell
+$admin = Invoke-RestMethod -Method Post -Uri http://localhost:8080/api/v1/auth/login -ContentType 'application/json' -Body '{"email":"<admin email>","password":"<admin password>"}'
+$adminHeaders = @{ Authorization = "Bearer $($admin.accessToken)" }
+Invoke-RestMethod -Method Post -Uri http://localhost:8080/api/v1/admin/categories -Headers $adminHeaders -ContentType 'application/json' -Body '{"name":"Electronics"}'
+```
+
+2. Confirm `GET /api/v1/categories` shows the category.
+3. Create a product as vendor (store is APPROVED): `POST /api/v1/vendor/products` with name, priceCents, currency, stockQuantity, categoryId, status ACTIVE, optional imageUrls.
+4. Confirm `GET /api/v1/products` lists the product.
+5. Register a customer account, get token, create order (`POST /api/v1/orders`), then mock pay (`POST /api/v1/payments/orders/{orderId}/pay` with provider MOCK, then `/payments/mock/{providerReference}/confirm`).
+6. Check `GET /admin/vendors` again.
+7. Check Spring log for each step. Paste only errors and key result lines, never tokens.
+
+Then:
+- Git: check `git status`. Commit `PasswordResetTokenRepository.java` filename (snapshot had `.jav`). Confirm the local fixes from session 1 are committed.
+- Rust: `cargo build` in `services/inventory-engine` (needs Rust installed).
+- Phase 3 decision: how Java calls Rust (HttpInventoryClient) before Redis Streams.
+
+---
+
+## 10. Pending decisions (owner has not answered)
+
+1. Payment: SSLCOMMERZ primary (A), Stripe test mode (B), or both (C).
 2. Accent color (lime #E8F44A?).
 3. Dashboard inside the storefront Next.js app or separate.
 4. AI bar: rule-based or free-tier LLM.
 5. Timeline: 12 to 14 weeks.
-6. Currency for the demo: keep USD (needs SSLCOMMERZ multi-currency, unverified) or switch seeded products and orders to BDT.
+6. Demo currency: USD (needs SSLCOMMERZ multi-currency, unverified) or BDT.
 7. Email verify: add later or never.
-
-## 10. Known risks and unknowns (all "verify kori-ni")
-
-- Nothing has been compiled. Expect more small errors in the files not yet read.
-- SSLCOMMERZ: refund endpoint and response status unverified (see fix 8). Does the sandbox accept USD? Unverified. IPN needs a public URL (localhost will not receive it, use a tunnel or deploy, use Mock locally). Amount for a non-BDT refund: which currency? Unknown.
-- If the gateway refund succeeds and the DB commit then fails, the customer got the money but the DB does not know. Fixing this needs an outbox. Accepted for the portfolio.
-- Refund with cancelOrder=false leaves the order PAID, so the revenue dashboard still counts it.
-- Raw SQL (stats, admin reports) read but never run on Postgres. Also unconfirmed: NamedParameterJdbcTemplate bean, Hibernate record @Embeddable (ShippingAddress), Specification lambdas, PageResponse.of(result, r -> r) inference, JPQL "select count(i) > 0", ReviewRepository join, V10 DO block, V9 and V12 CHECK constraints.
-- Spring Data derived queries never accepted by a running app (existsByCategoryId, existsByNameIgnoreCaseAndIdNot, findByReviewReason...).
-- StubInventoryClient approves everything. Stock is only reduced at payment time (PaymentService.deductStock). Until the Rust engine exists, two buyers can order the last item and OVERSOLD is only logged. The stock guard at order create is not atomic.
-- Order price is frozen at order time. A sale that ends during the 10 minute hold still sells at the sale price.
-- ProductSpecs price filters and price sorting use the regular price, not the sale price.
-- A product named "Flash Sales" gets the slug flash-sales and clashes with /products/flash-sales.
-- No average rating on the product list. No "can I review this" endpoint.
-- Access token of a suspended user works until it expires (60 minutes).
-- OrderPaidNotifier selects PAID orders without a notification, oldest first, LIMIT 50. 50 permanently failing orders would block newer ones (unlikely).
-- Seeded vendor accounts (vendor1 to vendor3 @shopstream.local) share one password from SEED_VENDOR_PASSWORD. Demo data only. Never enable seed on a real production database.
-- Dhaka is UTC+6. Dashboards use UTC days. A tz parameter is needed later.
-- springdoc is in pom.xml but there is no OpenAPI config. README is 2 lines. src/test does not exist.
-- The local .env may contain real values. Never share it. .gitignore covers .env, *.pem, target/, *.class.
-
-## 11. Setup needed later (Phase 2)
-
-JDK 21, Maven, Postgres (Docker is blocked, so Neon), Redis (Upstash), RSA key pair.
-JWT keys: JwtConfig reads the private key as PKCS#8 (`-----BEGIN PRIVATE KEY-----`) and the public key as X.509 (`-----BEGIN PUBLIC KEY-----`). A key from `openssl genrsa` (PKCS#1, `BEGIN RSA PRIVATE KEY`) will fail at boot. Generate with `openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out private.pem` and `openssl rsa -pubout -in private.pem -out public.pem` (is openssl available on the owner's PC? verify kori-ni; Git for Windows usually ships it).
-Env (from application.yml): DB_URL, DB_USER, DB_PASSWORD, JWT_PRIVATE_KEY_PATH, JWT_PUBLIC_KEY_PATH, ADMIN_EMAIL, ADMIN_PASSWORD, PAYMENT_MOCK_ENABLED, SSLCOMMERZ_ENABLED, SSLCOMMERZ_STORE_ID, SSLCOMMERZ_STORE_PASSWORD, SSLCOMMERZ_SANDBOX, INVENTORY_MODE, SEED_ENABLED, SEED_VENDOR_PASSWORD, CORS_ALLOWED_ORIGINS, APP_PUBLIC_URL, API_PUBLIC_URL, MAIL_HOST, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD, MAIL_FROM.
-First run checklist: mvn compile, fix errors, boot with Neon, check Flyway applies V1 to V13, check Hibernate validate, run the seeder once, then run a mock payment end to end, then a sandbox refund.
-
-## 12. Design system (for the frontend phase, not now)
-
-Sora (headings) and Manrope (body). 60-30-10 color rule. Light: bg #FFFFFF, surface #F4F4F5, border #E4E4E7, text #18181B. Dark: bg #1A1A1A, surface #242424, border #333333, text #F4F4F5. Accent is flat lime, always with dark text. No gradients, no shadows, blur allowed (nav, dock, modal, toast, badge). Hugeicons, some animated, disabled under prefers-reduced-motion. 8pt grid, breakpoints 375, 768, 1024, 1440, touch targets 44px or more. Storefront: top pill nav. Vendor: tile sidebar and bottom dock. Dashboard: bento grid with flat solid charts.
 
 ---
 
-## 13. What the next Claude should do first
+## 11. Known risks (verify kori-ni)
 
-1. Greet in Banglish, no long intro. List the pending decisions (section 9) once, do not block on them.
-2. Ask the owner to upload a fresh zip of the repo (local fixes are not in the old snapshot). Reading it with tools is allowed. List the zip, extract to a scratch folder, never create deliverable files.
-3. Review batch 2 (read first, then give full replacement files only where a real bug exists): ProductService, ReviewService, FulfillmentService, VendorService. Check imports, method names that other files call (grep for calls to methods that do not exist), constructor signatures, and property names. Those three kinds of error caused all 5 compile errors so far.
-4. Then batch 3: AdminCatalogService, NotificationService, VendorStatsService, AdminReportService, AdminSeeder, SecurityConfig, and every controller and DTO record.
-5. After each batch give PowerShell checks (rule 9) with expected output, and wait for the owner's output.
-6. When all files are read, move to Phase 2 (setup, mvn compile, first boot).
+- Inventory: stub approves everything. Two buyers can oversell until Rust engine exists. Stock is reduced only at payment time.
+- SSLCOMMERZ refund endpoint and USD support unverified against official docs.
+- Refund with cancelOrder=false leaves the order PAID, so revenue still counts it.
+- Gateway refund succeeds but DB commit fails: money returned but DB unaware. Needs outbox later.
+- Raw SQL (stats, admin reports) and JPQL `select count(i) > 0` never run on Postgres in a test. Verify when the dashboard is called.
+- Access token of a suspended user works until expiry (60 minutes).
+- Order price frozen at order time. Sale ending during the 10 minute hold still sells at sale price.
+- ProductSpecs price filters use regular price, not sale price.
+- A product named "Flash Sales" clashes with `/products/flash-sales`.
+- Timezone: dashboards use UTC days. Dhaka is UTC+6.
+- Seeded vendor accounts share one password. Never enable seed on a real database.
+- No tests (`src/test` does not exist). No OpenAPI config class. README is 2 lines.
+- `.env` may hold real values. Never share it.
+
+---
+
+## 12. Design system (for frontend phase)
+
+Sora (headings) and Manrope (body). 60-30-10 colour rule. Light: bg #FFFFFF, surface #F4F4F5, border #E4E4E7, text #18181B. Dark: bg #1A1A1A, surface #242424, border #333333, text #F4F4F5. Accent flat lime with dark text. No gradients, no shadows. Blur allowed on nav, dock, modal, toast, badge. Hugeicons, disabled under prefers-reduced-motion. 8pt grid. Breakpoints 375, 768, 1024, 1440. Touch targets 44px or more. Storefront: top pill nav. Vendor: tile sidebar and bottom dock. Dashboard: bento grid with flat solid charts.
+
+---
+
+## 13. What the next session should do first
+
+1. Greet in Banglish, short. Ask what the owner has run since the last handoff.
+2. Ask whether `GET /api/v1/categories` returned any category. If empty, do step 9.1.
+3. Continue section 9 in order. Give one step at a time with expected output.
+4. Do not start frontend (apps/web) until product, order, and mock payment are verified.
