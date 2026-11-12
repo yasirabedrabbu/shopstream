@@ -207,3 +207,14 @@ Sora (headings) and Manrope (body). 60-30-10 color rule. Light: bg #FFFFFF, surf
 4. Then batch 3: AdminCatalogService, NotificationService, VendorStatsService, AdminReportService, AdminSeeder, SecurityConfig, and every controller and DTO record.
 5. After each batch give PowerShell checks (rule 9) with expected output, and wait for the owner's output.
 6. When all files are read, move to Phase 2 (setup, mvn compile, first boot).
+### Inventory engine written (not compiled)
+All 10 files written from scratch:
+Cargo.toml, config.rs, jwt.rs, redis_store.rs,
+routes/mod.rs, reserve.rs, finalize.rs, release.rs, sse.rs, main.rs
+
+Redis: Lua atomic scripts for reserve/finalize/release.
+JWT: RS256 verify using same public key as Java.
+SSE: /stream?products=uuid1,uuid2 polls every 2s.
+Auth middleware: Bearer JWT on /reserve /finalize /release.
+Port: 8081 (env PORT).
+Env needed: REDIS_URL, JWT_PUBLIC_KEY_PATH, PORT (opt), HOLD_TTL_SECONDS (opt, default 600).
