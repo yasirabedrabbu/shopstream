@@ -10,6 +10,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import jakarta.persistence.LockModeType;
 
@@ -26,10 +28,8 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
 
     List<Order> findByStatusAndUpdatedAtAfter(OrderStatus status, Instant since);
 
-    /**
-     * Loads the order and locks its row until the transaction ends.
-     * Payment and expiry both use this, so they can never change the same order at the same time.
-     */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    Optional<Order> findWithLockById(UUID id);
+    @EntityGraph(attributePaths = "items")
+    @Query("select o from Order o where o.id = :id")
+    Optional<Order> findWithLockById(@Param("id") UUID id);
 }
