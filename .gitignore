@@ -23,3 +23,10 @@ build/
 
 # Docker volumes (local)
 infra/data/
+
+# Rust
+services/inventory-engine/target/
+
+# Env
+.env
+*.pem
