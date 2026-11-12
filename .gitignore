@@ -30,3 +30,10 @@ services/inventory-engine/target/
 # Env
 .env
 *.pem
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.iml
