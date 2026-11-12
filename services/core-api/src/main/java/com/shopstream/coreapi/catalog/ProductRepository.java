@@ -31,4 +31,10 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
     @Query(value = "UPDATE products SET stock_quantity = stock_quantity - :qty, updated_at = now() "
             + "WHERE id = :id AND stock_quantity >= :qty", nativeQuery = true)
     int decrementStock(@Param("id") UUID id, @Param("qty") int qty);
+
+    /** Gives stock back (for example after a refund). Atomic in the database. Returns 0 if the product is gone. */
+    @Modifying
+    @Query(value = "UPDATE products SET stock_quantity = stock_quantity + :qty, updated_at = now() "
+            + "WHERE id = :id", nativeQuery = true)
+    int incrementStock(@Param("id") UUID id, @Param("qty") int qty);
 }

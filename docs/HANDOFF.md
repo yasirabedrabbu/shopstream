@@ -37,7 +37,7 @@ ShopStream is a multi-vendor e-commerce platform with zero-oversell flash sales 
 |---|---|---|
 | apps/web | Next.js (App Router, TypeScript): storefront and vendor/admin dashboard | empty |
 | apps/widgets | SvelteKit live widgets | empty |
-| services/core-api | Java 21, Spring Boot 3.4.1, Maven | in progress |
+| services/core-api | Java 25, Spring Boot 3.5.16, Maven | in progress |
 | services/inventory-engine | Rust (Axum, Tokio): atomic reserve, expiry, SSE | empty |
 | Infra | Postgres 16, Redis 7 (Streams), Mailpit (docker-compose.yml) | not running yet |
 
@@ -49,7 +49,7 @@ Seed data: one-time import from DummyJSON, committed to the repo.
 
 ## 4. Owner's PC
 
-Windows 10, i3-7020U (2 cores), 8GB RAM. Run one service at a time. Docker install is blocked (WSL Ubuntu error 0x8000000d, Docker Desktop installer says it cannot run on this PC, probably wrong architecture, not confirmed). Plan B: Neon (Postgres) and Upstash (Redis). JDK 21, Maven, Rust and Node are not set up yet. Setup is planned after the Java code is complete.
+Windows 10, i3-7020U (2 cores), 8GB RAM. Run one service at a time. Docker install is blocked (WSL Ubuntu error 0x8000000d, Docker Desktop installer says it cannot run on this PC, probably wrong architecture, not confirmed). Plan B: Neon (Postgres) and Upstash (Redis). JDK 25, Maven, Rust and Node are not set up yet. Setup is planned after the Java code is complete.
 
 ---
 
@@ -192,7 +192,7 @@ Behavior decisions applied in 5.1:
 
 JDK 21, Maven, Postgres (Docker or Neon), Redis (Upstash), RSA key pair (JWT_PRIVATE_KEY_PATH, JWT_PUBLIC_KEY_PATH).
 Env: DB_URL, DB_USER, DB_PASSWORD, ADMIN_EMAIL, ADMIN_PASSWORD, PAYMENT_MOCK_ENABLED, SSLCOMMERZ_ENABLED, SSLCOMMERZ_STORE_ID, SSLCOMMERZ_STORE_PASSWORD, SSLCOMMERZ_SANDBOX, INVENTORY_MODE, SEED_ENABLED, SEED_VENDOR_PASSWORD, CORS_ALLOWED_ORIGINS, APP_PUBLIC_URL, API_PUBLIC_URL, MAIL_*.
-Recommendation: after Step 5 or 6, set up JDK 21, Maven and Neon, run mvn compile and boot the app, because runtime bugs pile up when a lot of code is written first. The owner currently prefers to write all Java code first.
+Recommendation: after Step 5 or 6, set up JDK 25, Maven and Neon, run mvn compile and boot the app, because runtime bugs pile up when a lot of code is written first. The owner currently prefers to write all Java code first.
 
 ## 12. Design system (for the frontend phase, not now)
 

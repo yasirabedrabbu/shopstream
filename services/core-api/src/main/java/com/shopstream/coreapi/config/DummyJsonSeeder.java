@@ -1,6 +1,5 @@
 package com.shopstream.coreapi.config;
 
-import java.math.BigDecimal;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -42,8 +41,11 @@ import com.shopstream.coreapi.vendor.VendorStatus;
  *
  * What it creates:
  *   - Categories from DummyJSON product categories
- *   - 3 vendor users + vendor rows (store approved)
+ *   - 3 demo vendor users + vendor rows (store approved)
  *   - Up to 194 products spread across those vendors (all ACTIVE)
+ *
+ * Demo data only. The vendor accounts share one password from SEED_VENDOR_PASSWORD.
+ * Do not enable this on a real production database.
  *
  * Images: DummyJSON thumbnail URLs are used directly (CDN, no local storage needed).
  * Prices: DummyJSON prices are in USD (float). We convert to cents.
@@ -106,9 +108,12 @@ public class DummyJsonSeeder implements ApplicationRunner {
 
         // 1. Fetch and create categories.
         List<String> categoryNames = fetchCategories();
+        if (categoryNames.isEmpty()) {
+            throw new IllegalStateException("DummyJSON returned no categories");
+        }
         List<Category> savedCategories = new ArrayList<>();
         for (String name : categoryNames) {
-            String slug = Slugs.from(name);
+            String slug = Slugs.slugify(name);
             Category cat = new Category(name, slug);
             savedCategories.add(categories.save(cat));
         }
@@ -190,7 +195,8 @@ public class DummyJsonSeeder implements ApplicationRunner {
 
     private List<JsonNode> fetchProducts() {
         try {
-            String body = get(DUMMYJSON_BASE + "/products?limit=" + PRODUCTS_LIMIT + "&skip=0&select=title,description,price,stock,category,thumbnail,images");
+            String body = get(DUMMYJSON_BASE + "/products?limit=" + PRODUCTS_LIMIT
+                    + "&skip=0&select=title,description,price,stock,category,thumbnail,images");
             JsonNode root = json.readTree(body);
             List<JsonNode> list = new ArrayList<>();
             JsonNode arr = root.path("products");
@@ -203,18 +209,20 @@ public class DummyJsonSeeder implements ApplicationRunner {
         }
     }
 
+    /** Exact match on the slug ("womens-shoes" never lands in "Mens shoes"). Falls back to the first category. */
     private Category resolveCategory(List<Category> saved, String dummyCategory) {
-        // Try to match by name (case-insensitive, strip hyphens).
-        String normalized = dummyCategory.replace("-", " ").toLowerCase();
+        String wanted = Slugs.slugify(dummyCategory);
         return saved.stream()
-                .filter(c -> c.getName().toLowerCase().contains(normalized)
-                        || normalized.contains(c.getName().toLowerCase()))
+                .filter(c -> Slugs.slugify(c.getName()).equals(wanted))
                 .findFirst()
-                .orElse(saved.get(0)); // fallback to first category
+                .orElseGet(() -> {
+                    log.warn("No category matches '{}'. Using '{}'.", dummyCategory, saved.get(0).getName());
+                    return saved.get(0);
+                });
     }
 
     private String uniqueSlug(String name) {
-        String base = Slugs.from(name);
+        String base = Slugs.slugify(name, "product");
         if (!products.existsBySlug(base)) return base;
         for (int i = 2; i < 1000; i++) {
             String candidate = base + "-" + i;

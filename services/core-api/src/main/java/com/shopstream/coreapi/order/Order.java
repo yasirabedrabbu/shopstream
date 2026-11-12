@@ -111,6 +111,17 @@ public class Order {
         items.forEach(OrderItem::cancel);
     }
 
+    /**
+     * Cancels a PAID order after its money was refunded. paidAt is kept as history.
+     * Only the admin refund flow calls this. Normal cancel() still refuses PAID orders.
+     */
+    public void cancelAfterRefund(String reason) {
+        requireStatus(OrderStatus.PAID);
+        this.status = OrderStatus.CANCELLED;
+        this.cancelReason = reason;
+        items.forEach(OrderItem::cancel);
+    }
+
     public void expire() {
         requireStatus(OrderStatus.AWAITING_PAYMENT);
         this.status = OrderStatus.EXPIRED;

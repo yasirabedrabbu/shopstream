@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.shopstream.coreapi.auth.RefreshTokenRepository;
 import com.shopstream.coreapi.common.ApiException;
 import com.shopstream.coreapi.user.Role;
 import com.shopstream.coreapi.user.User;
@@ -20,9 +21,11 @@ import com.shopstream.coreapi.user.UserStatus;
 public class AdminUserService {
 
     private final UserRepository users;
+    private final RefreshTokenRepository refreshTokens;
 
-    public AdminUserService(UserRepository users) {
+    public AdminUserService(UserRepository users, RefreshTokenRepository refreshTokens) {
         this.users = users;
+        this.refreshTokens = refreshTokens;
     }
 
     @Transactional(readOnly = true)
@@ -54,6 +57,10 @@ public class AdminUserService {
             throw new ApiException(HttpStatus.FORBIDDEN, "Admin accounts cannot be suspended here");
         }
         user.setStatus(status);
+        if (status != UserStatus.ACTIVE) {
+            // Kill every refresh token. The access token still lives until it expires (max 60 minutes).
+            refreshTokens.revokeAllForUser(user.getId());
+        }
         return AdminUserResponse.from(user);
     }
 }

@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -51,6 +52,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ApiError> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
         return build(HttpStatus.BAD_REQUEST, "Invalid value for '" + ex.getName() + "'", null);
+    }
+
+    /**
+     * A unique or foreign key rule in the database said no, usually because two requests raced
+     * (a duplicate slug, a category that just got a product). The client gets a plain 409.
+     * The database's own message stays in the log only.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiError> handleIntegrity(DataIntegrityViolationException ex) {
+        log.warn("Database constraint rejected a request: {}", ex.getMostSpecificCause().getMessage());
+        return build(HttpStatus.CONFLICT, "This action conflicts with existing data. Please refresh and try again.", null);
     }
 
     @ExceptionHandler(Exception.class)

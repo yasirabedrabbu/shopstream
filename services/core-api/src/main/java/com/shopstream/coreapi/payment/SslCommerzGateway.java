@@ -40,7 +40,8 @@ public class SslCommerzGateway implements PaymentGateway {
     private static final String LIVE_BASE     = "https://securepay.sslcommerz.com";
     private static final String SESSION_PATH  = "/gwprocess/v4/api.php";
     private static final String VALIDATE_PATH = "/validator/api/validationserverAPI.php";
-    private static final String REFUND_PATH   = "/merchant/backrequest.php";
+    /** Refund initiation. Taken from several client libraries, official page not read: verify with a sandbox refund. */
+    private static final String REFUND_PATH   = "/validator/api/merchantTransIDvalidationAPI.php";
 
     private final String storeId;
     private final String storePassword;
@@ -180,47 +181,45 @@ public class SslCommerzGateway implements PaymentGateway {
     }
 
     /**
-     * Ask SSLCOMMERZ to refund a payment. This call is async on SSLCOMMERZ's side:
-     * they return "initiated" immediately and process the actual bank transfer later.
-     * We record refunded_at once they accept the request.
+     * Ask SSLCOMMERZ to refund a payment. This is a GET with the bank transaction id.
+     * SSLCOMMERZ accepts the request and moves the money later, so a successful answer means
+     * "refund started", not "money is back". We record refunded_at once they accept it.
+     * valId is not needed by this API and is ignored.
      */
     @Override
     public RefundResult refund(String providerReference, long amountCents, String currency,
             String bankTranId, String valId) {
-        if (!StringUtils.hasText(bankTranId) || !StringUtils.hasText(valId)) {
+        if (!StringUtils.hasText(bankTranId)) {
             throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY,
-                    "Cannot refund: bank_tran_id or val_id is missing on this payment");
+                    "Cannot refund: bank_tran_id is missing on this payment");
         }
 
-        String amount = BigDecimal.valueOf(amountCents, 2).toPlainString();
-        Map<String, String> form = new LinkedHashMap<>();
-        form.put("store_id",        storeId);
-        form.put("store_passwd",    storePassword);
-        form.put("refund_amount",   amount);
-        form.put("refund_remarks",  "ShopStream admin refund");
-        form.put("bank_tran_id",    bankTranId);
-        form.put("v_id",            valId);
-        form.put("format",          "json");
+        Map<String, String> query = new LinkedHashMap<>();
+        query.put("bank_tran_id",   bankTranId);
+        query.put("store_id",       storeId);
+        query.put("store_passwd",   storePassword);
+        query.put("refund_amount",  BigDecimal.valueOf(amountCents, 2).toPlainString());
+        query.put("refund_remarks", "ShopStream admin refund");
+        query.put("format",         "json");
 
         JsonNode answer;
         try {
-            answer = readJson(post(baseUrl + REFUND_PATH, form));
+            answer = readJson(get(baseUrl + REFUND_PATH, query));
         } catch (IllegalStateException ex) {
             log.error("SSLCOMMERZ refund call failed for tran_id {}", providerReference, ex);
             throw new ApiException(HttpStatus.BAD_GATEWAY, "Could not reach the payment provider for refund");
         }
 
         String status = text(answer, "status");
-        if (!"initiated".equalsIgnoreCase(status)) {
-            String errorCode = text(answer, "errorCode");
+        boolean accepted = "success".equalsIgnoreCase(status) || "initiated".equalsIgnoreCase(status);
+        if (!accepted) {
             String errorReason = text(answer, "errorReason");
-            log.error("SSLCOMMERZ refund rejected for tran_id {}: {} - {}", providerReference, errorCode, errorReason);
+            log.error("SSLCOMMERZ refund rejected for tran_id {}: status={} reason={}",
+                    providerReference, status, errorReason);
             throw new ApiException(HttpStatus.BAD_GATEWAY,
                     "Payment provider rejected the refund: " + errorReason);
         }
 
-        // SSLCOMMERZ does not return a unique refund reference in the initiation response.
-        // We use refund_ref_id if present, otherwise generate a local one.
         String refId = text(answer, "refund_ref_id");
         if (!StringUtils.hasText(refId)) {
             refId = "SSLCZ-REFUND-" + providerReference;

@@ -72,6 +72,10 @@ public class SslCommerzCallbackController {
         } catch (ApiException ex) {
             log.warn("SSLCOMMERZ browser return could not be processed: {}", ex.getMessage());
             result = "error";
+        } catch (RuntimeException ex) {
+            // Never show the customer a raw 500 page after they paid. Send them back to the shop.
+            log.error("SSLCOMMERZ browser return failed unexpectedly", ex);
+            result = "error";
         }
         return back(params.get("tran_id"), result);
     }
