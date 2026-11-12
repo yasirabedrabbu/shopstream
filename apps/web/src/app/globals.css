@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* Typography */
+  --font-heading: "Sora", sans-serif;
+  --font-body: "Manrope", sans-serif;
+
+  /* Light mode tokens */
+  --color-bg: #ffffff;
+  --color-surface: #f4f4f5;
+  --color-border: #e4e4e7;
+  --color-text: #18181b;
+  --color-text-muted: #71717a;
+  --color-accent: #e8f44a;
+  --color-accent-text: #18181b;
+
+  /* Spacing (8pt grid base) */
+  --spacing: 0.25rem;
+}
+
+:root {
+  --bg: #ffffff;
+  --surface: #f4f4f5;
+  --border: #e4e4e7;
+  --text: #18181b;
+  --text-muted: #71717a;
+  --accent: #e8f44a;
+  --accent-text: #18181b;
+}
+
+:root[data-theme="dark"],
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1a1a1a;
+    --surface: #242424;
+    --border: #333333;
+    --text: #f4f4f5;
+    --text-muted: #a1a1aa;
+    --accent: #e8f44a;
+    --accent-text: #18181b;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  margin: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
