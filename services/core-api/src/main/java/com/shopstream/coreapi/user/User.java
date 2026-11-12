@@ -71,6 +71,11 @@ public class User {
         this.status = status;
     }
 
+    /** Takes an already encoded hash (never a plain password). Used by password reset. */
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
     public UUID getId() {
         return id;
     }
