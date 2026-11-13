@@ -12,6 +12,9 @@
   --color-accent: #e8f44a;
   --color-accent-text: #18181b;
 
+  --radius-card: 1rem;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px rgb(0 0 0 / 0.06);
+
   --spacing: 0.25rem;
 }
 
@@ -23,6 +26,8 @@
   --text-muted: #71717a;
   --accent: #e8f44a;
   --accent-text: #18181b;
+  --accent-gradient: linear-gradient(135deg, #e8f44a 0%, #c9e02a 100%);
+  --transition: 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 :root[data-theme="dark"] {
@@ -73,9 +78,17 @@ h1, h2, h3, h4, h5, h6 {
   margin: 0;
 }
 
+::selection {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
