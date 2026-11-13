@@ -1,165 +1,253 @@
 // apps/web/src/lib/types.ts
+// Mirrors services/core-api DTOs exactly. Money is always cents (number).
+// Instants are ISO-8601 strings. UUIDs are strings.
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+export type Role = "CUSTOMER" | "VENDOR" | "ADMIN";
+export type UserStatus = "ACTIVE" | "SUSPENDED";
+export type VendorStatus = "PENDING" | "APPROVED" | "SUSPENDED" | "REJECTED";
+export type ProductStatus = "DRAFT" | "ACTIVE" | "ARCHIVED" | "BLOCKED";
+export type OrderStatus = "PENDING" | "AWAITING_PAYMENT" | "PAID" | "CANCELLED" | "EXPIRED";
+export type FulfillmentStatus = "NEW" | "PACKED" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+export type PaymentProvider = "MOCK" | "STRIPE" | "SSLCOMMERZ";
+export type PaymentStatus = "PENDING" | "SUCCEEDED" | "FAILED";
+export type PaymentReviewReason = "HELD" | "LATE_PAYMENT" | "AMOUNT_MISMATCH" | "DUPLICATE_CHARGE";
+
+// ─── Pagination ──────────────────────────────────────────────────────────────
+
+export interface Page<T> {
+  content: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
+export interface UserResponse {
+  id: string;
+  email: string;
+  fullName: string;
+  role: Role;
+  status: UserStatus;
+  createdAt: string;
+}
+
 export interface AuthResponse {
   accessToken: string;
+  tokenType: string;
+  expiresIn: number;
   refreshToken: string;
+  user: UserResponse;
 }
 
-export interface UserResponse {
-  id: number;
-  email: string;
-  name: string;
-  role: "CUSTOMER" | "VENDOR" | "ADMIN";
-  status: string;
-}
-
-// ─── Category ────────────────────────────────────────────────────────────────
+// ─── Catalog ─────────────────────────────────────────────────────────────────
 
 export interface CategoryResponse {
-  id: number;
+  id: string;
   name: string;
   slug: string;
 }
 
-// ─── Product ─────────────────────────────────────────────────────────────────
-
-export type ProductStatus = "DRAFT" | "ACTIVE" | "ARCHIVED" | "BLOCKED";
+export interface PublicStoreResponse {
+  storeName: string;
+  slug: string;
+  description: string | null;
+}
 
 export interface PublicProductResponse {
-  id: number;
+  id: string;
   name: string;
   slug: string;
   description: string | null;
   priceCents: number;
-  currency: string;
   salePriceCents: number | null;
   saleEndsAt: string | null;
-  stockQuantity: number;
+  flashSaleActive: boolean;
+  effectivePriceCents: number;
+  currency: string;
+  inStock: boolean;
+  category: CategoryResponse;
+  store: PublicStoreResponse;
   imageUrls: string[];
-  status: ProductStatus;
-  categoryId: number;
-  categoryName: string;
-  vendorId: number;
-  storeName: string;
-  storeSlug: string;
-  createdAt: string;
 }
 
-export interface AdminProductResponse extends PublicProductResponse {
-  vendorEmail: string;
-}
-
-// ─── Store / Vendor ───────────────────────────────────────────────────────────
-
-export type VendorStatus = "PENDING" | "APPROVED" | "SUSPENDED" | "REJECTED";
-
-export interface StoreResponse {
-  id: number;
+export interface ProductResponse {
+  id: string;
   name: string;
   slug: string;
   description: string | null;
-  logoUrl: string | null;
-  status: VendorStatus;
-  ownerName: string;
-  ownerEmail: string;
-  createdAt: string;
-}
-
-// ─── Order ───────────────────────────────────────────────────────────────────
-
-export type OrderStatus =
-  | "PENDING"
-  | "AWAITING_PAYMENT"
-  | "PAID"
-  | "CANCELLED"
-  | "EXPIRED";
-
-export type FulfillmentStatus =
-  | "NEW"
-  | "PACKED"
-  | "SHIPPED"
-  | "DELIVERED"
-  | "CANCELLED";
-
-export interface OrderItem {
-  id: number;
-  productId: number;
-  productName: string;
-  productSlug: string;
-  quantity: number;
-  unitPriceCents: number;
+  priceCents: number;
+  salePriceCents: number | null;
+  saleStartsAt: string | null;
+  saleEndsAt: string | null;
+  flashSaleActive: boolean;
+  effectivePriceCents: number;
   currency: string;
-}
-
-export interface OrderResponse {
-  id: number;
-  status: OrderStatus;
-  totalCents: number;
-  currency: string;
-  items: OrderItem[];
+  stockQuantity: number;
+  status: ProductStatus;
+  categoryId: string;
+  categoryName: string;
+  imageUrls: string[];
   createdAt: string;
   updatedAt: string;
 }
 
-// ─── Payment ─────────────────────────────────────────────────────────────────
-
-export type PaymentStatus = "PENDING" | "SUCCEEDED" | "FAILED";
-export type PaymentReviewReason =
-  | "HELD"
-  | "LATE_PAYMENT"
-  | "AMOUNT_MISMATCH"
-  | "DUPLICATE_CHARGE";
-
-export interface PaymentReviewResponse {
-  id: number;
-  orderId: number;
-  amountCents: number;
+export interface AdminProductResponse {
+  id: string;
+  name: string;
+  slug: string;
+  priceCents: number;
   currency: string;
-  status: PaymentStatus;
-  reviewReason: PaymentReviewReason | null;
-  providerReference: string;
+  stockQuantity: number;
+  status: ProductStatus;
+  categoryName: string;
+  vendorId: string;
+  storeName: string;
+  vendorStatus: VendorStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ─── Store / Vendor ──────────────────────────────────────────────────────────
+
+export interface VendorResponse {
+  id: string;
+  ownerUserId: string;
+  storeName: string;
+  slug: string;
+  description: string | null;
+  status: VendorStatus;
   createdAt: string;
 }
 
-// ─── Vendor Dashboard ─────────────────────────────────────────────────────────
+// ─── Shipping / Orders ───────────────────────────────────────────────────────
+
+export interface ShippingAddress {
+  fullName: string;
+  phone: string;
+  line1: string;
+  line2?: string | null;
+  city: string;
+  state?: string | null;
+  postalCode: string;
+  countryCode: string; // 2-letter ISO, e.g. "BD"
+}
+
+export interface OrderItem {
+  id: string;
+  productId: string;
+  vendorId: string;
+  productName: string;
+  unitPriceCents: number;
+  quantity: number;
+  lineTotalCents: number;
+  fulfillmentStatus: FulfillmentStatus;
+}
+
+export interface OrderResponse {
+  id: string;
+  status: OrderStatus;
+  currency: string;
+  totalCents: number;
+  reservationExpiresAt: string | null;
+  cancelReason: string | null;
+  createdAt: string;
+  shippingAddress: ShippingAddress;
+  items: OrderItem[];
+}
+
+export interface VendorOrderItemResponse {
+  itemId: string;
+  orderId: string;
+  placedAt: string;
+  productId: string;
+  productName: string;
+  quantity: number;
+  unitPriceCents: number;
+  lineTotalCents: number;
+  currency: string;
+  fulfillmentStatus: FulfillmentStatus;
+  shippingAddress: ShippingAddress;
+}
+
+export interface AdminOrderRow {
+  id: string;
+  status: OrderStatus;
+  currency: string;
+  totalCents: number;
+  itemCount: number;
+  customerEmail: string;
+  createdAt: string;
+  paidAt: string | null;
+}
+
+// ─── Payments ────────────────────────────────────────────────────────────────
+
+export interface AdminPaymentReviewResponse {
+  paymentId: string;
+  orderId: string;
+  provider: PaymentProvider;
+  providerReference: string;
+  status: PaymentStatus;
+  amountCents: number;
+  currency: string;
+  bankTranId: string | null;
+  reviewReason: PaymentReviewReason | null;
+  reviewAt: string | null;
+  refundedAt: string | null;
+  createdAt: string;
+}
+
+// ─── Vendor dashboard ────────────────────────────────────────────────────────
 
 export interface VendorDashboardResponse {
   period: string;
-  totalRevenueCents: number;
-  totalOrders: number;
-  totalProducts: number;
-  pendingOrders: number;
-  revenueByDay: { date: string; revenueCents: number }[];
+  from: string;
+  currency: string;
+  revenue: {
+    grossCents: number;
+    commissionCents: number;
+    netCents: number;
+    orders: number;
+    units: number;
+  };
+  pipeline: Partial<Record<FulfillmentStatus, number>>;
+  lowStock: { productId: string; name: string; slug: string; stockQuantity: number }[];
+  topProducts: { productId: string; name: string; unitsSold: number; revenueCents: number }[];
+  daily: { date: string; grossCents: number; orders: number }[];
+  recent: {
+    itemId: string;
+    orderId: string;
+    paidAt: string;
+    productName: string;
+    quantity: number;
+    lineTotalCents: number;
+    fulfillmentStatus: FulfillmentStatus;
+  }[];
 }
 
-// ─── Admin ────────────────────────────────────────────────────────────────────
+// ─── Admin dashboard ─────────────────────────────────────────────────────────
 
 export interface PlatformStatsResponse {
-  totalUsers: number;
-  totalVendors: number;
-  totalProducts: number;
-  totalOrders: number;
-  totalRevenueCents: number;
-  pendingVendors: number;
+  period: string;
+  from: string;
+  currency: string;
+  sales: { gmvCents: number; commissionCents: number; paidOrders: number; unitsSold: number };
+  usersByRole: Record<string, number>;
+  vendorsByStatus: Record<string, number>;
+  productsByStatus: Record<string, number>;
+  ordersByStatus: Record<string, number>;
+  topVendors: { vendorId: string; storeName: string; grossCents: number; orders: number }[];
 }
 
 export interface AdminUserResponse {
-  id: number;
+  id: string;
   email: string;
-  name: string;
-  role: string;
-  status: string;
+  fullName: string;
+  role: Role;
+  status: UserStatus;
   createdAt: string;
-}
-
-// ─── Pagination ───────────────────────────────────────────────────────────────
-
-export interface Page<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  number: number;
-  size: number;
 }
