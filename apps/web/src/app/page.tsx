@@ -13,19 +13,32 @@ export default function HomePage() {
   const [latest, setLatest] = useState<PublicProductResponse[]>([]);
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([
+    let cancelled = false;
+
+    Promise.allSettled([
       productApi.flashSales(),
       productApi.list({ size: 8 }),
       categoryApi.list(),
-    ])
-      .then(([f, l, c]) => {
-        setFlash(f);
-        setLatest(l.content);
-        setCategories(c);
-      })
-      .finally(() => setLoading(false));
+    ]).then(([f, l, c]) => {
+      if (cancelled) return;
+
+      if (f.status === "fulfilled") setFlash(f.value);
+      if (l.status === "fulfilled") setLatest(l.value.content);
+      if (c.status === "fulfilled") setCategories(c.value);
+
+      const failed = [f, l, c].filter((r) => r.status === "rejected");
+      if (failed.length === 3) {
+        setError("Backend এর সাথে connect করা যাচ্ছে না। Spring Boot চালু আছে কিনা দেখো।");
+      }
+      setLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
@@ -33,9 +46,7 @@ export default function HomePage() {
       <Nav />
 
       {/* Hero */}
-      <section
-        className="max-w-7xl mx-auto px-4 py-16 md:py-24 flex flex-col md:flex-row items-center gap-10"
-      >
+      <section className="max-w-7xl mx-auto px-4 py-16 md:py-24 flex flex-col md:flex-row items-center gap-10">
         <div className="flex flex-col gap-5 flex-1">
           <h1
             className="text-4xl md:text-6xl font-bold leading-tight"
@@ -67,7 +78,6 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Category pills */}
         {categories.length > 0 && (
           <div className="flex flex-wrap gap-2 md:justify-end">
             {categories.map((c) => (
@@ -84,14 +94,21 @@ export default function HomePage() {
         )}
       </section>
 
-      {/* Flash sales */}
+      {error && (
+        <div className="max-w-7xl mx-auto px-4 pb-8">
+          <div
+            className="rounded-2xl border p-5 text-sm"
+            style={{ background: "var(--surface)", borderColor: "var(--border)", color: "var(--text)" }}
+          >
+            {error}
+          </div>
+        </div>
+      )}
+
       {flash.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 pb-12">
           <div className="flex items-center gap-3 mb-5">
-            <h2
-              className="text-xl font-bold"
-              style={{ fontFamily: "var(--font-heading)", color: "var(--text)" }}
-            >
+            <h2 className="text-xl font-bold" style={{ fontFamily: "var(--font-heading)", color: "var(--text)" }}>
               Flash Sales
             </h2>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#E8F44A] text-zinc-900">
@@ -106,31 +123,19 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* Latest */}
       <section className="max-w-7xl mx-auto px-4 pb-16">
         <div className="flex items-center justify-between mb-5">
-          <h2
-            className="text-xl font-bold"
-            style={{ fontFamily: "var(--font-heading)", color: "var(--text)" }}
-          >
+          <h2 className="text-xl font-bold" style={{ fontFamily: "var(--font-heading)", color: "var(--text)" }}>
             Latest Products
           </h2>
-          <Link
-            href="/products"
-            className="text-sm font-medium"
-            style={{ color: "var(--text-muted)" }}
-          >
+          <Link href="/products" className="text-sm font-medium" style={{ color: "var(--text-muted)" }}>
             View all →
           </Link>
         </div>
         {loading ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div
-                key={i}
-                className="aspect-square rounded-2xl animate-pulse"
-                style={{ background: "var(--surface)" }}
-              />
+              <div key={i} className="aspect-square rounded-2xl animate-pulse" style={{ background: "var(--surface)" }} />
             ))}
           </div>
         ) : (

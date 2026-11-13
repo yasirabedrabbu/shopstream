@@ -27,8 +27,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${sora.variable} ${manrope.variable}`}>
-      <body>
+    <html lang="en" className={`${sora.variable} ${manrope.variable}`} suppressHydrationWarning>
+      {/* suppressHydrationWarning on body: browser extensions (Grammarly etc.) add attributes to body */}
+      <body suppressHydrationWarning>
         <ToastProvider>{children}</ToastProvider>
       </body>
     </html>

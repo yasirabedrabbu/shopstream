@@ -1,11 +1,9 @@
 @import "tailwindcss";
 
 @theme inline {
-  /* Typography */
   --font-heading: "Sora", sans-serif;
   --font-body: "Manrope", sans-serif;
 
-  /* Light mode tokens */
   --color-bg: #ffffff;
   --color-surface: #f4f4f5;
   --color-border: #e4e4e7;
@@ -14,7 +12,6 @@
   --color-accent: #e8f44a;
   --color-accent-text: #18181b;
 
-  /* Spacing (8pt grid base) */
   --spacing: 0.25rem;
 }
 
@@ -28,7 +25,16 @@
   --accent-text: #18181b;
 }
 
-:root[data-theme="dark"],
+:root[data-theme="dark"] {
+  --bg: #1a1a1a;
+  --surface: #242424;
+  --border: #333333;
+  --text: #f4f4f5;
+  --text-muted: #a1a1aa;
+  --accent: #e8f44a;
+  --accent-text: #18181b;
+}
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #1a1a1a;

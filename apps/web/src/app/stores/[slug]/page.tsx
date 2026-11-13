@@ -1,6 +1,8 @@
 // apps/web/src/app/stores/[slug]/page.tsx
 "use client";
 
+ 
+
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Nav } from "@/components/Nav";
