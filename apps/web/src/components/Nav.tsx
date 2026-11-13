@@ -3,18 +3,26 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getUser, clearSession } from "@/lib/auth";
 import type { UserResponse } from "@/lib/types";
+import { Icon, type IconName } from "@/components/ui/Icon";
 
 const links = [
   { href: "/", label: "Home" },
   { href: "/products", label: "Shop" },
 ];
 
+interface MenuItem {
+  href: string;
+  label: string;
+  icon: IconName;
+}
+
 export function Nav() {
   const pathname = usePathname();
   const router = useRouter();
+  const menuRef = useRef<HTMLDivElement>(null);
   const [user, setUser] = useState<UserResponse | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -22,40 +30,81 @@ export function Nav() {
     setUser(getUser());
   }, []);
 
+  // Close the account menu on outside click or Escape.
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    function onPointerDown(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setMenuOpen(false);
+    }
+
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [menuOpen]);
+
   function logout() {
     clearSession();
+    setMenuOpen(false);
     router.push("/auth/login");
   }
+
+  const menuItems: MenuItem[] = [];
+  if (user?.role === "VENDOR") {
+    menuItems.push({ href: "/vendor/dashboard", label: "Vendor dashboard", icon: "store" });
+  }
+  if (user?.role === "ADMIN") {
+    menuItems.push({ href: "/admin/dashboard", label: "Admin panel", icon: "shield" });
+  }
+  menuItems.push({ href: "/account/orders", label: "My orders", icon: "receipt" });
+
+  const initial = user?.fullName?.charAt(0).toUpperCase() ?? "";
 
   return (
     <header
       className="sticky top-0 z-40 w-full border-b"
       style={{
-        background: "var(--bg)",
+        background: "color-mix(in srgb, var(--bg) 88%, transparent)",
         backdropFilter: "blur(16px)",
         borderColor: "var(--border)",
       }}
     >
-      <nav className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
-        <Link
-          href="/"
-          className="font-bold text-base tracking-tight shrink-0"
-          style={{ fontFamily: "var(--font-heading)", color: "var(--text)" }}
-        >
-          ShopStream
+      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4">
+        <Link href="/" className="flex shrink-0 items-center gap-2.5">
+          <span
+            className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-sm font-bold text-accent-text"
+            style={{ fontFamily: "var(--font-heading)" }}
+            aria-hidden="true"
+          >
+            S
+          </span>
+          <span
+            className="text-base font-bold tracking-tight"
+            style={{ fontFamily: "var(--font-heading)", color: "var(--text)" }}
+          >
+            ShopStream
+          </span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-1">
+        <div className="hidden items-center gap-1 rounded-full p-1 md:flex" style={{ background: "var(--surface)" }}>
           {links.map((l) => {
             const active = l.href === "/" ? pathname === "/" : pathname.startsWith(l.href);
             return (
               <Link
                 key={l.href}
                 href={l.href}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                  active ? "bg-[#E8F44A] text-zinc-900" : "hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                aria-current={active ? "page" : undefined}
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200 ${
+                  active ? "bg-accent text-accent-text shadow-sm" : "text-[var(--text-muted)] hover:text-[var(--text)]"
                 }`}
-                style={active ? {} : { color: "var(--text-muted)" }}
               >
                 {l.label}
               </Link>
@@ -65,54 +114,62 @@ export function Nav() {
 
         <div className="flex items-center gap-2">
           {user ? (
-            <div className="relative">
+            <div className="relative" ref={menuRef}>
               <button
+                type="button"
                 onClick={() => setMenuOpen((v) => !v)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border transition-colors hover:border-[#E8F44A]"
+                aria-expanded={menuOpen}
+                aria-haspopup="menu"
+                className="flex items-center gap-2 rounded-full border py-1 pl-1 pr-3 text-sm font-medium transition-colors hover:border-accent"
                 style={{ borderColor: "var(--border)", color: "var(--text)" }}
               >
-                <span className="hidden sm:inline">{user.fullName}</span>
-                <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-                  ▾
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-text">
+                  {initial}
+                </span>
+                <span className="hidden max-w-[10rem] truncate sm:inline">{user.fullName}</span>
+                <span
+                  className={`transition-transform duration-200 ${menuOpen ? "rotate-180" : ""}`}
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  <Icon name="chevron" size={14} />
                 </span>
               </button>
+
               {menuOpen && (
                 <div
-                  className="absolute right-0 mt-2 w-44 rounded-xl border shadow-lg overflow-hidden z-50"
-                  style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+                  role="menu"
+                  className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-2xl border p-1.5 shadow-[var(--shadow-card)]"
+                  style={{ background: "var(--bg)", borderColor: "var(--border)" }}
                 >
-                  {user.role === "VENDOR" && (
+                  <div className="px-3 pb-2 pt-1.5">
+                    <p className="truncate text-sm font-semibold text-[var(--text)]">{user.fullName}</p>
+                    <p className="truncate text-xs text-[var(--text-muted)]">{user.email}</p>
+                  </div>
+                  <div className="my-1 h-px" style={{ background: "var(--border)" }} />
+
+                  {menuItems.map((item) => (
                     <Link
-                      href="/vendor/dashboard"
-                      className="block px-4 py-2.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                      style={{ color: "var(--text)" }}
+                      key={item.href}
+                      href={item.href}
+                      role="menuitem"
                       onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-[var(--text)] transition-colors hover:bg-[var(--surface)]"
                     >
-                      Vendor Dashboard
+                      <span className="text-[var(--text-muted)]">
+                        <Icon name={item.icon} size={16} />
+                      </span>
+                      {item.label}
                     </Link>
-                  )}
-                  {user.role === "ADMIN" && (
-                    <Link
-                      href="/admin/dashboard"
-                      className="block px-4 py-2.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                      style={{ color: "var(--text)" }}
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      Admin Panel
-                    </Link>
-                  )}
-                  <Link
-                    href="/account/orders"
-                    className="block px-4 py-2.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                    style={{ color: "var(--text)" }}
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    My Orders
-                  </Link>
+                  ))}
+
+                  <div className="my-1 h-px" style={{ background: "var(--border)" }} />
                   <button
+                    type="button"
+                    role="menuitem"
                     onClick={logout}
-                    className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm text-red-500 transition-colors hover:bg-[var(--surface)]"
                   >
+                    <Icon name="logout" size={16} />
                     Logout
                   </button>
                 </div>
@@ -121,7 +178,7 @@ export function Nav() {
           ) : (
             <Link
               href="/auth/login"
-              className="px-4 py-1.5 rounded-full text-sm font-semibold bg-[#E8F44A] text-zinc-900"
+              className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-accent-text shadow-sm transition-all hover:shadow-md"
             >
               Sign in
             </Link>
