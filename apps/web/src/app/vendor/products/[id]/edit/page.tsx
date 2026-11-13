@@ -1,6 +1,8 @@
 // apps/web/src/app/vendor/products/[id]/edit/page.tsx
 "use client";
 
+ 
+
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { vendorApi, categoryApi } from "@/lib/api";
