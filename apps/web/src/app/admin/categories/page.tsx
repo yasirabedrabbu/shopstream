@@ -17,12 +17,30 @@ export default function AdminCategoriesPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    adminApi.categories().then(setCategories).finally(() => setLoading(false));
-  }, []);
+    adminApi
+      .categories()
+      .then(setCategories)
+      .catch((err) => toast(err instanceof Error ? err.message : "Could not load categories.", "error"))
+      .finally(() => setLoading(false));
+  }, [toast]);
 
-  function openCreate() { setModal("create"); setName(""); setEditing(null); }
-  function openEdit(c: CategoryResponse) { setModal("edit"); setName(c.name); setEditing(c); }
-  function closeModal() { setModal(null); setName(""); setEditing(null); }
+  function openCreate() {
+    setModal("create");
+    setName("");
+    setEditing(null);
+  }
+
+  function openEdit(c: CategoryResponse) {
+    setModal("edit");
+    setName(c.name);
+    setEditing(c);
+  }
+
+  function closeModal() {
+    setModal(null);
+    setName("");
+    setEditing(null);
+  }
 
   async function save() {
     if (!name.trim()) return;
@@ -38,21 +56,21 @@ export default function AdminCategoriesPage() {
         toast("Category updated.", "success");
       }
       closeModal();
-    } catch {
-      toast("Failed.", "error");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Save failed.", "error");
     } finally {
       setSaving(false);
     }
   }
 
-  async function del(id: number) {
+  async function del(id: string) {
     if (!confirm("Delete this category?")) return;
     try {
       await adminApi.deleteCategory(id);
       setCategories((prev) => prev.filter((c) => c.id !== id));
       toast("Deleted.", "success");
-    } catch {
-      toast("Could not delete.", "error");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Could not delete.", "error");
     }
   }
 
@@ -91,14 +109,14 @@ export default function AdminCategoriesPage() {
               <div className="flex gap-2">
                 <button
                   onClick={() => openEdit(c)}
-                  className="px-3 py-1.5 rounded-lg border text-xs font-medium"
+                  className="px-3 py-1.5 rounded-lg border text-xs font-medium min-h-[36px]"
                   style={{ borderColor: "var(--border)", color: "var(--text)" }}
                 >
                   Edit
                 </button>
                 <button
                   onClick={() => del(c.id)}
-                  className="px-3 py-1.5 rounded-lg border text-xs font-medium text-red-500 border-red-200 dark:border-red-900"
+                  className="px-3 py-1.5 rounded-lg border text-xs font-medium text-red-500 border-red-200 dark:border-red-900 min-h-[36px]"
                 >
                   Delete
                 </button>
@@ -108,13 +126,18 @@ export default function AdminCategoriesPage() {
         </div>
       )}
 
-      <Modal open={modal !== null} onClose={closeModal} title={modal === "create" ? "New Category" : "Edit Category"}>
+      <Modal
+        open={modal !== null}
+        onClose={closeModal}
+        title={modal === "create" ? "New category" : "Edit category"}
+      >
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium" style={{ color: "var(--text)" }}>Name</label>
             <input
               type="text"
               value={name}
+              maxLength={100}
               onChange={(e) => setName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && save()}
               autoFocus
@@ -125,7 +148,7 @@ export default function AdminCategoriesPage() {
           <div className="flex gap-3">
             <button
               onClick={closeModal}
-              className="flex-1 h-10 rounded-xl border text-sm"
+              className="flex-1 h-10 rounded-xl border text-sm min-h-[44px]"
               style={{ borderColor: "var(--border)", color: "var(--text)" }}
             >
               Cancel
@@ -133,7 +156,7 @@ export default function AdminCategoriesPage() {
             <button
               onClick={save}
               disabled={saving}
-              className="flex-1 h-10 rounded-xl bg-[#E8F44A] text-zinc-900 text-sm font-semibold disabled:opacity-60"
+              className="flex-1 h-10 rounded-xl bg-[#E8F44A] text-zinc-900 text-sm font-semibold disabled:opacity-60 min-h-[44px]"
             >
               {saving ? "Saving..." : "Save"}
             </button>

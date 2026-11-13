@@ -1,5 +1,5 @@
 // apps/web/src/lib/types.ts
-// Mirrors services/core-api DTOs exactly. Money is always cents (number).
+// Mirrors services/core-api DTOs. Money is always cents (number).
 // Instants are ISO-8601 strings. UUIDs are strings.
 
 // ─── Enums ───────────────────────────────────────────────────────────────────
@@ -185,6 +185,14 @@ export interface AdminOrderRow {
 }
 
 // ─── Payments ────────────────────────────────────────────────────────────────
+
+export interface PaymentSession {
+  paymentId: string;
+  provider: PaymentProvider;
+  providerReference: string;
+  clientSecret: string | null;
+  redirectUrl: string | null;
+}
 
 export interface AdminPaymentReviewResponse {
   paymentId: string;

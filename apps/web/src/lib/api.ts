@@ -9,29 +9,21 @@ import type {
   FulfillmentStatus,
   OrderResponse,
   Page,
+  PaymentProvider,
+  PaymentSession,
   PlatformStatsResponse,
   ProductResponse,
+  ProductStatus,
   PublicProductResponse,
   PublicStoreResponse,
   ShippingAddress,
   UserResponse,
+  UserStatus,
   VendorDashboardResponse,
   VendorOrderItemResponse,
   VendorResponse,
   VendorStatus,
-  UserStatus,
-  ProductStatus,
 } from "./types";
-
-// ─── Payment session (from POST /orders/{id}/pay) ────────────────────────────
-
-export interface PaymentSession {
-  paymentId: string;
-  provider: PaymentProvider;
-  providerReference: string;
-  clientSecret: string | null;
-  redirectUrl: string | null;
-}
 
 // Browser calls /api/v1 on the same origin. next.config.ts rewrites it to Spring Boot.
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "/api/v1";
@@ -226,8 +218,8 @@ export const orderApi = {
 
   cancel: (id: string) => apiFetch<OrderResponse>(`/orders/${id}/cancel`, { method: "POST" }),
 
-  // Starts a payment session. Returns providerReference used by mockConfirm.
-  pay: (orderId: string, provider: "MOCK" | "SSLCOMMERZ" | "STRIPE" = "MOCK") =>
+  // Starts a payment session. providerReference is used by mockConfirm.
+  pay: (orderId: string, provider: PaymentProvider = "MOCK") =>
     apiFetch<PaymentSession>(`/orders/${orderId}/pay`, { method: "POST", body: { provider } }),
 
   // Dev only. Backend requires the logged-in customer who owns the order.
@@ -310,11 +302,11 @@ export const adminApi = {
   payments: (page = 0) =>
     apiFetch<Page<AdminPaymentReviewResponse>>(`/admin/payments/review?page=${page}`),
 
+  resolvePayment: (paymentId: string) =>
+    apiFetch<AdminPaymentReviewResponse>(`/admin/payments/review/${paymentId}/resolve`, { method: "POST" }),
+
   refund: (paymentId: string) =>
     apiFetch<void>(`/admin/payments/${paymentId}/refund`, { method: "POST" }),
 
   orders: (page = 0) => apiFetch<Page<AdminOrderRow>>(`/admin/orders?page=${page}`),
-
-    resolvePayment: (paymentId: string) =>
-    apiFetch<AdminPaymentReviewResponse>(`/admin/payments/review/${paymentId}/resolve`, { method: "POST" }),
 };
