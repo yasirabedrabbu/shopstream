@@ -12,32 +12,34 @@ export default function VendorDashboardPage() {
   const [data, setData] = useState<VendorDashboardResponse | null>(null);
   const [period, setPeriod] = useState<Period>("30d");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
+    setError(null);
     vendorApi
       .dashboard(period)
-      .then(setData)
-      .finally(() => setLoading(false));
+      .then((d) => {
+        if (!cancelled) setData(d);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Could not load dashboard.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [period]);
 
-  const tiles = data
-    ? [
-        { label: "Revenue", value: formatMoney(data.totalRevenueCents, "BDT"), big: true },
-        { label: "Orders", value: data.totalOrders },
-        { label: "Products", value: data.totalProducts },
-        { label: "Pending", value: data.pendingOrders },
-      ]
-    : [];
+  const maxDaily = Math.max(...(data?.daily.map((d) => d.grossCents) ?? [0]), 1);
 
   return (
     <div className="p-6 max-w-4xl">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-        <h1
-          className="text-2xl font-bold"
-          style={{ fontFamily: "var(--font-heading)", color: "var(--text)" }}
-        >
+        <h1 className="text-2xl font-bold" style={{ fontFamily: "var(--font-heading)", color: "var(--text)" }}>
           Dashboard
         </h1>
         <div className="flex gap-1 p-1 rounded-xl" style={{ background: "var(--surface)" }}>
@@ -56,67 +58,116 @@ export default function VendorDashboardPage() {
         </div>
       </div>
 
-      {/* Bento grid */}
-      {loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-28 rounded-2xl animate-pulse"
-              style={{ background: "var(--surface)" }}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {tiles.map((t) => (
-            <div
-              key={t.label}
-              className={`rounded-2xl border p-5 flex flex-col gap-2 ${t.big ? "md:col-span-2" : ""}`}
-              style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-            >
-              <p className="text-xs font-medium uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
-                {t.label}
-              </p>
-              <p
-                className="text-2xl font-bold"
-                style={{ fontFamily: "var(--font-heading)", color: "var(--text)" }}
-              >
-                {t.value}
-              </p>
-            </div>
-          ))}
+      {error && (
+        <div className="rounded-2xl border p-5 text-sm mb-6" style={{ background: "var(--surface)", borderColor: "var(--border)", color: "var(--text)" }}>
+          {error}
         </div>
       )}
 
-      {/* Revenue chart — simple bar */}
-      {data && data.revenueByDay.length > 0 && (
-        <div
-          className="mt-6 rounded-2xl border p-5"
-          style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-        >
-          <p
-            className="text-sm font-semibold mb-4"
-            style={{ fontFamily: "var(--font-heading)", color: "var(--text)" }}
-          >
-            Revenue by Day
-          </p>
-          <div className="flex items-end gap-1 h-32">
-            {data.revenueByDay.map((d) => {
-              const max = Math.max(...data.revenueByDay.map((x) => x.revenueCents), 1);
-              const pct = (d.revenueCents / max) * 100;
-              return (
-                <div
-                  key={d.date}
-                  className="flex-1 rounded-t-md relative group"
-                  style={{ height: `${Math.max(pct, 2)}%`, background: "#E8F44A", opacity: 0.85 }}
-                  title={`${d.date}: ${formatMoney(d.revenueCents, "BDT")}`}
-                />
-              );
-            })}
+      {loading || !data ? (
+        !error && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-28 rounded-2xl animate-pulse" style={{ background: "var(--surface)" }} />
+            ))}
           </div>
-        </div>
+        )
+      ) : (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Tile label="Gross revenue" value={formatMoney(data.revenue.grossCents, data.currency)} wide />
+            <Tile label="Net after commission" value={formatMoney(data.revenue.netCents, data.currency)} />
+            <Tile label="Orders" value={data.revenue.orders} />
+            <Tile label="Units sold" value={data.revenue.units} />
+          </div>
+
+          <div className="mt-6 rounded-2xl border p-5" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
+            <p className="text-sm font-semibold mb-4" style={{ fontFamily: "var(--font-heading)", color: "var(--text)" }}>
+              Gross revenue by day
+            </p>
+            {data.daily.length === 0 ? (
+              <p className="text-sm" style={{ color: "var(--text-muted)" }}>No sales in this period.</p>
+            ) : (
+              <div className="flex items-end gap-1 h-32">
+                {data.daily.map((d) => (
+                  <div
+                    key={d.date}
+                    className="flex-1 rounded-t-md"
+                    style={{ height: `${Math.max((d.grossCents / maxDaily) * 100, 2)}%`, background: "#E8F44A" }}
+                    title={`${d.date}: ${formatMoney(d.grossCents, data.currency)} (${d.orders} orders)`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="mt-6 grid md:grid-cols-2 gap-4">
+            <Panel title="Fulfilment pipeline">
+              {Object.keys(data.pipeline).length === 0 ? (
+                <p className="text-sm" style={{ color: "var(--text-muted)" }}>No items yet.</p>
+              ) : (
+                Object.entries(data.pipeline).map(([status, count]) => (
+                  <Row key={status} left={status} right={String(count)} />
+                ))
+              )}
+            </Panel>
+
+            <Panel title="Low stock">
+              {data.lowStock.length === 0 ? (
+                <p className="text-sm" style={{ color: "var(--text-muted)" }}>All products are well stocked.</p>
+              ) : (
+                data.lowStock.map((p) => <Row key={p.productId} left={p.name} right={`${p.stockQuantity} left`} />)
+              )}
+            </Panel>
+
+            <Panel title="Top products">
+              {data.topProducts.length === 0 ? (
+                <p className="text-sm" style={{ color: "var(--text-muted)" }}>No sales yet.</p>
+              ) : (
+                data.topProducts.map((p) => (
+                  <Row key={p.productId} left={p.name} right={`${p.unitsSold} sold`} />
+                ))
+              )}
+            </Panel>
+          </div>
+        </>
       )}
+    </div>
+  );
+}
+
+function Tile({ label, value, wide }: { label: string; value: string | number; wide?: boolean }) {
+  return (
+    <div
+      className={`rounded-2xl border p-5 flex flex-col gap-2 ${wide ? "md:col-span-2" : ""}`}
+      style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+    >
+      <p className="text-xs font-medium uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
+        {label}
+      </p>
+      <p className="text-2xl font-bold" style={{ fontFamily: "var(--font-heading)", color: "var(--text)" }}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl border p-5 flex flex-col gap-3" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
+      <p className="text-sm font-semibold" style={{ fontFamily: "var(--font-heading)", color: "var(--text)" }}>
+        {title}
+      </p>
+      {children}
+    </div>
+  );
+}
+
+function Row({ left, right }: { left: string; right: string }) {
+  return (
+    <div className="flex items-center justify-between text-sm gap-4">
+      <span className="truncate" style={{ color: "var(--text)" }}>{left}</span>
+      <span className="shrink-0" style={{ color: "var(--text-muted)" }}>{right}</span>
     </div>
   );
 }

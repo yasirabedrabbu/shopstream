@@ -1,34 +1,53 @@
 // apps/web/src/app/admin/users/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { adminApi } from "@/lib/api";
 import { Badge } from "@/components/Badge";
+import { Pager } from "@/components/Pager";
 import { useToast } from "@/components/Toast";
 import { formatDate } from "@/lib/money";
-import type { AdminUserResponse } from "@/lib/types";
+import type { AdminUserResponse, UserStatus } from "@/lib/types";
 
 export default function AdminUsersPage() {
   const { toast } = useToast();
   const [users, setUsers] = useState<AdminUserResponse[]>([]);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState<number | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+
+  const load = useCallback(
+    (p: number) => {
+      setLoading(true);
+      adminApi
+        .users(p)
+        .then((data) => {
+          setUsers(data.content);
+          setTotalPages(data.totalPages);
+          setPage(p);
+        })
+        .catch((err) => toast(err instanceof Error ? err.message : "Could not load users.", "error"))
+        .finally(() => setLoading(false));
+    },
+    [toast],
+  );
 
   useEffect(() => {
-    adminApi.users().then((data) => setUsers(data.content)).finally(() => setLoading(false));
-  }, []);
+    load(0);
+  }, [load]);
 
-  async function toggleStatus(u: AdminUserResponse) {
-    const next = u.status === "ACTIVE" ? "SUSPENDED" : "ACTIVE";
-    setUpdating(u.id);
+  async function toggle(u: AdminUserResponse) {
+    const next: UserStatus = u.status === "ACTIVE" ? "SUSPENDED" : "ACTIVE";
+    setBusy(u.id);
     try {
-      await adminApi.updateUserStatus(u.id, next);
-      setUsers((prev) => prev.map((x) => (x.id === u.id ? { ...x, status: next } : x)));
-      toast(`User ${next.toLowerCase()}.`, "success");
-    } catch {
-      toast("Failed.", "error");
+      const updated = await adminApi.updateUserStatus(u.id, next);
+      setUsers((prev) => prev.map((x) => (x.id === u.id ? updated : x)));
+      toast(`${updated.fullName} is now ${next.toLowerCase()}.`, "success");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Update failed.", "error");
     } finally {
-      setUpdating(null);
+      setBusy(null);
     }
   }
 
@@ -45,10 +64,10 @@ export default function AdminUsersPage() {
           ))}
         </div>
       ) : (
-        <div className="rounded-2xl border overflow-hidden" style={{ borderColor: "var(--border)" }}>
-          <table className="w-full text-sm">
+        <div className="rounded-2xl border overflow-x-auto" style={{ borderColor: "var(--border)" }}>
+          <table className="w-full text-sm min-w-[640px]">
             <thead>
-              <tr style={{ background: "var(--surface)", borderBottom: `1px solid var(--border)` }}>
+              <tr style={{ background: "var(--surface)", borderBottom: "1px solid var(--border)" }}>
                 {["Name", "Email", "Role", "Joined", "Status", "Action"].map((h) => (
                   <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
                     {h}
@@ -58,8 +77,8 @@ export default function AdminUsersPage() {
             </thead>
             <tbody>
               {users.map((u) => (
-                <tr key={u.id} style={{ borderBottom: `1px solid var(--border)`, background: "var(--bg)" }}>
-                  <td className="px-4 py-3 font-medium" style={{ color: "var(--text)" }}>{u.name}</td>
+                <tr key={u.id} style={{ borderBottom: "1px solid var(--border)", background: "var(--bg)" }}>
+                  <td className="px-4 py-3 font-medium" style={{ color: "var(--text)" }}>{u.fullName}</td>
                   <td className="px-4 py-3 text-xs" style={{ color: "var(--text-muted)" }}>{u.email}</td>
                   <td className="px-4 py-3">
                     <Badge variant={u.role === "ADMIN" ? "accent" : u.role === "VENDOR" ? "success" : "default"}>
@@ -73,9 +92,9 @@ export default function AdminUsersPage() {
                   <td className="px-4 py-3">
                     {u.role !== "ADMIN" && (
                       <button
-                        onClick={() => toggleStatus(u)}
-                        disabled={updating === u.id}
-                        className="px-3 py-1.5 rounded-lg border text-xs font-medium disabled:opacity-60"
+                        onClick={() => toggle(u)}
+                        disabled={busy === u.id}
+                        className="px-3 py-1.5 rounded-lg border text-xs font-medium disabled:opacity-60 min-h-[36px]"
                         style={{ borderColor: "var(--border)", color: "var(--text)" }}
                       >
                         {u.status === "ACTIVE" ? "Suspend" : "Activate"}
@@ -88,6 +107,8 @@ export default function AdminUsersPage() {
           </table>
         </div>
       )}
+
+      <Pager page={page} totalPages={totalPages} onChange={load} />
     </div>
   );
 }

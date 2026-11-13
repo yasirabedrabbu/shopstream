@@ -25,7 +25,7 @@ export default function HomePage() {
     ]).then(([f, l, c]) => {
       if (cancelled) return;
 
-      if (f.status === "fulfilled") setFlash(f.value);
+      if (f.status === "fulfilled") setFlash(f.value.content);
       if (l.status === "fulfilled") setLatest(l.value.content);
       if (c.status === "fulfilled") setCategories(c.value);
 

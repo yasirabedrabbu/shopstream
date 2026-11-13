@@ -1,9 +1,10 @@
 // apps/web/src/app/admin/products/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { adminApi } from "@/lib/api";
 import { productStatusBadge } from "@/components/Badge";
+import { Pager } from "@/components/Pager";
 import { useToast } from "@/components/Toast";
 import { formatMoney } from "@/lib/money";
 import type { AdminProductResponse } from "@/lib/types";
@@ -11,29 +12,46 @@ import type { AdminProductResponse } from "@/lib/types";
 export default function AdminProductsPage() {
   const { toast } = useToast();
   const [products, setProducts] = useState<AdminProductResponse[]>([]);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState<number | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+
+  const load = useCallback(
+    (p: number) => {
+      setLoading(true);
+      adminApi
+        .products(p)
+        .then((data) => {
+          setProducts(data.content);
+          setTotalPages(data.totalPages);
+          setPage(p);
+        })
+        .catch((err) => toast(err instanceof Error ? err.message : "Could not load products.", "error"))
+        .finally(() => setLoading(false));
+    },
+    [toast],
+  );
 
   useEffect(() => {
-    adminApi.products().then((data) => setProducts(data.content)).finally(() => setLoading(false));
-  }, []);
+    load(0);
+  }, [load]);
 
   async function toggle(p: AdminProductResponse) {
-    setUpdating(p.id);
+    const blocking = p.status !== "BLOCKED";
+    setBusy(p.id);
     try {
-      if (p.status === "BLOCKED") {
-        await adminApi.unblockProduct(p.id);
-        setProducts((prev) => prev.map((x) => x.id === p.id ? { ...x, status: "ACTIVE" } : x));
-        toast("Product unblocked.", "success");
-      } else {
+      if (blocking) {
         await adminApi.blockProduct(p.id);
-        setProducts((prev) => prev.map((x) => x.id === p.id ? { ...x, status: "BLOCKED" } : x));
-        toast("Product blocked.", "success");
+      } else {
+        await adminApi.unblockProduct(p.id);
       }
-    } catch {
-      toast("Failed.", "error");
+      toast(blocking ? "Product blocked." : "Product unblocked.", "success");
+      load(page);
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Update failed.", "error");
     } finally {
-      setUpdating(null);
+      setBusy(null);
     }
   }
 
@@ -45,17 +63,18 @@ export default function AdminProductsPage() {
 
       {loading ? (
         <div className="flex flex-col gap-3">
-          {Array.from({ length: 5 }).map((
-            _, i) => (
+          {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="h-14 rounded-2xl animate-pulse" style={{ background: "var(--surface)" }} />
           ))}
         </div>
+      ) : products.length === 0 ? (
+        <div className="text-center py-24" style={{ color: "var(--text-muted)" }}>No products.</div>
       ) : (
-        <div className="rounded-2xl border overflow-hidden" style={{ borderColor: "var(--border)" }}>
-          <table className="w-full text-sm">
+        <div className="rounded-2xl border overflow-x-auto" style={{ borderColor: "var(--border)" }}>
+          <table className="w-full text-sm min-w-[640px]">
             <thead>
-              <tr style={{ background: "var(--surface)", borderBottom: `1px solid var(--border)` }}>
-                {["Product", "Vendor", "Price", "Status", "Action"].map((h) => (
+              <tr style={{ background: "var(--surface)", borderBottom: "1px solid var(--border)" }}>
+                {["Product", "Store", "Price", "Stock", "Status", "Action"].map((h) => (
                   <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
                     {h}
                   </th>
@@ -64,7 +83,7 @@ export default function AdminProductsPage() {
             </thead>
             <tbody>
               {products.map((p) => (
-                <tr key={p.id} style={{ borderBottom: `1px solid var(--border)`, background: "var(--bg)" }}>
+                <tr key={p.id} style={{ borderBottom: "1px solid var(--border)", background: "var(--bg)" }}>
                   <td className="px-4 py-3">
                     <p className="font-medium line-clamp-1" style={{ color: "var(--text)" }}>{p.name}</p>
                     <p className="text-xs" style={{ color: "var(--text-muted)" }}>{p.categoryName}</p>
@@ -73,15 +92,14 @@ export default function AdminProductsPage() {
                   <td className="px-4 py-3 font-medium" style={{ color: "var(--text)" }}>
                     {formatMoney(p.priceCents, p.currency)}
                   </td>
+                  <td className="px-4 py-3" style={{ color: "var(--text)" }}>{p.stockQuantity}</td>
                   <td className="px-4 py-3">{productStatusBadge(p.status)}</td>
                   <td className="px-4 py-3">
                     <button
                       onClick={() => toggle(p)}
-                      disabled={updating === p.id}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-60 ${
-                        p.status === "BLOCKED"
-                          ? "bg-[#E8F44A] text-zinc-900"
-                          : "border text-red-500 border-red-200 dark:border-red-900"
+                      disabled={busy === p.id}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-60 min-h-[36px] ${
+                        p.status === "BLOCKED" ? "bg-[#E8F44A] text-zinc-900" : "border text-red-500 border-red-200 dark:border-red-900"
                       }`}
                     >
                       {p.status === "BLOCKED" ? "Unblock" : "Block"}
@@ -93,6 +111,8 @@ export default function AdminProductsPage() {
           </table>
         </div>
       )}
+
+      <Pager page={page} totalPages={totalPages} onChange={load} />
     </div>
   );
 }
