@@ -31,13 +31,12 @@ export function Nav() {
     <header
       className="sticky top-0 z-40 w-full border-b"
       style={{
-        background: "rgba(var(--bg-rgb, 255 255 255) / 0.85)",
+        background: "var(--bg)",
         backdropFilter: "blur(16px)",
         borderColor: "var(--border)",
       }}
     >
       <nav className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
-        {/* Logo */}
         <Link
           href="/"
           className="font-bold text-base tracking-tight shrink-0"
@@ -46,7 +45,6 @@ export function Nav() {
           ShopStream
         </Link>
 
-        {/* Pill links — desktop */}
         <div className="hidden md:flex items-center gap-1">
           {links.map((l) => {
             const active = l.href === "/" ? pathname === "/" : pathname.startsWith(l.href);
@@ -55,9 +53,7 @@ export function Nav() {
                 key={l.href}
                 href={l.href}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                  active
-                    ? "bg-[#E8F44A] text-zinc-900"
-                    : "hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                  active ? "bg-[#E8F44A] text-zinc-900" : "hover:bg-zinc-100 dark:hover:bg-zinc-800"
                 }`}
                 style={active ? {} : { color: "var(--text-muted)" }}
               >
@@ -67,7 +63,6 @@ export function Nav() {
           })}
         </div>
 
-        {/* Right side */}
         <div className="flex items-center gap-2">
           {user ? (
             <div className="relative">
@@ -76,7 +71,7 @@ export function Nav() {
                 className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border transition-colors hover:border-[#E8F44A]"
                 style={{ borderColor: "var(--border)", color: "var(--text)" }}
               >
-                <span className="hidden sm:inline">{user.name}</span>
+                <span className="hidden sm:inline">{user.fullName}</span>
                 <span className="text-xs" style={{ color: "var(--text-muted)" }}>
                   ▾
                 </span>

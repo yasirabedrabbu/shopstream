@@ -9,31 +9,16 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const isFlash =
-    product.salePriceCents !== null &&
-    product.saleEndsAt !== null &&
-    new Date(product.saleEndsAt) > new Date();
-
-  const displayPrice = isFlash
-    ? product.salePriceCents!
-    : product.priceCents;
-
+  const isFlash = product.flashSaleActive;
   const img = product.imageUrls?.[0];
 
   return (
     <Link
       href={`/products/${product.slug}`}
       className="group flex flex-col rounded-2xl overflow-hidden border transition-colors hover:border-[#E8F44A]"
-      style={{
-        background: "var(--surface)",
-        borderColor: "var(--border)",
-      }}
+      style={{ background: "var(--surface)", borderColor: "var(--border)" }}
     >
-      {/* Image */}
-      <div
-        className="aspect-square w-full overflow-hidden"
-        style={{ background: "var(--border)" }}
-      >
+      <div className="aspect-square w-full overflow-hidden" style={{ background: "var(--border)" }}>
         {img ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -48,10 +33,9 @@ export function ProductCard({ product }: ProductCardProps) {
         )}
       </div>
 
-      {/* Info */}
       <div className="p-4 flex flex-col gap-1.5 flex-1">
         <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-          {product.storeName}
+          {product.store.storeName}
         </p>
         <h3
           className="text-sm font-semibold line-clamp-2 leading-snug"
@@ -62,14 +46,11 @@ export function ProductCard({ product }: ProductCardProps) {
 
         <div className="flex items-center gap-2 mt-auto pt-2">
           <span className="text-sm font-bold" style={{ color: "var(--text)" }}>
-            {formatMoney(displayPrice, product.currency)}
+            {formatMoney(product.effectivePriceCents, product.currency)}
           </span>
           {isFlash && (
             <>
-              <span
-                className="text-xs line-through"
-                style={{ color: "var(--text-muted)" }}
-              >
+              <span className="text-xs line-through" style={{ color: "var(--text-muted)" }}>
                 {formatMoney(product.priceCents, product.currency)}
               </span>
               <Badge variant="accent">Flash</Badge>
@@ -77,14 +58,7 @@ export function ProductCard({ product }: ProductCardProps) {
           )}
         </div>
 
-        {product.stockQuantity <= 5 && product.stockQuantity > 0 && (
-          <p className="text-xs text-amber-500">
-            Only {product.stockQuantity} left
-          </p>
-        )}
-        {product.stockQuantity === 0 && (
-          <p className="text-xs text-red-500">Out of stock</p>
-        )}
+        {!product.inStock && <p className="text-xs text-red-500">Out of stock</p>}
       </div>
     </Link>
   );

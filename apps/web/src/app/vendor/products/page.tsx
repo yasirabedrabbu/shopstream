@@ -5,11 +5,13 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { vendorApi } from "@/lib/api";
 import { productStatusBadge } from "@/components/Badge";
+import { useToast } from "@/components/Toast";
 import { formatMoney } from "@/lib/money";
-import type { PublicProductResponse } from "@/lib/types";
+import type { ProductResponse } from "@/lib/types";
 
 export default function VendorProductsPage() {
-  const [products, setProducts] = useState<PublicProductResponse[]>([]);
+  const { toast } = useToast();
+  const [products, setProducts] = useState<ProductResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -23,25 +25,26 @@ export default function VendorProductsPage() {
         setTotalPages(data.totalPages);
         setPage(p);
       })
+      .catch((err) => toast(err instanceof Error ? err.message : "Could not load products.", "error"))
       .finally(() => setLoading(false));
   }
 
-  useEffect(() => { load(0); }, []);
+  useEffect(() => {
+    load(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="p-6 max-w-5xl">
       <div className="flex items-center justify-between mb-6">
-        <h1
-          className="text-2xl font-bold"
-          style={{ fontFamily: "var(--font-heading)", color: "var(--text)" }}
-        >
+        <h1 className="text-2xl font-bold" style={{ fontFamily: "var(--font-heading)", color: "var(--text)" }}>
           Products
         </h1>
         <Link
           href="/vendor/products/new"
           className="px-4 py-2 rounded-xl bg-[#E8F44A] text-zinc-900 text-sm font-semibold min-h-[44px] flex items-center"
         >
-          + Add Product
+          + Add product
         </Link>
       </div>
 
@@ -53,19 +56,19 @@ export default function VendorProductsPage() {
         </div>
       ) : products.length === 0 ? (
         <div className="text-center py-24" style={{ color: "var(--text-muted)" }}>
-          No products yet. <Link href="/vendor/products/new" className="underline" style={{ color: "var(--text)" }}>Add one</Link>
+          No products yet.{" "}
+          <Link href="/vendor/products/new" className="underline" style={{ color: "var(--text)" }}>
+            Add one
+          </Link>
         </div>
       ) : (
-        <div
-          className="rounded-2xl border overflow-hidden"
-          style={{ borderColor: "var(--border)" }}
-        >
-          <table className="w-full text-sm">
+        <div className="rounded-2xl border overflow-x-auto" style={{ borderColor: "var(--border)" }}>
+          <table className="w-full text-sm min-w-[560px]">
             <thead>
-              <tr style={{ background: "var(--surface)", borderBottom: `1px solid var(--border)` }}>
-                {["Product", "Price", "Stock", "Status", ""].map((h) => (
+              <tr style={{ background: "var(--surface)", borderBottom: "1px solid var(--border)" }}>
+                {["Product", "Price", "Stock", "Status", ""].map((h, i) => (
                   <th
-                    key={h}
+                    key={i}
                     className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide"
                     style={{ color: "var(--text-muted)" }}
                   >
@@ -76,16 +79,13 @@ export default function VendorProductsPage() {
             </thead>
             <tbody>
               {products.map((p) => (
-                <tr
-                  key={p.id}
-                  style={{ borderBottom: `1px solid var(--border)`, background: "var(--bg)" }}
-                >
+                <tr key={p.id} style={{ borderBottom: "1px solid var(--border)", background: "var(--bg)" }}>
                   <td className="px-4 py-3">
                     <p className="font-medium line-clamp-1" style={{ color: "var(--text)" }}>{p.name}</p>
                     <p className="text-xs" style={{ color: "var(--text-muted)" }}>{p.categoryName}</p>
                   </td>
                   <td className="px-4 py-3 font-medium" style={{ color: "var(--text)" }}>
-                    {formatMoney(p.priceCents, p.currency)}
+                    {formatMoney(p.effectivePriceCents, p.currency)}
                   </td>
                   <td className="px-4 py-3" style={{ color: "var(--text)" }}>{p.stockQuantity}</td>
                   <td className="px-4 py-3">{productStatusBadge(p.status)}</td>
@@ -111,7 +111,9 @@ export default function VendorProductsPage() {
             <button
               key={i}
               onClick={() => load(i)}
-              className={`w-9 h-9 rounded-full text-sm font-medium border ${i === page ? "bg-[#E8F44A] text-zinc-900 border-[#E8F44A]" : ""}`}
+              className={`w-9 h-9 rounded-full text-sm font-medium border ${
+                i === page ? "bg-[#E8F44A] text-zinc-900 border-[#E8F44A]" : ""
+              }`}
               style={i !== page ? { borderColor: "var(--border)", color: "var(--text)" } : {}}
             >
               {i + 1}

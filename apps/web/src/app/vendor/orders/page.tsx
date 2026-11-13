@@ -4,24 +4,50 @@
 import { useEffect, useState } from "react";
 import { vendorApi } from "@/lib/api";
 import { Badge } from "@/components/Badge";
-import { formatMoney } from "@/lib/money";
+import { useToast } from "@/components/Toast";
+import { formatMoney, formatDate } from "@/lib/money";
+import type { FulfillmentStatus, VendorOrderItemResponse } from "@/lib/types";
 
-interface VendorOrderItem {
-  id: number;
-  orderId: number;
-  status: string;
-  productName: string;
-  quantity: number;
-  unitPriceCents: number;
-}
+const NEXT: Partial<Record<FulfillmentStatus, FulfillmentStatus>> = {
+  NEW: "PACKED",
+  PACKED: "SHIPPED",
+  SHIPPED: "DELIVERED",
+};
+
+const NEXT_LABEL: Record<string, string> = {
+  PACKED: "Mark packed",
+  SHIPPED: "Mark shipped",
+  DELIVERED: "Mark delivered",
+};
 
 export default function VendorOrdersPage() {
-  const [items, setItems] = useState<VendorOrderItem[]>([]);
+  const { toast } = useToast();
+  const [items, setItems] = useState<VendorOrderItemResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState<string | null>(null);
 
   useEffect(() => {
-    vendorApi.orders().then((data) => setItems(data.content)).finally(() => setLoading(false));
-  }, []);
+    vendorApi
+      .orderItems()
+      .then((data) => setItems(data.content))
+      .catch((err) => toast(err instanceof Error ? err.message : "Could not load orders.", "error"))
+      .finally(() => setLoading(false));
+  }, [toast]);
+
+  async function advance(item: VendorOrderItemResponse) {
+    const next = NEXT[item.fulfillmentStatus];
+    if (!next) return;
+    setBusy(item.itemId);
+    try {
+      const updated = await vendorApi.advanceItem(item.itemId, next);
+      setItems((prev) => prev.map((x) => (x.itemId === item.itemId ? updated : x)));
+      toast(`Marked ${next.toLowerCase()}.`, "success");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Update failed.", "error");
+    } finally {
+      setBusy(null);
+    }
+  }
 
   return (
     <div className="p-6 max-w-5xl">
@@ -38,33 +64,43 @@ export default function VendorOrdersPage() {
       ) : items.length === 0 ? (
         <div className="text-center py-24" style={{ color: "var(--text-muted)" }}>No orders yet.</div>
       ) : (
-        <div className="rounded-2xl border overflow-hidden" style={{ borderColor: "var(--border)" }}>
-          <table className="w-full text-sm">
-            <thead>
-              <tr style={{ background: "var(--surface)", borderBottom: `1px solid var(--border)` }}>
-                {["Order #", "Product", "Qty", "Total", "Status"].map((h) => (
-                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item) => (
-                <tr key={item.id} style={{ borderBottom: `1px solid var(--border)`, background: "var(--bg)" }}>
-                  <td className="px-4 py-3 font-mono text-xs" style={{ color: "var(--text-muted)" }}>#{item.orderId}</td>
-                  <td className="px-4 py-3 font-medium" style={{ color: "var(--text)" }}>{item.productName}</td>
-                  <td className="px-4 py-3" style={{ color: "var(--text)" }}>{item.quantity}</td>
-                  <td className="px-4 py-3 font-medium" style={{ color: "var(--text)" }}>
-                    {formatMoney(item.unitPriceCents * item.quantity, "BDT")}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge>{item.status}</Badge>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="flex flex-col gap-3">
+          {items.map((item) => {
+            const next = NEXT[item.fulfillmentStatus];
+            const addr = item.shippingAddress;
+            return (
+              <div
+                key={item.itemId}
+                className="rounded-2xl border p-5 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+              >
+                <div className="flex flex-col gap-1 min-w-0">
+                  <p className="text-sm font-semibold truncate" style={{ color: "var(--text)" }}>
+                    {item.productName} × {item.quantity}
+                  </p>
+                  <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                    Order #{item.orderId.slice(0, 8)} · {formatDate(item.placedAt)} · {formatMoney(item.lineTotalCents, item.currency)}
+                  </p>
+                  <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>
+                    {addr.fullName}, {addr.city} {addr.postalCode}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3 shrink-0">
+                  <Badge>{item.fulfillmentStatus}</Badge>
+                  {next && (
+                    <button
+                      onClick={() => advance(item)}
+                      disabled={busy === item.itemId}
+                      className="h-9 px-4 rounded-xl bg-[#E8F44A] text-zinc-900 text-xs font-semibold disabled:opacity-60 min-h-[44px]"
+                    >
+                      {busy === item.itemId ? "Saving..." : NEXT_LABEL[next]}
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

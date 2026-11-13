@@ -23,6 +23,16 @@ import type {
   ProductStatus,
 } from "./types";
 
+// ─── Payment session (from POST /orders/{id}/pay) ────────────────────────────
+
+export interface PaymentSession {
+  paymentId: string;
+  provider: PaymentProvider;
+  providerReference: string;
+  clientSecret: string | null;
+  redirectUrl: string | null;
+}
+
 // Browser calls /api/v1 on the same origin. next.config.ts rewrites it to Spring Boot.
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "/api/v1";
 
@@ -216,18 +226,13 @@ export const orderApi = {
 
   cancel: (id: string) => apiFetch<OrderResponse>(`/orders/${id}/cancel`, { method: "POST" }),
 
-  // Mock payment flow (dev only): pay, then confirm via the mock endpoint.
-  pay: (orderId: string, provider: "MOCK" = "MOCK") =>
-    apiFetch<{ providerReference: string; redirectUrl?: string }>(`/orders/${orderId}/pay`, {
-      method: "POST",
-      body: { provider },
-    }),
+  // Starts a payment session. Returns providerReference used by mockConfirm.
+  pay: (orderId: string, provider: "MOCK" | "SSLCOMMERZ" | "STRIPE" = "MOCK") =>
+    apiFetch<PaymentSession>(`/orders/${orderId}/pay`, { method: "POST", body: { provider } }),
 
+  // Dev only. Backend requires the logged-in customer who owns the order.
   mockConfirm: (providerReference: string) =>
-    apiFetch<void>(`/payments/mock/${providerReference}/confirm?success=true`, {
-      method: "POST",
-      auth: false,
-    }),
+    apiFetch<void>(`/payments/mock/${providerReference}/confirm`, { method: "POST" }),
 };
 
 // ─── Vendor ──────────────────────────────────────────────────────────────────
@@ -309,4 +314,7 @@ export const adminApi = {
     apiFetch<void>(`/admin/payments/${paymentId}/refund`, { method: "POST" }),
 
   orders: (page = 0) => apiFetch<Page<AdminOrderRow>>(`/admin/orders?page=${page}`),
+
+    resolvePayment: (paymentId: string) =>
+    apiFetch<AdminPaymentReviewResponse>(`/admin/payments/review/${paymentId}/resolve`, { method: "POST" }),
 };
