@@ -45,6 +45,54 @@ export default function AdminProductsPage() {
 
       {loading ? (
         <div className="flex flex-col gap-3">
-          {Array.from({ length: 5 }).map((_, i) => (
+          {Array.from({ length: 5 }).map((
+            _, i) => (
             <div key={i} className="h-14 rounded-2xl animate-pulse" style={{ background: "var(--surface)" }} />
           ))}
+        </div>
+      ) : (
+        <div className="rounded-2xl border overflow-hidden" style={{ borderColor: "var(--border)" }}>
+          <table className="w-full text-sm">
+            <thead>
+              <tr style={{ background: "var(--surface)", borderBottom: `1px solid var(--border)` }}>
+                {["Product", "Vendor", "Price", "Status", "Action"].map((h) => (
+                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {products.map((p) => (
+                <tr key={p.id} style={{ borderBottom: `1px solid var(--border)`, background: "var(--bg)" }}>
+                  <td className="px-4 py-3">
+                    <p className="font-medium line-clamp-1" style={{ color: "var(--text)" }}>{p.name}</p>
+                    <p className="text-xs" style={{ color: "var(--text-muted)" }}>{p.categoryName}</p>
+                  </td>
+                  <td className="px-4 py-3 text-xs" style={{ color: "var(--text-muted)" }}>{p.storeName}</td>
+                  <td className="px-4 py-3 font-medium" style={{ color: "var(--text)" }}>
+                    {formatMoney(p.priceCents, p.currency)}
+                  </td>
+                  <td className="px-4 py-3">{productStatusBadge(p.status)}</td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => toggle(p)}
+                      disabled={updating === p.id}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-60 ${
+                        p.status === "BLOCKED"
+                          ? "bg-[#E8F44A] text-zinc-900"
+                          : "border text-red-500 border-red-200 dark:border-red-900"
+                      }`}
+                    >
+                      {p.status === "BLOCKED" ? "Unblock" : "Block"}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
