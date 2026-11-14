@@ -1,6 +1,6 @@
 // apps/web/src/app/layout.tsx
 import type { Metadata } from "next";
-import { Sora, Manrope } from "next/font/google";
+import { Sora, Manrope, Noto_Sans_Bengali } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/components/Toast";
 import { AssistantWidget } from "@/components/AssistantWidget";
@@ -17,6 +17,14 @@ const manrope = Manrope({
   display: "swap",
 });
 
+// Bangla glyph er jonno. Latin text Sora/Manrope theke ashbe, Bangla text ei font theke.
+const bengali = Noto_Sans_Bengali({
+  variable: "--font-bengali",
+  subsets: ["bengali"],
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
+});
+
 export const metadata: Metadata = {
   title: "ShopStream",
   description: "Multi-vendor e-commerce with live inventory",
@@ -28,7 +36,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${sora.variable} ${manrope.variable}`} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${sora.variable} ${manrope.variable} ${bengali.variable}`}
+      suppressHydrationWarning
+    >
       {/* suppressHydrationWarning on body: browser extensions (Grammarly etc.) add attributes to body */}
       <body suppressHydrationWarning>
         <ToastProvider>
