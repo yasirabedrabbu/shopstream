@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Nav } from "@/components/Nav";
 import { ProductCard } from "@/components/ProductCard";
+import { Footer } from "@/components/Footer";
 import { productApi, categoryApi } from "@/lib/api";
 import type { PublicProductResponse, CategoryResponse } from "@/lib/types";
 
@@ -146,6 +147,8 @@ export default function HomePage() {
           </div>
         )}
       </section>
+
+      <Footer />
     </div>
   );
 }
