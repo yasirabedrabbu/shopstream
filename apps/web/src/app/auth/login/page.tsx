@@ -4,10 +4,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { authApi } from "@/lib/api";
-import { saveTokens } from "@/lib/api";
+import { authApi, saveTokens } from "@/lib/api";
 import { saveUser } from "@/lib/auth";
 import { useToast } from "@/components/Toast";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+import { AuthShell } from "@/components/AuthShell";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -29,88 +31,52 @@ export default function LoginPage() {
       else if (role === "VENDOR") router.push("/vendor/dashboard");
       else router.push("/");
     } catch {
-      toast("Invalid email or password.", "error");
+      toast("Email or password is incorrect.", "error");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-4"
-      style={{ background: "var(--bg)" }}
-    >
-      <div
-        className="w-full max-w-sm rounded-2xl border p-8 flex flex-col gap-6"
-        style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-      >
-        <div>
+    <AuthShell
+      title="Sign in"
+      subtitle="Sign in to manage your store or track your orders."
+      footer={
+        <>
+          New here?{" "}
           <Link
-            href="/"
-            className="text-sm font-bold"
-            style={{ fontFamily: "var(--font-heading)", color: "var(--text)" }}
+            href="/auth/register"
+            className="rounded font-semibold text-text underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus)]"
           >
-            ShopStream
+            Create an account
           </Link>
-          <h1
-            className="text-2xl font-bold mt-4"
-            style={{ fontFamily: "var(--font-heading)", color: "var(--text)" }}
-          >
-            Sign in
-          </h1>
-        </div>
-
-        <form onSubmit={submit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium" style={{ color: "var(--text)" }}>
-              Email
-            </label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="h-11 px-4 rounded-xl border text-sm outline-none focus:border-[#E8F44A]"
-              style={{
-                background: "var(--bg)",
-                borderColor: "var(--border)",
-                color: "var(--text)",
-              }}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium" style={{ color: "var(--text)" }}>
-              Password
-            </label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="h-11 px-4 rounded-xl border text-sm outline-none focus:border-[#E8F44A]"
-              style={{
-                background: "var(--bg)",
-                borderColor: "var(--border)",
-                color: "var(--text)",
-              }}
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="h-11 rounded-xl bg-[#E8F44A] text-zinc-900 font-semibold text-sm disabled:opacity-60 mt-1"
-          >
-            {loading ? "Signing in..." : "Sign in"}
-          </button>
-        </form>
-
-        <p className="text-sm text-center" style={{ color: "var(--text-muted)" }}>
-          No account?{" "}
-          <Link href="/auth/register" className="font-semibold hover:underline" style={{ color: "var(--text)" }}>
-            Register
-          </Link>
-        </p>
-      </div>
-    </div>
+        </>
+      }
+    >
+      <form onSubmit={submit} className="flex flex-col gap-5">
+        <Input
+          label="Email"
+          type="email"
+          name="email"
+          autoComplete="email"
+          inputMode="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <Input
+          label="Password"
+          type="password"
+          name="password"
+          autoComplete="current-password"
+          required
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <Button type="submit" size="lg" loading={loading} className="mt-1 w-full">
+          {loading ? "Signing in" : "Sign in"}
+        </Button>
+      </form>
+    </AuthShell>
   );
 }

@@ -6,6 +6,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authApi } from "@/lib/api";
 import { useToast } from "@/components/Toast";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+import { AuthShell } from "@/components/AuthShell";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -20,69 +23,65 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await authApi.register(name, email, password);
-      toast("Account created! Please sign in.", "success");
+      toast("Account created. Please sign in.", "success");
       router.push("/auth/login");
     } catch {
-      toast("Registration failed. Email may already be in use.", "error");
+      toast("Could not create the account. This email may already be in use.", "error");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-4"
-      style={{ background: "var(--bg)" }}
-    >
-      <div
-        className="w-full max-w-sm rounded-2xl border p-8 flex flex-col gap-6"
-        style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-      >
-        <div>
-          <Link href="/" className="text-sm font-bold" style={{ fontFamily: "var(--font-heading)", color: "var(--text)" }}>
-            ShopStream
-          </Link>
-          <h1 className="text-2xl font-bold mt-4" style={{ fontFamily: "var(--font-heading)", color: "var(--text)" }}>
-            Create account
-          </h1>
-        </div>
-
-        <form onSubmit={submit} className="flex flex-col gap-4">
-          {[
-            { label: "Name", type: "text", value: name, set: setName },
-            { label: "Email", type: "email", value: email, set: setEmail },
-            { label: "Password", type: "password", value: password, set: setPassword },
-          ].map(({ label, type, value, set }) => (
-            <div key={label} className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium" style={{ color: "var(--text)" }}>
-                {label}
-              </label>
-              <input
-                type={type}
-                required
-                value={value}
-                onChange={(e) => set(e.target.value)}
-                className="h-11 px-4 rounded-xl border text-sm outline-none focus:border-[#E8F44A]"
-                style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
-              />
-            </div>
-          ))}
-          <button
-            type="submit"
-            disabled={loading}
-            className="h-11 rounded-xl bg-[#E8F44A] text-zinc-900 font-semibold text-sm disabled:opacity-60 mt-1"
-          >
-            {loading ? "Creating..." : "Create account"}
-          </button>
-        </form>
-
-        <p className="text-sm text-center" style={{ color: "var(--text-muted)" }}>
+    <AuthShell
+      title="Create account"
+      subtitle="Takes less than a minute. You can start shopping or open a store."
+      footer={
+        <>
           Already have an account?{" "}
-          <Link href="/auth/login" className="font-semibold hover:underline" style={{ color: "var(--text)" }}>
+          <Link
+            href="/auth/login"
+            className="rounded font-semibold text-text underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus)]"
+          >
             Sign in
           </Link>
-        </p>
-      </div>
-    </div>
+        </>
+      }
+    >
+      <form onSubmit={submit} className="flex flex-col gap-5">
+        <Input
+          label="Full name"
+          type="text"
+          name="name"
+          autoComplete="name"
+          required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <Input
+          label="Email"
+          type="email"
+          name="email"
+          autoComplete="email"
+          inputMode="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <Input
+          label="Password"
+          type="password"
+          name="password"
+          autoComplete="new-password"
+          required
+          helper="Use a strong password you do not use elsewhere."
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <Button type="submit" size="lg" loading={loading} className="mt-1 w-full">
+          {loading ? "Creating account" : "Create account"}
+        </Button>
+      </form>
+    </AuthShell>
   );
 }
