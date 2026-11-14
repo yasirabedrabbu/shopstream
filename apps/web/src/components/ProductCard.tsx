@@ -31,9 +31,14 @@ export function ProductCard({ product }: ProductCardProps) {
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-text-muted">
-            <Icon name="box" size={28} />
-            <span className="text-xs">No image</span>
+          <div
+            className="flex h-full w-full items-center justify-center"
+            style={{ background: "linear-gradient(135deg, var(--surface), var(--border))" }}
+            aria-hidden="true"
+          >
+            <span className="text-5xl font-bold text-text-muted/50" style={{ fontFamily: "var(--font-heading)" }}>
+              {product.name.charAt(0).toUpperCase()}
+            </span>
           </div>
         )}
 

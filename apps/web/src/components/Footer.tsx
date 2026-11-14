@@ -44,7 +44,7 @@ export function Footer() {
             ShopStream
           </span>
           <p className="max-w-xs text-sm leading-relaxed text-[var(--text-muted)]">
-            Bangladeshi sellers er jonno ek jaygay online store, payment ar delivery.
+            The online marketplace for Bangladeshi sellers and buyers. Payments, delivery and support in one place.
           </p>
         </div>
 
@@ -81,7 +81,7 @@ export function Footer() {
         style={{ borderColor: "var(--border)" }}
       >
         <p className="text-xs text-[var(--text-muted)]">
-          © {year} ShopStream. Sob odhikar sorokkhito.
+          © {year} ShopStream. All rights reserved.
         </p>
 
         <ul aria-label="Payment methods" className="flex flex-wrap gap-2">

@@ -104,9 +104,9 @@ export function Nav() {
 
   const initial = user?.fullName?.charAt(0).toUpperCase() ?? "";
 
-  function isActive(href: string) {
-    const path = href.split("#")[0];
-    return path === "/" ? pathname === "/" : pathname.startsWith(path);
+   function isActive(href: string) {
+    if (href.includes("#")) return false;
+    return href === "/" ? pathname === "/" : pathname.startsWith(href);
   }
 
   return (
