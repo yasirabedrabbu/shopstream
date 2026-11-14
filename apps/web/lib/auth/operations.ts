@@ -3,6 +3,7 @@ import { authApi, saveTokens } from "@/lib/api";
 import { saveUser } from "@/lib/auth";
 import { demoDestination, liveDestination, type SignupRole } from "@/lib/auth-pages/model";
 import { previewDelay } from "./useActive";
+
 export interface LoginInput {
   email: string;
   password: string;
@@ -10,6 +11,7 @@ export interface LoginInput {
   returnTo: string | null;
   active: { current: boolean };
 }
+
 export async function login(input: LoginInput) {
   if (DEMO_MODE) {
     await previewDelay();
@@ -22,12 +24,14 @@ export async function login(input: LoginInput) {
   }
   return input.returnTo ?? liveDestination(result.user.role);
 }
+
 export interface RegistrationInput {
   name: string;
   email: string;
   password: string;
   role: SignupRole;
 }
+
 export async function register(input: RegistrationInput) {
   if (DEMO_MODE) {
     await previewDelay();
@@ -39,10 +43,21 @@ export async function register(input: RegistrationInput) {
     );
   await authApi.register(input.name.trim(), input.email.trim(), input.password);
 }
-export async function requestReset() {
-  await previewDelay();
-  if (!DEMO_MODE)
-    throw Error(
-      "Reset-email delivery is not configured for the connected API. Contact support for account recovery.",
-    );
+
+// Sends the reset email. Backend answers the same way whether or not the email exists.
+export async function requestReset(email: string) {
+  if (DEMO_MODE) {
+    await previewDelay();
+    return;
+  }
+  await authApi.requestPasswordReset(email.trim());
+}
+
+// Called from the reset-password page with the token from the email link.
+export async function confirmReset(token: string, newPassword: string) {
+  if (DEMO_MODE) {
+    await previewDelay();
+    return;
+  }
+  await authApi.confirmPasswordReset(token, newPassword);
 }

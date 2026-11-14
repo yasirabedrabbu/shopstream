@@ -14,6 +14,7 @@ import { DEMO_MODE } from "@/lib/demo";
 import { isLoggedIn } from "@/lib/auth";
 import { formatMoney } from "@/lib/money";
 import type { PublicProductResponse } from "@/lib/types";
+import { ProductReviews } from "@/components/ProductReviews";
 
 function ProductDetailContent() {
   const { slug } = useParams<{ slug: string }>();
@@ -316,6 +317,7 @@ function ProductDetailContent() {
                 </Link>
               </div>
             </div>
+                        <ProductReviews slug={slug} />
             {related.length > 0 && (
               <section className="mt-16 border-t border-border pt-10">
                 <div className="mb-6 flex items-end justify-between gap-4">

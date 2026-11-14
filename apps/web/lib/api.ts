@@ -130,6 +130,24 @@ type RequestOptions = {
   signal?: AbortSignal;
 };
 
+async function readErrorMessage(res: Response): Promise<string> {
+  let message = res.statusText || `HTTP ${res.status}`;
+  try {
+    const err = await res.json();
+    message = err.detail ?? err.message ?? err.error ?? message;
+  } catch {
+    // response had no JSON body
+  }
+  return message;
+}
+
+async function parseBody<T>(res: Response): Promise<T> {
+  // Spring void endpoints return an empty body. Do not call res.json() on that.
+  if (res.status === 204) return undefined as T;
+  const text = await res.text();
+  return (text ? JSON.parse(text) : undefined) as T;
+}
+
 export async function apiFetch<T>(
   path: string,
   opts: RequestOptions = {},
@@ -152,18 +170,124 @@ export async function apiFetch<T>(
   });
 
   if (!res.ok) {
-    let message = res.statusText || `HTTP ${res.status}`;
-    try {
-      const err = await res.json();
-      message = err.detail ?? err.message ?? err.error ?? message;
-    } catch {
-      // response had no JSON body
-    }
-    throw new ApiError(res.status, message);
+    throw new ApiError(res.status, await readErrorMessage(res));
   }
 
-  if (res.status === 204) return undefined as T;
-  return (await res.json()) as T;
+  return parseBody<T>(res);
+}
+
+// Multipart upload (CSV import). Do NOT set Content-Type; the browser sets the boundary.
+async function apiUpload<T>(path: string, form: FormData): Promise<T> {
+  const token = await getValidAccess();
+  const headers: Record<string, string> = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: "POST",
+    headers,
+    body: form,
+  });
+
+  if (!res.ok) {
+    throw new ApiError(res.status, await readErrorMessage(res));
+  }
+  return parseBody<T>(res);
+}
+
+// ─── Extra types (kept here so lib/types.ts does not need edits) ─────────────
+
+export interface ReviewItem {
+  id: string;
+  rating: number;
+  comment: string | null;
+  reviewerName: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReviewSummaryData {
+  average: number;
+  count: number;
+  // Keys are "5","4","3","2","1" because JSON object keys are strings.
+  distribution: Record<string, number>;
+}
+
+export interface VendorReviewItem {
+  reviewId: string;
+  productId: string;
+  productName: string;
+  productSlug: string;
+  rating: number;
+  comment: string | null;
+  reviewerName: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NotificationItem {
+  id: string;
+  type: string;
+  title: string;
+  body: string | null;
+  link: string | null;
+  read: boolean;
+  createdAt: string;
+}
+
+export interface VariantItem {
+  id: string;
+  productId: string;
+  sku: string;
+  options: Record<string, string>;
+  priceDeltaCents: number;
+  priceCents: number;
+  stockQuantity: number;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface VariantBody {
+  sku: string;
+  options: Record<string, string>;
+  priceDeltaCents: number;
+  stockQuantity: number;
+  active?: boolean;
+}
+
+export interface VendorStoreBody {
+  storeName: string;
+  description?: string;
+}
+
+export interface FlashSaleBody {
+  salePriceCents: number;
+  startsAt: string; // ISO-8601, e.g. new Date().toISOString()
+  endsAt: string;
+}
+
+export interface AssistantFaqItem {
+  id: string;
+  audience: "CUSTOMER" | "VENDOR" | "ADMIN" | "ALL" | string;
+  questionBn: string;
+  questionEn: string;
+  answerBn: string;
+  answerEn: string;
+  keywords: string | null;
+  link: string | null;
+  active: boolean;
+  updatedAt: string;
+}
+
+export interface AssistantFaqBody {
+  audience: string;
+  questionBn: string;
+  questionEn: string;
+  answerBn: string;
+  answerEn: string;
+  keywords?: string;
+  link?: string;
+  active?: boolean;
 }
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
@@ -185,6 +309,20 @@ export const authApi = {
 
   logout: (refreshToken: string) =>
     apiFetch<void>("/auth/logout", { method: "POST", body: { refreshToken } }),
+
+  requestPasswordReset: (email: string) =>
+    apiFetch<void>("/auth/password-reset/request", {
+      method: "POST",
+      body: { email },
+      auth: false,
+    }),
+
+  confirmPasswordReset: (token: string, newPassword: string) =>
+    apiFetch<void>("/auth/password-reset/confirm", {
+      method: "POST",
+      body: { token, newPassword },
+      auth: false,
+    }),
 
   me: () => apiFetch<UserResponse>("/me"),
 };
@@ -256,6 +394,76 @@ export const storeApi = {
     productApi.list({ store: slug, page, size: 20 }),
 };
 
+// ─── Reviews (product, public read + auth write) ─────────────────────────────
+
+const EMPTY_PAGE = <T>(): Page<T> => ({
+  content: [],
+  page: 0,
+  size: 0,
+  totalElements: 0,
+  totalPages: 0,
+});
+
+export const reviewApi = {
+  list: (slug: string, page = 0, size = 10) => {
+    if (DEMO_MODE) return Promise.resolve(EMPTY_PAGE<ReviewItem>());
+    return apiFetch<Page<ReviewItem>>(
+      `/products/${slug}/reviews?page=${page}&size=${size}`,
+      { auth: false },
+    );
+  },
+
+  summary: (slug: string) => {
+    if (DEMO_MODE)
+      return Promise.resolve<ReviewSummaryData>({
+        average: 0,
+        count: 0,
+        distribution: {},
+      });
+    return apiFetch<ReviewSummaryData>(`/products/${slug}/reviews/summary`, {
+      auth: false,
+    });
+  },
+
+  create: (slug: string, body: { rating: number; comment?: string }) =>
+    apiFetch<ReviewItem>(`/products/${slug}/reviews`, {
+      method: "POST",
+      body,
+    }),
+
+  update: (slug: string, body: { rating: number; comment?: string }) =>
+    apiFetch<ReviewItem>(`/products/${slug}/reviews/mine`, {
+      method: "PUT",
+      body,
+    }),
+
+  remove: (slug: string) =>
+    apiFetch<void>(`/products/${slug}/reviews/mine`, { method: "DELETE" }),
+};
+
+// ─── Notifications (customer, auth required) ─────────────────────────────────
+
+export const notificationApi = {
+  list: (page = 0, size = 20) => {
+    if (DEMO_MODE) return Promise.resolve(EMPTY_PAGE<NotificationItem>());
+    return apiFetch<Page<NotificationItem>>(
+      `/notifications?page=${page}&size=${size}`,
+    );
+  },
+
+  unreadCount: async (): Promise<number> => {
+    if (DEMO_MODE) return 0;
+    const res = await apiFetch<{ count: number }>("/notifications/unread-count");
+    return res.count;
+  },
+
+  markRead: (id: string) =>
+    apiFetch<void>(`/notifications/${id}/read`, { method: "POST" }),
+
+  markAllRead: () =>
+    apiFetch<void>("/notifications/read-all", { method: "POST" }),
+};
+
 // ─── Orders (customer) ───────────────────────────────────────────────────────
 
 export const orderApi = {
@@ -302,8 +510,21 @@ export interface ProductWriteBody {
   imageUrls?: string[];
 }
 
+export interface ImportResultItem {
+  total: number;
+  created: number;
+  failed: number;
+  errors: { row: number; message: string }[];
+}
+
 export const vendorApi = {
   store: () => apiFetch<VendorResponse>("/vendor/store"),
+
+  createStore: (data: VendorStoreBody) =>
+    apiFetch<VendorResponse>("/vendor/store", { method: "POST", body: data }),
+
+  updateStore: (data: VendorStoreBody) =>
+    apiFetch<VendorResponse>("/vendor/store", { method: "PUT", body: data }),
 
   dashboard: (period: "7d" | "30d" | "all" = "30d") =>
     apiFetch<VendorDashboardResponse>(`/vendor/dashboard?period=${period}`),
@@ -326,6 +547,54 @@ export const vendorApi = {
       body: data,
     }),
 
+  // Backend archives the product (soft delete). It returns the archived product.
+  deleteProduct: (id: string) =>
+    apiFetch<ProductResponse>(`/vendor/products/${id}`, { method: "DELETE" }),
+
+  setFlashSale: (id: string, data: FlashSaleBody) =>
+    apiFetch<ProductResponse>(`/vendor/products/${id}/flash-sale`, {
+      method: "PUT",
+      body: data,
+    }),
+
+  clearFlashSale: (id: string) =>
+    apiFetch<ProductResponse>(`/vendor/products/${id}/flash-sale`, {
+      method: "DELETE",
+    }),
+
+  variants: {
+    list: (productId: string) =>
+      apiFetch<VariantItem[]>(`/vendor/products/${productId}/variants`),
+
+    create: (productId: string, data: VariantBody) =>
+      apiFetch<VariantItem>(`/vendor/products/${productId}/variants`, {
+        method: "POST",
+        body: data,
+      }),
+
+    update: (productId: string, variantId: string, data: VariantBody) =>
+      apiFetch<VariantItem>(
+        `/vendor/products/${productId}/variants/${variantId}`,
+        { method: "PUT", body: data },
+      ),
+
+    remove: (productId: string, variantId: string) =>
+      apiFetch<void>(`/vendor/products/${productId}/variants/${variantId}`, {
+        method: "DELETE",
+      }),
+  },
+
+  importProducts: (file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    return apiUpload<ImportResultItem>("/vendor/products/import", form);
+  },
+
+  reviews: (page = 0, size = 20) =>
+    apiFetch<Page<VendorReviewItem>>(
+      `/vendor/reviews?page=${page}&size=${size}`,
+    ),
+
   orderItems: (page = 0) =>
     apiFetch<Page<VendorOrderItemResponse>>(
       `/vendor/orders/items?page=${page}`,
@@ -340,6 +609,31 @@ export const vendorApi = {
       },
     ),
 };
+
+// CSV template needs the bearer token, so a plain <a href> would fail (401).
+// Fetch it as a blob and trigger the download from memory.
+export async function downloadVendorImportTemplate(): Promise<void> {
+  const token = await getValidAccess();
+  const headers: Record<string, string> = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const res = await fetch(`${BASE_URL}/vendor/products/import/template`, {
+    headers,
+  });
+  if (!res.ok) {
+    throw new ApiError(res.status, await readErrorMessage(res));
+  }
+
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "shopstream-product-import-template.csv";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
 
 // ─── Admin ───────────────────────────────────────────────────────────────────
 
@@ -408,4 +702,21 @@ export const adminApi = {
 
   orders: (page = 0) =>
     apiFetch<Page<AdminOrderRow>>(`/admin/orders?page=${page}`),
+
+  // Backend returns a plain array here, not a page.
+  faqs: {
+    list: () => apiFetch<AssistantFaqItem[]>("/admin/assistant/faqs"),
+
+    create: (data: AssistantFaqBody) =>
+      apiFetch<AssistantFaqItem>("/admin/assistant/faqs", {
+        method: "POST",
+        body: data,
+      }),
+
+    update: (id: string, data: AssistantFaqBody) =>
+      apiFetch<AssistantFaqItem>(`/admin/assistant/faqs/${id}`, {
+        method: "PUT",
+        body: data,
+      }),
+  },
 };
