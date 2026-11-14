@@ -9,8 +9,8 @@ import { Footer } from "@/components/Footer";
 import { ProductCard } from "@/components/ProductCard";
 import { Icon } from "@/components/ui/Icon";
 import { productApi } from "@/lib/api";
-import { DEMO_CATEGORIES, DEMO_MODE, DEMO_STORES } from "@/lib/demo";
-import type { PublicProductResponse } from "@/lib/types";
+import { DEMO_MODE, DEMO_STORES } from "@/lib/demo";
+import { useLiveCategories } from "@/lib/useLiveCategories";import type { PublicProductResponse } from "@/lib/types";
 import styles from "./home.module.css";
 
 const edits = [
