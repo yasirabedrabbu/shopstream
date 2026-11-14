@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Nav } from "@/components/Nav";
+import { Icon } from "@/components/ui/Icon";
 import { ProductCard } from "@/components/ProductCard";
 import { Footer } from "@/components/Footer";
 import { productApi, categoryApi } from "@/lib/api";
@@ -129,8 +130,13 @@ export default function HomePage() {
           <h2 className="text-xl font-bold" style={{ fontFamily: "var(--font-heading)", color: "var(--text)" }}>
             Latest Products
           </h2>
-          <Link href="/products" className="text-sm font-medium" style={{ color: "var(--text-muted)" }}>
-            View all →
+          <Link
+            href="/products"
+            className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium"
+            style={{ color: "var(--text-muted)" }}
+          >
+            View all
+            <Icon name="arrowRight" size={16} />
           </Link>
         </div>
         {loading ? (

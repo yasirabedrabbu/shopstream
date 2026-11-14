@@ -1,6 +1,8 @@
 // apps/web/src/components/Pager.tsx
 "use client";
 
+import { Icon } from "@/components/ui/Icon";
+
 interface PagerProps {
   page: number;
   totalPages: number;
@@ -11,29 +13,35 @@ export function Pager({ page, totalPages, onChange }: PagerProps) {
   if (totalPages <= 1) return null;
 
   const btn =
-    "h-10 px-4 rounded-xl border text-sm font-medium disabled:opacity-40 transition-colors min-h-[44px]";
+    "inline-flex h-11 items-center gap-2 rounded-xl border border-border px-4 text-sm font-medium text-text transition-colors hover:bg-surface disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus)]";
 
   return (
-    <div className="flex items-center justify-center gap-3 mt-6">
+    <nav aria-label="Pagination" className="mt-6 flex items-center justify-center gap-3">
       <button
+        type="button"
         onClick={() => onChange(page - 1)}
         disabled={page <= 0}
         className={btn}
-        style={{ borderColor: "var(--border)", color: "var(--text)" }}
+        aria-label="Previous page"
       >
-        ← Previous
+        <Icon name="arrowLeft" size={16} />
+        Previous
       </button>
-      <span className="text-sm" style={{ color: "var(--text-muted)" }}>
+
+      <span className="text-sm text-text-muted" aria-live="polite">
         Page {page + 1} of {totalPages}
       </span>
+
       <button
+        type="button"
         onClick={() => onChange(page + 1)}
         disabled={page >= totalPages - 1}
         className={btn}
-        style={{ borderColor: "var(--border)", color: "var(--text)" }}
+        aria-label="Next page"
       >
-        Next →
+        Next
+        <Icon name="arrowRight" size={16} />
       </button>
-    </div>
+    </nav>
   );
 }

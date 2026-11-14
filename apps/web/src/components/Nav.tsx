@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { getUser, clearSession } from "@/lib/auth";
 import type { UserResponse } from "@/lib/types";
 import { Icon, type IconName } from "@/components/ui/Icon";
+import { buttonClasses } from "@/components/ui/Button";
 
 const links = [
   { href: "/", label: "Home" },
@@ -68,6 +69,10 @@ export function Nav() {
 
   const initial = user?.fullName?.charAt(0).toUpperCase() ?? "";
 
+  function isActive(href: string) {
+    return href === "/" ? pathname === "/" : pathname.startsWith(href);
+  }
+
   return (
     <header
       className="sticky top-0 z-40 w-full border-b"
@@ -77,8 +82,14 @@ export function Nav() {
         borderColor: "var(--border)",
       }}
     >
-      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4">
-        <Link href="/" className="flex shrink-0 items-center gap-2.5">
+      <nav
+        aria-label="Main"
+        className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4"
+      >
+        <Link
+          href="/"
+          className="flex shrink-0 items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus)]"
+        >
           <span
             className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-sm font-bold text-accent-text"
             style={{ fontFamily: "var(--font-heading)" }}
@@ -87,23 +98,24 @@ export function Nav() {
             S
           </span>
           <span
-            className="text-base font-bold tracking-tight"
-            style={{ fontFamily: "var(--font-heading)", color: "var(--text)" }}
+            className="text-base font-bold tracking-tight text-text"
+            style={{ fontFamily: "var(--font-heading)" }}
           >
             ShopStream
           </span>
         </Link>
 
-        <div className="hidden items-center gap-1 rounded-full p-1 md:flex" style={{ background: "var(--surface)" }}>
+        {/* Desktop segmented links */}
+        <div className="hidden items-center gap-1 rounded-full bg-surface p-1 md:flex">
           {links.map((l) => {
-            const active = l.href === "/" ? pathname === "/" : pathname.startsWith(l.href);
+            const active = isActive(l.href);
             return (
               <Link
                 key={l.href}
                 href={l.href}
                 aria-current={active ? "page" : undefined}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200 ${
-                  active ? "bg-accent text-accent-text shadow-sm" : "text-[var(--text-muted)] hover:text-[var(--text)]"
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus)] ${
+                  active ? "bg-accent text-accent-text shadow-sm" : "text-text-muted hover:text-text"
                 }`}
               >
                 {l.label}
@@ -120,16 +132,16 @@ export function Nav() {
                 onClick={() => setMenuOpen((v) => !v)}
                 aria-expanded={menuOpen}
                 aria-haspopup="menu"
-                className="flex items-center gap-2 rounded-full border py-1 pl-1 pr-3 text-sm font-medium transition-colors hover:border-accent"
-                style={{ borderColor: "var(--border)", color: "var(--text)" }}
+                aria-controls="account-menu"
+                aria-label={`Account menu for ${user.fullName}`}
+                className="flex min-h-11 items-center gap-2 rounded-full border border-border py-1 pl-1 pr-3 text-sm font-medium text-text transition-colors hover:border-text/40 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus)]"
               >
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-text">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-text">
                   {initial}
                 </span>
                 <span className="hidden max-w-[10rem] truncate sm:inline">{user.fullName}</span>
                 <span
-                  className={`transition-transform duration-200 ${menuOpen ? "rotate-180" : ""}`}
-                  style={{ color: "var(--text-muted)" }}
+                  className={`text-text-muted transition-transform duration-200 ${menuOpen ? "rotate-180" : ""}`}
                 >
                   <Icon name="chevron" size={14} />
                 </span>
@@ -137,15 +149,15 @@ export function Nav() {
 
               {menuOpen && (
                 <div
+                  id="account-menu"
                   role="menu"
-                  className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-2xl border p-1.5 shadow-[var(--shadow-card)]"
-                  style={{ background: "var(--bg)", borderColor: "var(--border)" }}
+                  className="absolute right-0 z-50 mt-2 w-60 overflow-hidden rounded-2xl border border-border bg-bg p-1.5 shadow-[var(--shadow-lift)]"
                 >
                   <div className="px-3 pb-2 pt-1.5">
-                    <p className="truncate text-sm font-semibold text-[var(--text)]">{user.fullName}</p>
-                    <p className="truncate text-xs text-[var(--text-muted)]">{user.email}</p>
+                    <p className="truncate text-sm font-semibold text-text">{user.fullName}</p>
+                    <p className="truncate text-xs text-text-muted">{user.email}</p>
                   </div>
-                  <div className="my-1 h-px" style={{ background: "var(--border)" }} />
+                  <div className="my-1 h-px bg-border" />
 
                   {menuItems.map((item) => (
                     <Link
@@ -153,21 +165,21 @@ export function Nav() {
                       href={item.href}
                       role="menuitem"
                       onClick={() => setMenuOpen(false)}
-                      className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-[var(--text)] transition-colors hover:bg-[var(--surface)]"
+                      className="flex min-h-11 items-center gap-2.5 rounded-xl px-3 text-sm text-text transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus)]"
                     >
-                      <span className="text-[var(--text-muted)]">
+                      <span className="text-text-muted">
                         <Icon name={item.icon} size={16} />
                       </span>
                       {item.label}
                     </Link>
                   ))}
 
-                  <div className="my-1 h-px" style={{ background: "var(--border)" }} />
+                  <div className="my-1 h-px bg-border" />
                   <button
                     type="button"
                     role="menuitem"
                     onClick={logout}
-                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm text-red-500 transition-colors hover:bg-[var(--surface)]"
+                    className="flex min-h-11 w-full items-center gap-2.5 rounded-xl px-3 text-left text-sm text-danger transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus)]"
                   >
                     <Icon name="logout" size={16} />
                     Logout
@@ -176,15 +188,31 @@ export function Nav() {
               )}
             </div>
           ) : (
-            <Link
-              href="/auth/login"
-              className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-accent-text shadow-sm transition-all hover:shadow-md"
-            >
+            <Link href="/auth/login" className={buttonClasses({ variant: "primary", size: "sm" })}>
               Sign in
             </Link>
           )}
         </div>
       </nav>
+
+      {/* Mobile links row */}
+      <div className="mx-auto flex max-w-7xl gap-2 px-4 pb-3 md:hidden" aria-label="Mobile">
+        {links.map((l) => {
+          const active = isActive(l.href);
+          return (
+            <Link
+              key={l.href}
+              href={l.href}
+              aria-current={active ? "page" : undefined}
+              className={`flex min-h-11 flex-1 items-center justify-center rounded-full text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus)] ${
+                active ? "bg-accent text-accent-text" : "bg-surface text-text-muted"
+              }`}
+            >
+              {l.label}
+            </Link>
+          );
+        })}
+      </div>
     </header>
   );
 }

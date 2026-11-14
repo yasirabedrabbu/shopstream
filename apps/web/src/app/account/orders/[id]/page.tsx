@@ -4,6 +4,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { Icon } from "@/components/ui/Icon";
 import { Nav } from "@/components/Nav";
 import { orderStatusBadge } from "@/components/Badge";
 import { orderApi } from "@/lib/api";
@@ -84,8 +85,13 @@ export default function OrderDetailPage() {
       <Nav />
       <main className="max-w-2xl mx-auto px-4 py-10">
         <div className="mb-6">
-          <Link href="/account/orders" className="text-sm" style={{ color: "var(--text-muted)" }}>
-            ← Orders
+          <Link
+            href="/account/orders"
+            className="inline-flex min-h-11 items-center gap-1.5 text-sm"
+            style={{ color: "var(--text-muted)" }}
+          >
+            <Icon name="arrowLeft" size={16} />
+            Orders
           </Link>
         </div>
 

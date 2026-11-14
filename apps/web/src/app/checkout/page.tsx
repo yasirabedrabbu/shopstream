@@ -4,6 +4,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Icon } from "@/components/ui/Icon";
 import { Nav } from "@/components/Nav";
 import { useToast } from "@/components/Toast";
 import { productApi, orderApi } from "@/lib/api";
@@ -100,7 +101,10 @@ function CheckoutContent() {
   return (
     <main className="max-w-3xl mx-auto px-4 py-10">
       <div className="flex gap-2 text-sm mb-6" style={{ color: "var(--text-muted)" }}>
-        <Link href={`/products/${product.slug}`}>← Back to product</Link>
+        <Link href={`/products/${product.slug}`} className="inline-flex min-h-11 items-center gap-1.5">
+          <Icon name="arrowLeft" size={16} />
+          Back to product
+        </Link>
       </div>
 
       <h1 className="text-2xl font-bold mb-6" style={{ fontFamily: "var(--font-heading)", color: "var(--text)" }}>
