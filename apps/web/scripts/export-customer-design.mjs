@@ -1,0 +1,10 @@
+import {readFileSync,writeFileSync,mkdirSync} from "node:fs";
+import ts from "typescript";
+import * as platform from "../lib/platform/design.ts";
+const {outputText}=ts.transpileModule(readFileSync("lib/customer/design.ts","utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}});
+const exports={};
+new Function("require","exports",outputText)((name)=>{if(name!=="../platform/design")throw Error(`Unexpected design dependency: ${name}`);return platform;},exports);
+mkdirSync("public/customer-design",{recursive:true});
+writeFileSync("public/customer-design/shopstream-customer-design-spec.json",JSON.stringify(exports.customerSpec,null,2)+"\n");
+writeFileSync("public/customer-design/tokens.json",JSON.stringify(exports.customerSpec.variables,null,2)+"\n");
+console.log("Exported customer mobile/desktop frame, component and variable specifications.");

@@ -1,0 +1,93 @@
+.a-submit:disabled {
+  cursor: wait;
+  opacity: var(--a-disabled-opacity);
+}
+
+.a-submit > [class*="animate-spin"] {
+  width: var(--p-space-20, calc(var(--p-space-16) + var(--p-space-4)));
+  height: calc(var(--p-space-16) + var(--p-space-4));
+  border-color: currentColor;
+  border-right-color: transparent;
+}
+
+.a-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--p-space-16);
+  margin-block: var(--p-space-24);
+}
+
+.a-divider > span:not(.p-text) {
+  flex: var(--a-one);
+  height: var(--p-stroke);
+  background: var(--p-border);
+}
+
+.auth-pages .a-switch-copy {
+  margin-top: var(--p-space-16);
+  font-size: var(--p-font-14);
+  text-align: center;
+}
+
+.a-switch-copy .a-text-link {
+  font-size: var(--p-font-14);
+}
+
+.a-form-error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--p-space-12);
+  padding: var(--p-space-12) var(--p-space-16);
+  border: var(--p-stroke) solid color-mix(in srgb, var(--p-danger) var(--a-danger-border-mix), var(--p-border));
+  background: var(--p-danger-soft);
+  color: var(--p-danger-text);
+  border-radius: var(--p-radius-control);
+}
+
+.a-form-error > svg {
+  flex-shrink: var(--a-zero);
+  margin-top: var(--p-space-4);
+}
+
+.a-form-error > .p-small {
+  font-size: var(--p-font-12);
+}
+
+.a-role-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--p-space-12);
+}
+
+.a-role-field > .p-small {
+  font-size: var(--p-font-14);
+  font-weight: var(--p-weight-medium);
+}
+
+.a-role-group {
+  display: grid;
+  grid-template-columns: repeat(var(--a-three), var(--a-role-width));
+  gap: var(--p-space-12);
+  justify-content: space-between;
+  padding-top: var(--p-space-4);
+}
+
+.auth-pages .a-role-card {
+  position: relative;
+  width: var(--a-role-width);
+  height: var(--a-role-height);
+  min-height: var(--a-role-height);
+  padding: var(--p-space-12);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--p-space-8);
+  border: var(--p-stroke) solid var(--p-border);
+  border-radius: var(--p-radius-control);
+  background: var(--p-surface);
+  color: var(--p-text-muted-readable);
+  transition:
+    transform var(--a-transition-fast),
+    box-shadow var(--a-transition-fast),
+    border-color var(--a-transition-fast);
+}

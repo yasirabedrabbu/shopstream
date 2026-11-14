@@ -1,0 +1,94 @@
+/* Auth screens already expose a contact link; keep the global launcher off mobile CTAs. */
+
+@media (max-width: 1023px) {
+  body:has(.auth-pages) > button[aria-label="Open help assistant"] {
+    display: none;
+  }
+}
+
+.auth-pages {
+  display: grid;
+  grid-template-columns: minmax(var(--a-zero), var(--a-flex-track));
+  min-height: var(--a-viewport-height);
+  background: var(--p-surface);
+  color: var(--p-text);
+  color-scheme: light;
+}
+
+.auth-pages .a-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--p-space-12);
+  width: fit-content;
+  min-height: var(--p-space-48);
+  border-radius: var(--p-space-8);
+  text-decoration: none;
+}
+
+.a-logo-symbol {
+  display: grid;
+  place-items: center;
+  width: var(--p-space-32);
+  height: var(--p-space-32);
+  flex-shrink: var(--a-zero);
+  border-radius: var(--p-space-8);
+  color: var(--p-accent-text);
+  background: var(--p-accent);
+}
+
+.auth-pages .a-logo-name {
+  font: var(--p-weight-heading) var(--p-font-20)/var(--a-line-height-body) var(--p-font-heading);
+  letter-spacing: var(--a-tracking-tight);
+}
+
+.auth-pages .a-logo-name > .a-logo-dot {
+  font: inherit;
+  color: var(--p-accent-readable);
+}
+
+.a-brand-panel {
+  display: none;
+}
+
+.a-form-side {
+  min-width: var(--a-zero);
+  display: flex;
+  flex-direction: column;
+  min-height: var(--a-viewport-height);
+}
+
+.a-form-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--p-space-12);
+  padding: var(--p-space-24) var(--p-space-16);
+}
+
+.a-support {
+  display: flex;
+  align-items: center;
+  gap: var(--p-space-8);
+}
+
+.a-support > .p-small {
+  display: none;
+}
+
+.auth-pages .a-text-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--p-space-8);
+  min-height: var(--a-input-height);
+  color: var(--p-text);
+  font-weight: var(--p-weight-medium);
+  text-decoration: none;
+  border-radius: var(--p-space-4);
+}
+
+.a-text-link:hover {
+  text-decoration: underline;
+  text-underline-offset: var(--p-space-4);
+}

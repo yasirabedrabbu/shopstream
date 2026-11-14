@@ -1,0 +1,28 @@
+/* Generated from the shared platform and authentication token lists. */
+.auth-pages {
+  --a-icon-default: 20px;
+  --a-icon-stroke: 1.7;
+  --a-icon-tiny: 12px;
+  --a-icon-mini: 14px;
+  --a-icon-xs: 16px;
+  --a-icon-sm: 18px;
+  --a-icon-lg: 24px;
+  --a-icon-heading: 26px;
+  --a-icon-xl: 32px;
+  --a-form-max: 400px;
+  --a-brand-panel-min: 360px;
+  --a-input-height: 44px;
+  --a-button-height: 48px;
+  --a-control-radius: 12px;
+  --a-card-radius: 16px;
+  --a-role-width: 100px;
+  --a-role-height: 80px;
+  --a-otp-width: 48px;
+  --a-otp-height: 56px;
+  --a-otp-gap: 8px;
+  --a-avatar: 48px;
+  --a-brand-bg: #111114;
+  --a-brand-text: #f1f1f3;
+  --a-brand-muted: #9299a6;
+  --a-brand-border: #1e1e24;
+}

@@ -1,0 +1,95 @@
+.a-resend-success {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--p-space-8);
+  color: var(--p-success-text);
+  margin-top: var(--p-space-12);
+}
+
+.auth-pages .a-back-link {
+  display: flex;
+  width: fit-content;
+  margin: var(--p-space-24) auto var(--a-zero);
+  font-size: var(--p-font-12);
+  color: var(--p-text-muted-readable);
+}
+
+.a-success {
+  padding: var(--p-space-24);
+  border: var(--p-stroke) solid color-mix(in srgb, var(--p-success) var(--a-success-border-mix), var(--p-border));
+  border-radius: var(--p-radius-card);
+  background: var(--p-success-soft);
+  display: flex;
+  flex-direction: column;
+  gap: var(--p-space-16);
+}
+
+.a-success-icon {
+  color: var(--p-success-text);
+  display: flex;
+}
+
+.a-success > .p-heading {
+  color: var(--p-success-text);
+  font-size: var(--p-font-20);
+}
+
+.a-success-actions {
+  margin-top: var(--p-space-8);
+}
+
+.auth-pages .a-button-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--p-space-8);
+  width: var(--a-full);
+  min-height: var(--a-button-height);
+  padding: var(--p-space-12);
+  border: var(--p-stroke) solid var(--p-accent);
+  border-radius: var(--p-radius-control);
+  background: var(--p-accent);
+  color: var(--p-accent-text);
+  text-decoration: none;
+  font-family: var(--p-font-heading);
+  font-weight: var(--p-weight-heading);
+  font-size: var(--p-font-12);
+  text-align: center;
+}
+
+.a-mode-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--p-space-8);
+  padding-top: var(--p-space-24);
+  margin-top: var(--p-space-24);
+  border-top: var(--p-stroke) solid var(--p-border);
+}
+
+.a-mode-note > svg {
+  flex-shrink: var(--a-zero);
+  color: var(--p-text-muted-readable);
+  margin-top: var(--p-space-4);
+}
+
+.a-mode-note > .p-small {
+  font-size: var(--p-font-12);
+  line-height: var(--a-line-height-copy);
+}
+
+.a-page-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--p-space-12);
+  padding: var(--p-space-16) var(--p-space-16) var(--p-space-80);
+  text-align: center;
+}
+
+.a-footer-tools {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--p-space-8);
+  flex-wrap: wrap;
+}

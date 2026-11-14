@@ -1,0 +1,61 @@
+@media (prefers-reduced-motion: reduce) {
+  .auth-pages *,
+  .auth-pages *::before,
+  .auth-pages *::after {
+    transition: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-pages .a-role-card:hover {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .a-route-loading > div {
+    animation: none;
+  }
+}
+
+.auth-pages .a-icon {
+  width: var(--a-icon-default);
+  height: var(--a-icon-default);
+  stroke-width: var(--a-icon-stroke);
+  flex-shrink: var(--a-zero);
+}
+
+.auth-pages .a-icon-tiny {
+  width: var(--a-icon-tiny);
+  height: var(--a-icon-tiny);
+}
+
+.auth-pages .a-icon-mini {
+  width: var(--a-icon-mini);
+  height: var(--a-icon-mini);
+}
+
+.auth-pages .a-icon-xs {
+  width: var(--a-icon-xs);
+  height: var(--a-icon-xs);
+}
+
+.auth-pages .a-icon-sm {
+  width: var(--a-icon-sm);
+  height: var(--a-icon-sm);
+}
+
+.auth-pages .a-icon-lg {
+  width: var(--a-icon-lg);
+  height: var(--a-icon-lg);
+}
+
+.auth-pages .a-icon-heading {
+  width: var(--a-icon-heading);
+  height: var(--a-icon-heading);
+}
+
+.auth-pages .a-icon-xl {
+  width: var(--a-icon-xl);
+  height: var(--a-icon-xl);
+}

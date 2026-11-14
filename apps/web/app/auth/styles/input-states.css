@@ -1,0 +1,93 @@
+.auth-pages .a-field input::placeholder {
+  color: var(--p-text-muted-readable);
+  opacity: var(--a-one);
+  font-size: var(--p-font-14);
+}
+
+.auth-pages .a-field input:focus {
+  border-color: var(--p-accent);
+  box-shadow: var(--a-zero) var(--a-zero)
+    var(--a-zero) var(--p-stroke) var(--p-accent);
+  outline: calc(var(--p-stroke) * var(--a-two)) solid
+    color-mix(in srgb, var(--p-text) var(--a-focus-mix), transparent);
+  outline-offset: var(--p-space-4);
+}
+
+.auth-pages .a-field input[aria-invalid="true"] {
+  border-color: var(--p-danger-text);
+  box-shadow: none;
+}
+
+.auth-pages .a-field input[aria-invalid="true"]:focus {
+  outline-color: var(--p-danger-text);
+}
+
+.auth-pages .a-field input:disabled {
+  color: var(--p-text-muted-readable);
+  background: var(--p-bg);
+  opacity: var(--a-disabled-opacity);
+  cursor: not-allowed;
+}
+
+.a-field p {
+  font-family: var(--p-font-body);
+  font-size: var(--p-font-12);
+  line-height: var(--a-line-height-copy);
+}
+
+.a-field p[role="alert"] {
+  color: var(--p-danger-text);
+}
+
+.a-password-field input {
+  padding-right: var(--p-space-48) !important;
+}
+
+.auth-pages .a-password-toggle {
+  position: absolute;
+  top: calc(var(--a-label-line) + var(--a-field-gap));
+  right: var(--p-space-4);
+  width: var(--a-input-height);
+  min-width: var(--a-input-height);
+  height: var(--a-input-height);
+  min-height: var(--a-input-height);
+  padding: var(--p-space-8);
+  border: var(--a-zero);
+  color: var(--p-text-muted-readable);
+  border-radius: var(--p-space-8);
+}
+
+.a-forgot-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: calc(var(--p-space-12) * var(--a-negative-one));
+  margin-bottom: calc(var(--p-space-8) * var(--a-negative-one));
+}
+
+.a-forgot-row .a-text-link {
+  font-size: var(--p-font-12);
+}
+
+.auth-pages .a-submit {
+  height: var(--a-button-height);
+  min-height: var(--a-button-height);
+  width: var(--a-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--p-space-12) var(--p-space-24);
+  border: var(--p-stroke) solid var(--p-accent);
+  border-radius: var(--p-radius-control);
+  background: var(--p-accent);
+  color: var(--p-accent-text);
+  font: var(--p-weight-heading) var(--p-font-14)/var(--a-line-height-body) var(--p-font-heading);
+  box-shadow: none;
+  transition:
+    background var(--a-transition-fast),
+    box-shadow var(--a-transition-fast);
+}
+
+.a-submit:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--p-accent) var(--a-hover-mix), var(--p-surface));
+  box-shadow: var(--a-zero) var(--p-space-4) var(--p-space-12) var(--p-accent-soft);
+}

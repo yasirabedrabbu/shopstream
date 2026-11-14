@@ -1,0 +1,94 @@
+.a-support .a-text-link {
+  font-size: var(--p-font-12);
+}
+
+.a-form-main {
+  width: var(--a-full);
+  flex: var(--a-one);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--p-space-24) var(--p-space-16) var(--p-space-32);
+  outline: none;
+}
+
+.a-form-container {
+  width: var(--a-full);
+  max-width: var(--a-form-max);
+}
+
+.a-form-heading {
+  margin-bottom: var(--p-space-32);
+}
+
+.auth-pages .a-form-heading > .p-title {
+  font: var(--p-weight-heading) var(--p-font-32)/var(--a-line-height-title) var(--p-font-heading);
+  letter-spacing: var(--a-tracking-tight);
+  margin-bottom: var(--p-space-12);
+}
+
+.a-form-heading > .p-tone-muted {
+  line-height: var(--a-line-height-relaxed);
+}
+
+.a-form-heading > .p-tone-muted > .p-text {
+  font-size: inherit;
+  font-weight: var(--p-weight-medium);
+  color: var(--p-text);
+  overflow-wrap: anywhere;
+}
+
+.a-heading-icon {
+  display: grid;
+  place-items: center;
+  width: var(--p-space-56, calc(var(--p-space-48) + var(--p-space-8)));
+  height: calc(var(--p-space-48) + var(--p-space-8));
+  border: var(--p-stroke) solid var(--p-border);
+  border-radius: var(--p-radius-card);
+  background: var(--p-bg);
+  color: var(--p-text);
+  margin-bottom: var(--p-space-24);
+}
+
+.a-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--a-form-gap);
+}
+
+.a-register-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--p-space-16);
+}
+
+.a-field {
+  min-width: var(--a-zero);
+  position: relative;
+}
+
+.a-field > div {
+  gap: var(--a-field-gap);
+}
+
+.a-field label {
+  font-family: var(--p-font-body);
+  font-size: var(--p-font-14);
+  line-height: var(--a-label-line);
+  font-weight: var(--p-weight-medium);
+  color: var(--p-text);
+}
+
+.auth-pages .a-field input {
+  display: block;
+  width: var(--a-full);
+  height: var(--a-input-height);
+  min-height: var(--a-input-height);
+  padding: var(--p-space-12) var(--p-space-16);
+  border: var(--p-stroke) solid var(--p-border);
+  border-radius: var(--a-control-radius);
+  background: var(--p-surface);
+  color: var(--p-text);
+  font: var(--p-weight-normal) var(--p-font-16)/var(--a-line-height-body) var(--p-font-body);
+  box-shadow: none;
+}

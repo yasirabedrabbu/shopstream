@@ -1,0 +1,91 @@
+.a-role-card > .p-small {
+  color: var(--p-text);
+  font-size: var(--p-font-12);
+}
+
+.auth-pages .a-role-card:hover:not(:disabled) {
+  transform: translateY(calc(var(--p-stroke) * var(--a-negative-two)));
+  box-shadow: var(--a-zero) var(--p-space-8) var(--p-space-24)
+    color-mix(in srgb, var(--p-text) var(--a-soft-shadow-mix), transparent);
+}
+
+.auth-pages .a-role-selected {
+  border: calc(var(--p-stroke) * var(--a-two)) solid var(--p-accent);
+  color: var(--p-text);
+  background: var(--p-accent-soft);
+}
+
+.a-role-check {
+  position: absolute;
+  top: calc(var(--p-space-8) * var(--a-negative-one));
+  right: calc(var(--p-space-8) * var(--a-negative-one));
+  display: grid;
+  place-items: center;
+  width: var(--p-space-20, calc(var(--p-space-16) + var(--p-space-4)));
+  height: calc(var(--p-space-16) + var(--p-space-4));
+  border-radius: var(--a-half);
+  background: var(--p-accent);
+  color: var(--p-accent-text);
+  box-shadow: var(--a-zero) var(--a-zero)
+    var(--a-zero) calc(var(--p-stroke) * var(--a-three))
+    var(--p-surface);
+}
+
+.a-terms-row {
+  display: flex;
+  gap: var(--p-space-12);
+  align-items: flex-start;
+}
+
+.a-terms-row > div {
+  width: var(--p-space-24);
+  flex-shrink: var(--a-zero);
+  padding-top: var(--p-space-12);
+}
+
+.auth-pages .a-checkbox {
+  width: var(--p-space-16);
+  height: var(--p-space-16);
+  min-height: var(--a-zero);
+  padding: var(--a-zero);
+  border-radius: var(--p-space-4);
+  accent-color: var(--p-text);
+  cursor: pointer;
+  background: var(--p-surface);
+}
+
+.a-terms-row > label {
+  display: flex;
+  align-items: center;
+  min-height: var(--p-space-44, calc(var(--p-space-32) + var(--p-space-12)));
+  cursor: pointer;
+  line-height: var(--a-line-height-relaxed);
+}
+
+.a-terms-row > label > .p-small {
+  font-size: var(--p-font-12);
+  color: var(--p-text-muted-readable);
+}
+
+.auth-pages .a-policy-link {
+  color: var(--p-text);
+  font-weight: var(--p-weight-medium);
+  text-decoration: underline;
+  text-underline-offset: var(--p-space-4);
+}
+
+.a-terms > p {
+  margin-top: var(--p-space-8) !important;
+}
+
+.a-password-strength {
+  display: flex;
+  flex-direction: column;
+  gap: var(--p-space-8);
+  margin-top: calc(var(--p-space-8) * var(--a-negative-one));
+}
+
+.a-strength-bars {
+  display: flex;
+  gap: var(--p-space-4);
+}

@@ -1,0 +1,92 @@
+@media (min-width: 1024px) and (max-height: 760px) {
+  .a-brand-description {
+    margin-top: var(--p-space-16) !important;
+  }
+}
+
+@media (min-width: 1024px) and (max-height: 760px) {
+  .auth-pages .a-quote {
+    font-size: var(--p-font-16);
+  }
+}
+
+@media (min-width: 1024px) and (max-height: 760px) {
+  .a-brand-bottom {
+    gap: var(--p-space-16);
+  }
+}
+
+@media (min-width: 1024px) and (max-height: 760px) {
+  .a-trust-badges {
+    padding-top: var(--p-space-16);
+    gap: var(--p-space-8);
+  }
+}
+
+@media (max-width: 359px) {
+  .a-role-group {
+    grid-template-columns: repeat(
+      var(--a-three),
+      minmax(var(--a-zero), var(--a-flex-track))
+    );
+    gap: var(--p-space-8);
+  }
+}
+
+@media (max-width: 359px) {
+  .auth-pages .a-role-card {
+    width: var(--a-full);
+  }
+}
+
+@media (max-width: 359px) {
+  .a-otp-group {
+    grid-template-columns: repeat(
+      var(--a-decoration-scale),
+      minmax(var(--a-zero), var(--a-flex-track))
+    );
+    gap: var(--p-space-4);
+  }
+}
+
+@media (max-width: 359px) {
+  .auth-pages .a-otp-box input {
+    width: var(--a-full);
+  }
+}
+
+@media (max-width: 359px) {
+  .a-form-top {
+    padding-top: var(--p-space-16);
+  }
+}
+
+@media (max-width: 359px) {
+  .a-form-top .a-logo-name {
+    font-size: var(--p-font-16);
+  }
+}
+
+@media (max-width: 359px) {
+  .a-form-top .a-logo {
+    gap: var(--p-space-8);
+  }
+}
+
+@media (max-width: 359px) {
+  .auth-pages .a-form-heading > .p-title {
+    font-size: var(--p-font-24);
+  }
+}
+
+@media (max-width: 359px) {
+  .a-footer-tools {
+    gap: var(--p-space-4);
+  }
+}
+
+@media (max-width: 359px) {
+  .a-footer-tools select {
+    padding-left: var(--p-space-8);
+  }
+}

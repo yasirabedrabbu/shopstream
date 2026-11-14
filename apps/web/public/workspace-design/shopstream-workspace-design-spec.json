@@ -1,0 +1,621 @@
+{
+  "name": "ShopStream / Tenant Workspace",
+  "version": "1.0.0",
+  "format": "Figma variable, component and frame implementation/import specification; not a native .fig file",
+  "frames": [
+    {
+      "name": "workspace/overview",
+      "route": "/workspace/overview",
+      "desktop": {
+        "width": 1440,
+        "height": 1100
+      },
+      "tablet": {
+        "width": 1024
+      },
+      "mobile": {
+        "width": 390
+      },
+      "states": [
+        "populated",
+        "loading",
+        "empty",
+        "error"
+      ],
+      "modes": [
+        "Dark",
+        "Light"
+      ]
+    },
+    {
+      "name": "workspace/commerce/products",
+      "route": "/workspace/commerce/products",
+      "desktop": {
+        "width": 1440,
+        "height": 1100
+      },
+      "tablet": {
+        "width": 1024
+      },
+      "mobile": {
+        "width": 390
+      },
+      "states": [
+        "populated",
+        "loading",
+        "empty",
+        "error"
+      ],
+      "modes": [
+        "Dark",
+        "Light"
+      ]
+    },
+    {
+      "name": "workspace/commerce/orders",
+      "route": "/workspace/commerce/orders",
+      "desktop": {
+        "width": 1440,
+        "height": 1100
+      },
+      "tablet": {
+        "width": 1024
+      },
+      "mobile": {
+        "width": 390
+      },
+      "states": [
+        "populated",
+        "loading",
+        "empty",
+        "error"
+      ],
+      "modes": [
+        "Dark",
+        "Light"
+      ]
+    },
+    {
+      "name": "workspace/marketing/campaigns",
+      "route": "/workspace/marketing/campaigns",
+      "desktop": {
+        "width": 1440,
+        "height": 1100
+      },
+      "tablet": {
+        "width": 1024
+      },
+      "mobile": {
+        "width": 390
+      },
+      "states": [
+        "populated",
+        "loading",
+        "empty",
+        "error"
+      ],
+      "modes": [
+        "Dark",
+        "Light"
+      ]
+    },
+    {
+      "name": "workspace/team",
+      "route": "/workspace/team",
+      "desktop": {
+        "width": 1440,
+        "height": 1100
+      },
+      "tablet": {
+        "width": 1024
+      },
+      "mobile": {
+        "width": 390
+      },
+      "states": [
+        "populated",
+        "loading",
+        "empty",
+        "error"
+      ],
+      "modes": [
+        "Dark",
+        "Light"
+      ]
+    },
+    {
+      "name": "workspace/settings/store",
+      "route": "/workspace/settings/store",
+      "desktop": {
+        "width": 1440,
+        "height": 1100
+      },
+      "tablet": {
+        "width": 1024
+      },
+      "mobile": {
+        "width": 390
+      },
+      "states": [
+        "populated",
+        "loading",
+        "empty",
+        "error"
+      ],
+      "modes": [
+        "Dark",
+        "Light"
+      ]
+    }
+  ],
+  "variables": {
+    "collection": "ShopStream / Workspace",
+    "modes": [
+      "Dark",
+      "Light"
+    ],
+    "colors": [
+      {
+        "name": "color/bg",
+        "type": "COLOR",
+        "valuesByMode": {
+          "Dark": "#0a0a0b",
+          "Light": "#f8f9fa"
+        }
+      },
+      {
+        "name": "color/surface",
+        "type": "COLOR",
+        "valuesByMode": {
+          "Dark": "#111114",
+          "Light": "#ffffff"
+        }
+      },
+      {
+        "name": "color/border",
+        "type": "COLOR",
+        "valuesByMode": {
+          "Dark": "#1e1e24",
+          "Light": "#e5e7eb"
+        }
+      },
+      {
+        "name": "color/text",
+        "type": "COLOR",
+        "valuesByMode": {
+          "Dark": "#f1f1f3",
+          "Light": "#111114"
+        }
+      },
+      {
+        "name": "color/text-muted",
+        "type": "COLOR",
+        "valuesByMode": {
+          "Dark": "#6b7280",
+          "Light": "#6b7280"
+        }
+      },
+      {
+        "name": "color/text-muted-readable",
+        "type": "COLOR",
+        "valuesByMode": {
+          "Dark": "#9299a6",
+          "Light": "#626976"
+        }
+      },
+      {
+        "name": "color/accent",
+        "type": "COLOR",
+        "valuesByMode": {
+          "Dark": "#e8f44a",
+          "Light": "#e8f44a"
+        }
+      },
+      {
+        "name": "color/accent-text",
+        "type": "COLOR",
+        "valuesByMode": {
+          "Dark": "#111114",
+          "Light": "#111114"
+        }
+      },
+      {
+        "name": "color/danger",
+        "type": "COLOR",
+        "valuesByMode": {
+          "Dark": "#ef4444",
+          "Light": "#ef4444"
+        }
+      },
+      {
+        "name": "color/success",
+        "type": "COLOR",
+        "valuesByMode": {
+          "Dark": "#22c55e",
+          "Light": "#22c55e"
+        }
+      },
+      {
+        "name": "color/chart-secondary",
+        "type": "COLOR",
+        "valuesByMode": {
+          "Dark": "#9299a6",
+          "Light": "#6b7280"
+        }
+      },
+      {
+        "name": "color/chart-tertiary",
+        "type": "COLOR",
+        "valuesByMode": {
+          "Dark": "#bbc0ca",
+          "Light": "#a9aeb9"
+        }
+      },
+      {
+        "name": "color/chart-quaternary",
+        "type": "COLOR",
+        "valuesByMode": {
+          "Dark": "#657044",
+          "Light": "#657044"
+        }
+      }
+    ],
+    "spacing": [
+      {
+        "name": "spacing/4",
+        "type": "FLOAT",
+        "value": 4
+      },
+      {
+        "name": "spacing/8",
+        "type": "FLOAT",
+        "value": 8
+      },
+      {
+        "name": "spacing/12",
+        "type": "FLOAT",
+        "value": 12
+      },
+      {
+        "name": "spacing/16",
+        "type": "FLOAT",
+        "value": 16
+      },
+      {
+        "name": "spacing/24",
+        "type": "FLOAT",
+        "value": 24
+      },
+      {
+        "name": "spacing/32",
+        "type": "FLOAT",
+        "value": 32
+      },
+      {
+        "name": "spacing/48",
+        "type": "FLOAT",
+        "value": 48
+      },
+      {
+        "name": "spacing/64",
+        "type": "FLOAT",
+        "value": 64
+      },
+      {
+        "name": "spacing/72",
+        "type": "FLOAT",
+        "value": 72
+      },
+      {
+        "name": "spacing/80",
+        "type": "FLOAT",
+        "value": 80
+      },
+      {
+        "name": "spacing/96",
+        "type": "FLOAT",
+        "value": 96
+      },
+      {
+        "name": "spacing/100",
+        "type": "FLOAT",
+        "value": 100
+      }
+    ],
+    "radii": {
+      "radius-control": 12,
+      "radius-card": 16,
+      "radius-pill": 999
+    },
+    "dimensions": {
+      "sidebar-expanded": 240,
+      "sidebar-collapsed": 80,
+      "topbar": 80,
+      "bottom-nav": 80,
+      "control-min": 48,
+      "content-max": 1280,
+      "drawer-width": 480
+    },
+    "roles": [
+      {
+        "name": "role/owner",
+        "type": "COLOR",
+        "valuesByMode": {
+          "Dark": "#e8f44a",
+          "Light": "#555c0b"
+        }
+      },
+      {
+        "name": "role/manager",
+        "type": "COLOR",
+        "valuesByMode": {
+          "Dark": "#8fbcff",
+          "Light": "#2055a0"
+        }
+      },
+      {
+        "name": "role/packer",
+        "type": "COLOR",
+        "valuesByMode": {
+          "Dark": "#c6a2ff",
+          "Light": "#7340b1"
+        }
+      },
+      {
+        "name": "role/support",
+        "type": "COLOR",
+        "valuesByMode": {
+          "Dark": "#69d9a0",
+          "Light": "#17673d"
+        }
+      },
+      {
+        "name": "role/marketer",
+        "type": "COLOR",
+        "valuesByMode": {
+          "Dark": "#ffbd7a",
+          "Light": "#9a460b"
+        }
+      }
+    ]
+  },
+  "typography": {
+    "heading": {
+      "family": "Sora",
+      "weights": [
+        600,
+        700
+      ]
+    },
+    "body": {
+      "family": "Manrope",
+      "weights": [
+        400,
+        500
+      ]
+    },
+    "scale": [
+      12,
+      14,
+      16,
+      20,
+      24,
+      32,
+      40,
+      44,
+      48,
+      56
+    ]
+  },
+  "components": {
+    "StatTile": {
+      "variants": {
+        "trend": [
+          "up",
+          "down",
+          "neutral"
+        ]
+      },
+      "value": "Sora / 32 / 700",
+      "label": "Manrope / 14 / 400"
+    },
+    "DataTable": {
+      "variants": {
+        "state": [
+          "default",
+          "empty"
+        ],
+        "selection": [
+          "none",
+          "partial",
+          "all"
+        ],
+        "sort": [
+          "ascending",
+          "descending"
+        ]
+      },
+      "features": [
+        "sticky header",
+        "row hover",
+        "checkbox selection",
+        "pagination",
+        "sortable columns"
+      ]
+    },
+    "StatusBadge": {
+      "variants": {
+        "status": [
+          "Active",
+          "Pending",
+          "Suspended"
+        ]
+      }
+    },
+    "RoleBadge": {
+      "variants": {
+        "role": [
+          "CUSTOMER",
+          "VENDOR",
+          "ADMIN",
+          "PLATFORM_ADMIN"
+        ]
+      }
+    },
+    "PageHeader": {
+      "title": "Sora / 24 / 600",
+      "subtitle": "Manrope / 14 / 400",
+      "slots": [
+        "title",
+        "subtitle",
+        "actions"
+      ]
+    },
+    "EmptyState": {
+      "slots": [
+        "icon",
+        "heading",
+        "subtext",
+        "optional action"
+      ]
+    },
+    "SidebarItem": {
+      "variants": {
+        "state": [
+          "default",
+          "hover",
+          "active"
+        ],
+        "layout": [
+          "expanded",
+          "collapsed",
+          "bottom navigation"
+        ]
+      }
+    },
+    "Button": {
+      "variants": {
+        "variant": [
+          "primary",
+          "secondary",
+          "ghost",
+          "danger"
+        ],
+        "state": [
+          "default",
+          "hover",
+          "focus",
+          "disabled"
+        ]
+      },
+      "minimumHeight": 48
+    },
+    "Switch": {
+      "variants": {
+        "checked": [
+          true,
+          false
+        ]
+      },
+      "minimumHeight": 48
+    },
+    "Chart": {
+      "variants": {
+        "type": [
+          "line",
+          "bar",
+          "donut"
+        ],
+        "compare": [
+          true,
+          false
+        ]
+      },
+      "accessibility": [
+        "text summary",
+        "equivalent data table"
+      ]
+    },
+    "ProductCard": {
+      "variants": {
+        "status": [
+          "Active",
+          "Draft",
+          "Out of Stock"
+        ],
+        "selected": [
+          true,
+          false
+        ]
+      },
+      "imageRatio": "1:1",
+      "name": "Sora / 16 / 600",
+      "price": "Sora / 20 / 600",
+      "slots": [
+        "image",
+        "name",
+        "price",
+        "status",
+        "stock",
+        "edit"
+      ]
+    },
+    "OrderRow": {
+      "variants": {
+        "status": [
+          "Pending",
+          "Confirmed",
+          "Shipped",
+          "Delivered",
+          "Cancelled"
+        ]
+      },
+      "date": "relative to labelled demo snapshot"
+    },
+    "RoleChip": {
+      "variants": {
+        "role": [
+          "Owner",
+          "Manager",
+          "Packer",
+          "Support",
+          "Marketer"
+        ]
+      },
+      "shape": "filled pill"
+    },
+    "Drawer": {
+      "width": 480,
+      "features": [
+        "modal backdrop",
+        "focus trap",
+        "Escape closes",
+        "scrolling body",
+        "sticky footer",
+        "focus return",
+        "slide from right"
+      ]
+    },
+    "FormSection": {
+      "heading": "Sora / 16 / 600",
+      "fieldGap": 12,
+      "surface": "surface token; white in Light mode",
+      "mobile": "full-width"
+    },
+    "ScreenState": {
+      "variants": {
+        "state": [
+          "populated",
+          "loading",
+          "empty",
+          "error"
+        ]
+      }
+    }
+  },
+  "accessibility": {
+    "textContrast": "4.5:1 minimum",
+    "note": "The exact brand text-muted token is retained. Use text-muted-readable for dark-mode text. Semantic light-mode text uses stronger aliases, not the raw success/danger fills."
+  },
+  "behavior": "Session-only frontend demonstration. No real emails, payments, store publishing or production changes. NID is optional demo input, not exported. Uploads stay in browser memory."
+}

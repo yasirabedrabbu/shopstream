@@ -1,0 +1,16 @@
+@import "./styles/tokens-01.css";
+@import "./styles/tokens-02.css";
+@import "./styles/identity.css";
+@import "./styles/form-layout.css";
+@import "./styles/input-states.css";
+@import "./styles/submit-and-feedback.css";
+@import "./styles/role-and-terms.css";
+@import "./styles/otp.css";
+@import "./styles/success-and-footer.css";
+@import "./styles/loading-and-tablet.css";
+@import "./styles/brand-layout.css";
+@import "./styles/brand-testimonial.css";
+@import "./styles/brand-illustration.css";
+@import "./styles/desktop-responsive.css";
+@import "./styles/mobile-responsive.css";
+@import "./styles/motion-and-icons.css";

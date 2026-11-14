@@ -1,68 +1,64 @@
-# ShopStream Web
+# ShopStream frontend
 
-Next.js 16 storefront, vendor dashboard, and admin panel for ShopStream.
+A responsive marketplace preview built with Next.js, React, TypeScript, and
+Tailwind CSS. The default experience is frontend-only; it needs no backend or
+credentials.
 
-## Stack
+## What works in the demo
 
-- Next.js 16.4 (App Router, Turbopack)
-- React 19.3
-- Tailwind CSS 4.3 with `@tailwindcss/postcss`
-- TypeScript
-- Fonts: Sora (headings), Manrope (body)
+- Eight clearly labeled sample products across six categories and three sample stores.
+- Search across product names, descriptions, categories, and stores.
+- Category filtering, sorting, URL-based pagination, and browser back/forward navigation.
+- Product details, quantity controls, unavailable-product states, and related finds.
+- Guest checkout with delivery details, illustrative delivery charges, simulated
+  payment choices, an editable review, and a demo completion screen.
+- Account and order notices that explain that real accounts and orders are not connected.
+- Local quick-help FAQs with an accessible keyboard-operable dialog.
+- Responsive layouts, system dark mode, reduced-motion support, and optimized
+  versions of the supplied photography.
 
-## Setup
-
-```powershell
-cd apps\web
-npm install
-```
-
-Create `apps\web\.env.local`:
-
-```env
-NEXT_PUBLIC_API_URL=/api/v1
-API_PROXY_TARGET=http://localhost:8080
-```
-
-`/api/v1` requests from the browser are forwarded to the Spring Boot backend by `next.config.ts`. The backend must be running on port 8080.
+No demo order, payment information, or delivery address is submitted or persisted.
+Use the **Use example details** button rather than entering personal information.
 
 ## Commands
 
-| Command | Purpose |
-|---|---|
-| `npm run dev` | Development server on `http://localhost:3000` |
-| `npm run build` | Production build and type check |
-| `npm run start` | Serve the production build |
-| `npm run lint` | ESLint |
+Dependencies are installed through `.figma/make/install` in Figma Make.
+The preview server is managed automatically; do not start a second server there.
 
-## Routes
+```sh
+npm test
+npm run lint
+NODE_ENV=production npm run build
+```
 
-| Area | Routes |
-|---|---|
-| Storefront | `/`, `/products`, `/products/[slug]`, `/stores/[slug]` |
-| Auth | `/auth/login`, `/auth/register` |
-| Customer | `/account/orders`, `/account/orders/[id]` |
-| Vendor | `/vendor/dashboard`, `/vendor/products`, `/vendor/products/new`, `/vendor/products/[id]/edit`, `/vendor/orders` |
-| Admin | `/admin/dashboard`, `/admin/vendors`, `/admin/products`, `/admin/users`, `/admin/categories`, `/admin/payments` |
+The explicit production environment avoids inheriting the sandbox's development
+`NODE_ENV` during a production build.
 
-## Folder structure
+`npm test` runs the catalog and safe-return-path regression tests with Node.js 22.
+The full lint command also checks the imported admin/vendor dashboard code;
+those untouched pages currently have seven `react-hooks/set-state-in-effect`
+errors. The revised storefront files pass focused linting.
 
-src/
-app/ Routes (App Router)
-components/ Shared UI (Nav, Sidebar, ProductCard, Modal, Toast, Badge)
-lib/ api.ts (fetch wrapper), types.ts (DTO mirror), auth.ts, money.ts
+## Browser regression checks
 
-## Design system
+Browser tooling is kept separate from application dependencies:
 
-- Light and dark themes through CSS variables in `src/app/globals.css`.
-- Accent: lime `#E8F44A` with dark text.
-- Flat surfaces. No gradients, no shadows.
-- 8pt spacing grid. Breakpoints 375, 768, 1024, 1440.
-- Minimum touch target 44px.
+```sh
+npm install --prefix /tmp/shopstream-ui-tests --no-package-lock playwright @axe-core/playwright
+node /tmp/shopstream-ui-tests/node_modules/playwright/cli.js install chromium
+NODE_PATH=/tmp/shopstream-ui-tests/node_modules node tests/browser-audit.cjs
+```
 
-## Troubleshooting
+Run against the existing preview at `http://localhost:3000`, or set the optional
+`PLAYWRIGHT_BASE_URL` for another already-running preview. The test exercises the
+demo shopping journey, mobile navigation, modal focus restoration, light/dark
+accessibility checks, and verifies that no API calls or broken assets occur.
+Screenshots are written to `/tmp/shopstream-*.png`, not the repository.
 
-- `Failed to fetch` on the homepage: the backend is not running. Start it and open `http://localhost:8080/api/v1/ping`.
-- Styles missing: confirm `postcss.config.mjs` exists and `@tailwindcss/postcss` is installed.
-- `Method 'GET' is not supported`: the frontend called an endpoint with a different method or path than the backend. Compare with `services/core-api` controllers.
-- After changing `next.config.ts` or `.env.local`, stop the dev server and restart it.
+## Original API integration
+
+The imported API integration is preserved. An explicitly configured
+`NEXT_PUBLIC_API_URL` opts out of demo catalog mode. Real authentication, orders,
+payments, and seller/admin data still require the original compatible service;
+this UI work does not supply one. Do not use the frontend demo as a production
+commerce or authentication service.

@@ -1,0 +1,88 @@
+@media (min-width: 1024px) {
+  .a-brand-panel::before {
+    content: "";
+    position: absolute;
+    width: calc(var(--p-space-100) * var(--a-decoration-scale));
+    height: calc(var(--p-space-100) * var(--a-decoration-scale));
+    left: calc(var(--p-space-100) * var(--a-glow-offset-inline));
+    bottom: calc(var(--p-space-100) * var(--a-glow-offset-block));
+    border-radius: var(--a-half);
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--p-accent) var(--a-glow-mix), transparent),
+      transparent var(--a-gradient-stop)
+    );
+    pointer-events: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  .a-brand-panel > * {
+    position: relative;
+    z-index: var(--a-one);
+  }
+}
+
+@media (min-width: 1024px) {
+  .a-brand-panel .a-logo-name {
+    color: var(--a-brand-text);
+  }
+}
+
+@media (min-width: 1024px) {
+  .a-brand-panel .a-logo-dot {
+    color: var(--p-accent) !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .a-brand-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: var(--p-space-8);
+    color: var(--a-brand-muted);
+    font-size: var(--p-font-12);
+    margin-bottom: var(--p-space-24);
+  }
+}
+
+@media (min-width: 1024px) {
+  .a-brand-eyebrow > span {
+    width: var(--p-space-4);
+    height: var(--p-space-4);
+    border-radius: var(--a-half);
+    background: var(--p-accent);
+  }
+}
+
+@media (min-width: 1024px) {
+  .auth-pages .a-brand-headline {
+    font: var(--p-weight-bold) var(--p-font-40)/var(--a-line-height-hero) var(--p-font-heading);
+    letter-spacing: var(--a-tracking-hero);
+    color: var(--a-brand-text);
+  }
+}
+
+@media (min-width: 1024px) {
+  .auth-pages .a-brand-headline > span {
+    font: inherit;
+    color: var(--p-accent);
+  }
+}
+
+@media (min-width: 1024px) {
+  .auth-pages .a-brand-description {
+    margin-top: var(--p-space-24);
+    color: var(--a-brand-muted);
+    line-height: var(--a-line-height-description);
+    font-size: var(--p-font-14);
+  }
+}
+
+@media (min-width: 1024px) {
+  .a-brand-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: var(--p-space-24);
+  }
+}

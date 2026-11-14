@@ -1,0 +1,90 @@
+.a-strength-bars > span {
+  flex: var(--a-one);
+  height: var(--p-space-4);
+  background: var(--p-border);
+  border-radius: var(--p-space-4);
+}
+
+.a-strength-bars > [data-filled="true"] {
+  background: var(--p-success-text);
+}
+
+.a-otp-group {
+  display: grid;
+  grid-template-columns: repeat(var(--a-decoration-scale), var(--a-otp-width));
+  gap: var(--a-otp-gap);
+  justify-content: center;
+  padding-block: var(--p-space-8);
+}
+
+.a-otp-box {
+  min-width: var(--a-zero);
+}
+
+.a-otp-box label {
+  position: absolute;
+  width: var(--p-stroke);
+  height: var(--p-stroke);
+  overflow: hidden;
+  clip-path: inset(var(--a-half));
+  white-space: nowrap;
+}
+
+.a-otp-box > div {
+  gap: var(--a-zero);
+}
+
+.auth-pages .a-otp-box input {
+  width: var(--a-otp-width);
+  height: var(--a-otp-height);
+  min-height: var(--a-otp-height);
+  padding: var(--a-zero);
+  border: var(--p-stroke) solid var(--p-border);
+  border-radius: var(--p-radius-control);
+  background: var(--p-surface);
+  font: var(--p-weight-heading) var(--p-font-24)/var(--a-one) var(--p-font-heading);
+  color: var(--p-text);
+  text-align: center;
+  box-shadow: none;
+}
+
+.auth-pages .a-otp-box input:focus {
+  border-color: var(--p-accent);
+  box-shadow: var(--a-zero) var(--a-zero)
+    var(--a-zero) var(--p-stroke) var(--p-accent);
+  outline: calc(var(--p-stroke) * var(--a-two)) solid
+    color-mix(in srgb, var(--p-text) var(--a-focus-mix), transparent);
+  outline-offset: var(--p-space-4);
+}
+
+.auth-pages .a-otp-box input[aria-invalid="true"] {
+  border-color: var(--p-danger-text);
+}
+
+.auth-pages .a-otp-box input:disabled {
+  background: var(--p-bg);
+  opacity: var(--a-otp-disabled-opacity);
+}
+
+.a-resend-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--p-space-4);
+  flex-wrap: wrap;
+  margin-top: var(--p-space-16);
+}
+
+.auth-pages .a-resend-row .p-button {
+  min-height: var(--a-input-height);
+  padding: var(--p-space-4) var(--p-space-8);
+  font-size: var(--p-font-12);
+  text-decoration: underline;
+  text-underline-offset: var(--p-space-4);
+  color: var(--p-text);
+}
+
+.a-resend-row [disabled] {
+  color: var(--p-text-muted-readable);
+  text-decoration: none;
+}

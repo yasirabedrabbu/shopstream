@@ -1,0 +1,92 @@
+@media (min-width: 1024px) {
+  .a-trust-badges .p-small {
+    font-size: var(--p-font-12);
+  }
+}
+
+@media (min-width: 1024px) {
+  .a-trust-badges svg {
+    color: var(--p-accent);
+  }
+}
+
+@media (min-width: 1024px) {
+  .a-brand-decoration {
+    position: relative;
+    height: calc(var(--p-space-100) + var(--p-space-32));
+    width: min(var(--a-full), calc(var(--p-space-100) * var(--a-art-width-scale)));
+    margin-top: var(--p-space-32);
+  }
+}
+
+@media (min-width: 1024px) {
+  .a-decoration-card {
+    border: var(--p-stroke) solid
+      color-mix(in srgb, var(--a-brand-text) var(--a-decoration-border-mix), var(--a-brand-bg));
+    background: var(--a-brand-bg);
+    border-radius: var(--p-radius-control);
+    display: flex;
+    align-items: center;
+    gap: var(--p-space-16);
+    padding: var(--p-space-16);
+    position: absolute;
+  }
+}
+
+@media (min-width: 1024px) {
+  .a-decoration-card-back {
+    left: var(--p-space-24);
+    top: var(--a-zero);
+    width: var(--a-partial);
+    height: var(--p-space-80);
+    transform: rotate(var(--a-tilt-back));
+    color: var(--p-accent);
+  }
+}
+
+@media (min-width: 1024px) {
+  .a-decoration-card-back > div {
+    display: flex;
+    flex: var(--a-one);
+    flex-direction: column;
+    gap: var(--p-space-8);
+  }
+}
+
+@media (min-width: 1024px) {
+  .a-decoration-card-back span {
+    display: block;
+    width: var(--a-partial);
+    height: var(--p-space-8);
+    border-radius: var(--p-space-4);
+    background: var(--a-brand-border);
+  }
+}
+
+@media (min-width: 1024px) {
+  .a-decoration-card-back span:last-child {
+    width: var(--a-half);
+  }
+}
+
+@media (min-width: 1024px) {
+  .a-decoration-card-front {
+    right: var(--a-zero);
+    bottom: var(--a-zero);
+    width: var(--a-most);
+    transform: rotate(var(--a-tilt-front));
+    box-shadow: var(--p-shadow);
+  }
+}
+
+@media (min-width: 1024px) {
+  .a-decoration-card-front > div {
+    flex: var(--a-one);
+  }
+}
+
+@media (min-width: 1024px) {
+  .a-decoration-card-front .p-small {
+    color: var(--a-brand-text);
+  }
+}
