@@ -66,16 +66,19 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/ping", "/api/v1/auth/**", "/actuator/health",
+                        // Swagger UI and OpenAPI docs: dev only, see handoff section 9.
+                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**",
+                                "/v3/api-docs", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/v1/ping", "/api/v1/auth/**", "/actuator/health",
                                 "/api/v1/payments/webhooks/**",
                                 "/api/v1/payments/sslcommerz/**").permitAll()
-                .requestMatchers(HttpMethod.GET,
+                        .requestMatchers(HttpMethod.GET,
                                 "/api/v1/stores/**",
                                 "/api/v1/products/**",
                                 "/api/v1/categories/**").permitAll()
-                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                .requestMatchers("/api/v1/vendor/**").hasAnyRole("VENDOR", "ADMIN")
-                .anyRequest().authenticated())
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/vendor/**").hasAnyRole("VENDOR", "ADMIN")
+                        .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth -> oauth
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(activeUserJwtConverter)));
         return http.build();
