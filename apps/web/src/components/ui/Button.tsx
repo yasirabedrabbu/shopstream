@@ -6,22 +6,23 @@ export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 export type ButtonSize = "sm" | "md" | "lg";
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-full font-semibold whitespace-nowrap " +
-  "transition-all duration-200 active:scale-[0.98] " +
-  "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-accent/30 " +
+  "inline-flex items-center justify-center gap-2 rounded-[var(--radius-control)] font-semibold whitespace-nowrap select-none " +
+  "transition-[background-color,border-color,box-shadow,transform] duration-200 active:scale-[0.98] " +
+  "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus)] " +
   "disabled:opacity-50 disabled:pointer-events-none";
 
 const variants: Record<ButtonVariant, string> = {
-  primary: "bg-accent text-accent-text shadow-sm hover:brightness-95 hover:shadow-md",
+  primary: "bg-accent text-accent-text shadow-sm hover:bg-accent-hover hover:shadow-md",
   secondary:
-    "bg-[var(--surface)] text-[var(--text)] border border-[var(--border)] hover:border-accent",
-  ghost: "text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface)]",
-  danger: "bg-red-500 text-white hover:bg-red-600",
+    "bg-surface text-text border border-border hover:border-text/40",
+  ghost: "text-text-muted hover:text-text hover:bg-surface",
+  danger: "bg-danger text-white hover:brightness-95",
 };
 
+// md = 44px: touch target minimum
 const sizes: Record<ButtonSize, string> = {
-  sm: "h-8 px-3 text-xs",
-  md: "h-10 px-5 text-sm",
+  sm: "h-9 px-3.5 text-xs",
+  md: "h-11 px-5 text-sm",
   lg: "h-12 px-7 text-base",
 };
 
@@ -39,16 +40,38 @@ export function buttonClasses({
   return `${base} ${variants[variant]} ${sizes[size]} ${className}`.trim();
 }
 
-type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & ButtonStyleOptions;
+type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> &
+  ButtonStyleOptions & {
+    loading?: boolean;
+  };
 
 export function Button({
   variant,
   size,
   className,
   type = "button",
+  loading = false,
+  disabled,
+  children,
   ...rest
 }: ButtonProps) {
-  return <button type={type} className={buttonClasses({ variant, size, className })} {...rest} />;
+  return (
+    <button
+      type={type}
+      aria-busy={loading || undefined}
+      disabled={disabled || loading}
+      className={buttonClasses({ variant, size, className })}
+      {...rest}
+    >
+      {loading && (
+        <span
+          aria-hidden="true"
+          className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+        />
+      )}
+      {children}
+    </button>
+  );
 }
 
 interface ButtonLinkProps extends ButtonStyleOptions {

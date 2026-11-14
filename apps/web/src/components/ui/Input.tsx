@@ -19,8 +19,13 @@ export function Input({ label, helper, error, id, className = "", ...rest }: Inp
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label htmlFor={inputId} className="text-xs font-semibold text-[var(--text)]">
+        <label htmlFor={inputId} className="text-xs font-semibold text-text">
           {label}
+          {rest.required && (
+            <span aria-hidden="true" className="ml-0.5 text-danger">
+              *
+            </span>
+          )}
         </label>
       )}
 
@@ -28,18 +33,20 @@ export function Input({ label, helper, error, id, className = "", ...rest }: Inp
         id={inputId}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy}
-        className={`h-11 w-full rounded-xl border bg-[var(--bg)] px-3.5 text-sm text-[var(--text)] outline-none transition-all duration-200 placeholder:text-[var(--text-muted)] focus:border-accent focus:ring-4 focus:ring-accent/25 ${
-          error ? "border-red-500" : "border-[var(--border)]"
+        className={`h-11 w-full rounded-[var(--radius-control)] border bg-bg px-3.5 text-sm text-text outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-text-muted focus:border-accent focus:ring-4 disabled:opacity-50 disabled:pointer-events-none ${
+          error
+            ? "border-danger focus:border-danger focus:ring-danger/20"
+            : "border-border focus:ring-[var(--focus)]"
         } ${className}`}
         {...rest}
       />
 
       {error ? (
-        <p id={errorId} className="text-xs text-red-500">
+        <p id={errorId} role="alert" className="text-xs text-danger">
           {error}
         </p>
       ) : helper ? (
-        <p id={helpId} className="text-xs text-[var(--text-muted)]">
+        <p id={helpId} className="text-xs text-text-muted">
           {helper}
         </p>
       ) : null}
