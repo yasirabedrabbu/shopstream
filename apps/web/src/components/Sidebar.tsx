@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-interface SidebarLink {
+export interface SidebarLink {
   href: string;
   label: string;
   icon: string;
