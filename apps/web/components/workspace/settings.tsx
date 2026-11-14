@@ -1,14 +1,239 @@
 "use client";
-import{useState}from"react";
-import Image from"next/image";
-import{validateProfile}from"@/lib/workspace/data";
-import{initials}from"@/lib/platform/data";
-import{useWorkspace}from"./state";
-import{readImage}from"./editors";
-import{Action,Box,Field,FormSection,MultilineField,Panel,Screen,SelectField,Text,WorkspaceIcon}from"./ui";
-export function StoreSettingsScreen(){const state=useWorkspace();const[error,setError]=useState("");const[saved,setSaved]=useState(false);const draft=state.draft;
- function update(key:keyof typeof draft,value:string){state.setDraft({...draft,[key]:value});setSaved(false);}
- function cancel(){state.setDraft(state.profile);setError("");setSaved(false);state.toast("Store profile changes discarded.");}
- function save(){const issue=validateProfile(draft);if(issue){setError(issue);setSaved(false);return;}const next={...draft,name:draft.name.trim(),owner:draft.owner.trim(),description:draft.description.trim(),address:draft.address.trim()};state.setProfile(next);state.setDraft(next);setError("");setSaved(true);state.toast("Store profile saved in this workspace session. Your public storefront is unchanged.");}
- return <Screen frame="workspace/settings/store" title="Store settings" subtitle="A few thoughtful details make your store feel like you." actions={<Text variant="small" className={`w-save-indicator ${state.dirty?"p-tone-accent":"p-tone-muted"}`}><span className={state.dirty?"p-dirty-dot":"p-footer-dot"}/>{state.dirty?"Unsaved changes":"All changes saved for this session"}</Text>} emptyTitle="Make this space your own" emptyText="Start with your store name and a few essential business details." emptyAction={<Action variant="primary" onClick={()=>{state.setMode("populated");state.setDraft({...state.profile,name:"",description:"",phone:"",address:"",owner:"",nid:"",logo:"",banner:""});}}>Set up store profile</Action>}><Box className="w-settings-layout"><Box as="form" id="workspace-store-profile" className="w-settings-form" onSubmit={event=>{event.preventDefault();save();}}><FormSection title="Store profile" subtitle="The essentials that tell customers who you are."><Box className="w-form-fields"><Field label="Store name" required maxLength={80} value={draft.name} onChange={e=>update("name",e.target.value)}/><MultilineField label="Store description" rows={3} maxLength={500} value={draft.description} onChange={e=>update("description",e.target.value)} helper={`${draft.description.length}/500 characters · A short introduction to your store`}/><Box className="w-upload-section"><Box className="w-logo-preview">{draft.logo?<Image src={draft.logo} alt="Store logo preview" width={80} height={80} unoptimized/>:<Text as="span" className="w-logo-initials">{initials(draft.name)||"ST"}</Text>}</Box><Box className="w-upload-control"><Field label="Store logo" type="file" accept="image/png,image/jpeg,image/webp" helper="Square image recommended · JPG, PNG, or WebP · Up to 5 MB" onChange={event=>readImage(event,url=>update("logo",url),setError)}/>{draft.logo&&<Action variant="ghost" onClick={()=>update("logo","")}>Remove logo</Action>}</Box></Box><Box className="w-banner-upload"><Box className="w-banner-preview">{draft.banner?<Image src={draft.banner} alt="Store banner preview" width={800} height={240} unoptimized/>:<Box className="w-upload-empty"><WorkspaceIcon name="upload" size={32}/><Text variant="small" tone="muted">Your store banner goes here</Text></Box>}</Box><Field label="Store banner" type="file" accept="image/png,image/jpeg,image/webp" helper="Landscape image recommended · JPG, PNG, or WebP · Up to 5 MB" onChange={event=>readImage(event,url=>update("banner",url),setError)}/>{draft.banner&&<Action variant="ghost" onClick={()=>update("banner","")}>Remove banner</Action>}</Box><Box className="w-form-columns"><SelectField label="Store category" value={draft.category} onChange={e=>update("category",e.target.value)} options={["Lifestyle","Fashion","Home & living","Electronics","Beauty","Books","Grocery"].map(value=>({value,label:value}))}/><Field label="Store phone" type="tel" required autoComplete="tel" value={draft.phone} onChange={e=>update("phone",e.target.value)} helper="Bangladesh mobile number, e.g. +880 1712 345678"/></Box><MultilineField label="Store address" rows={2} required maxLength={300} autoComplete="street-address" value={draft.address} onChange={e=>update("address",e.target.value)}/></Box></FormSection><FormSection title="Business details" subtitle="For this demo, use fictional information only."><Box className="w-form-fields"><Field label="Owner name" required autoComplete="name" maxLength={80} value={draft.owner} onChange={e=>update("owner",e.target.value)}/><Field label="National ID (optional demo field)" type="password" inputMode="numeric" autoComplete="off" maxLength={17} value={draft.nid} onChange={e=>update("nid",e.target.value)} helper="Do not enter a real NID. A fictional 10, 13, or 17-digit value is accepted. Never included in exports."/><SelectField label="Business type" value={draft.businessType} onChange={e=>update("businessType",e.target.value)} options={["Sole proprietorship","Partnership","Private limited company","Other"].map(value=>({value,label:value}))}/></Box></FormSection>{error&&<Box className="p-settings-error" role="alert"><Text>{error}</Text></Box>}{saved&&!state.dirty&&<Box role="status" className="w-inline-success"><WorkspaceIcon name="checkCircle"/><Text>Store profile saved for this session.</Text></Box>}<Box className="w-settings-save"><Box><Text>{state.dirty?"A few changes are waiting.":"Looking good. You’re up to date."}</Text><Text variant="small" tone="muted">Your live storefront will not be changed.</Text></Box><Box className="p-action-row"><Action disabled={!state.dirty&&!error} onClick={cancel}>Cancel changes</Action><Action variant="primary" type="submit" disabled={!state.dirty}><WorkspaceIcon name="check" size={16}/>Save changes</Action></Box></Box></Box><Box className="w-settings-aside"><Panel title="Your store at a glance" subtitle="A preview of your saved profile"><Box className="w-profile-preview"><Box className="w-profile-cover">{state.profile.banner&&<Image src={state.profile.banner} alt="Saved store banner" width={400} height={160} unoptimized/>}</Box><Box className="w-profile-copy"><span className="w-profile-logo">{state.profile.logo?<Image src={state.profile.logo} alt="Saved store logo" width={64} height={64} unoptimized/>:initials(state.profile.name)}</span><Text as="h2" variant="heading">{state.profile.name}</Text><Text variant="small" tone="muted">{state.profile.category} · Bangladesh</Text><Text variant="small" tone="muted">{state.profile.description}</Text><Text variant="small" className="w-saved-label"><WorkspaceIcon name="checkCircle" size={14}/>Saved profile</Text></Box></Box></Panel><Box className="w-profile-tip"><WorkspaceIcon name="info" size={20}/><Box><Text>Keep it recognizably you.</Text><Text variant="small" tone="muted">A clear logo, a considered banner, and a short introduction help customers feel at home.</Text></Box></Box><Box className="w-profile-tip"><WorkspaceIcon name="shield" size={20}/><Text variant="small" tone="muted">Uploads and settings stay in browser memory. Refreshing clears changes. Never enter real business identity information into this preview.</Text></Box></Box></Box></Screen>;
+
+import { useEffect, useState, type FormEvent } from "react";
+import { ApiError, vendorApi } from "@/lib/api";
+import type { VendorResponse } from "@/lib/types";
+import { Field } from "@/components/platform/ui";
+import {
+  Action,
+  Box,
+  FormSection,
+  MultilineField,
+  Panel,
+  PlatformLink,
+  Screen,
+  Text,
+  WorkspaceIcon,
+} from "./ui";
+
+const STATUS_TEXT: Record<string, string> = {
+  PENDING: "Pending review",
+  APPROVED: "Approved",
+  SUSPENDED: "Suspended",
+  REJECTED: "Rejected",
+};
+
+const NAME_MAX = 120;
+const DESCRIPTION_MAX = 2000;
+
+export function StoreSettingsScreen() {
+  const [store, setStore] = useState<VendorResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+
+  // Form state
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  // Last saved values, used for "dirty" checks and Cancel.
+  const [savedName, setSavedName] = useState("");
+  const [savedDescription, setSavedDescription] = useState("");
+
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [saved, setSaved] = useState(false);
+
+  function applyStore(s: VendorResponse) {
+    setStore(s);
+    setName(s.storeName);
+    setDescription(s.description ?? "");
+    setSavedName(s.storeName);
+    setSavedDescription(s.description ?? "");
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+    vendorApi
+      .store()
+      .then((s) => {
+        if (!cancelled) applyStore(s);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        // 404 means the vendor has no store yet, so show the create form.
+        if (err instanceof ApiError && err.status === 404) {
+          setStore(null);
+        } else {
+          setLoadError(err instanceof Error ? err.message : "Your store could not be loaded.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const dirty = name.trim() !== savedName.trim() || description.trim() !== savedDescription.trim();
+
+  function cancel() {
+    setName(savedName);
+    setDescription(savedDescription);
+    setError("");
+    setSaved(false);
+  }
+
+  async function save(event: FormEvent) {
+    event.preventDefault();
+    const storeName = name.trim();
+    const desc = description.trim();
+
+    if (!storeName) {
+      setError("Enter your store name.");
+      return;
+    }
+    if (storeName.length > NAME_MAX) {
+      setError(`Store name must be ${NAME_MAX} characters or fewer.`);
+      return;
+    }
+    if (desc.length > DESCRIPTION_MAX) {
+      setError(`Description must be ${DESCRIPTION_MAX} characters or fewer.`);
+      return;
+    }
+
+    setSaving(true);
+    setError("");
+    setSaved(false);
+    try {
+      // Send "" for an empty description so the server clears it.
+      const body = { storeName, description: desc };
+      const next = store ? await vendorApi.updateStore(body) : await vendorApi.createStore(body);
+      applyStore(next);
+      setSaved(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Your store could not be saved.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Screen
+      frame="workspace/settings/store"
+      title="Store settings"
+      subtitle="A few thoughtful details make your store feel like you."
+      actions={
+        store ? (
+          <Text variant="small" tone="muted">
+            Status: {STATUS_TEXT[store.status] ?? store.status}
+          </Text>
+        ) : undefined
+      }
+      emptyTitle="Make this space your own"
+      emptyText="Start with your store name and a short description."
+      emptyAction={<Action variant="primary">Set up store</Action>}
+    >
+      {loading && (
+        <Text role="status" tone="muted">
+          Loading your store…
+        </Text>
+      )}
+
+      {loadError && (
+        <Box className="p-settings-error" role="alert">
+          <Text>{loadError}</Text>
+        </Box>
+      )}
+
+      {!loading && !loadError && (
+        <Box className="w-settings-layout">
+          <Box as="form" className="w-settings-form" onSubmit={save}>
+            <FormSection
+              title={store ? "Store profile" : "Set up your store"}
+              subtitle={
+                store
+                  ? "The essentials that tell customers who you are."
+                  : "Create your store to start listing products."
+              }
+            >
+              <Box className="w-form-fields">
+                <Field
+                  label="Store name"
+                  required
+                  maxLength={NAME_MAX}
+                  value={name}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    setSaved(false);
+                  }}
+                />
+                <MultilineField
+                  label="Store description"
+                  rows={4}
+                  maxLength={DESCRIPTION_MAX}
+                  value={description}
+                  onChange={(e) => {
+                    setDescription(e.target.value);
+                    setSaved(false);
+                  }}
+                  helper={`${description.length}/${DESCRIPTION_MAX} characters · A short introduction to your store`}
+                />
+              </Box>
+            </FormSection>
+
+            {error && (
+              <Box className="p-settings-error" role="alert">
+                <Text>{error}</Text>
+              </Box>
+            )}
+
+            {saved && !dirty && (
+              <Box role="status" className="w-inline-success">
+                <WorkspaceIcon name="checkCircle" />
+                <Text>{store ? "Store saved." : "Store created."}</Text>
+              </Box>
+            )}
+
+            <Box className="w-settings-save">
+              <Box>
+                <Text>{dirty ? "A few changes are waiting." : "You’re up to date."}</Text>
+              </Box>
+              <Box className="p-action-row">
+                <Action disabled={!dirty || saving} onClick={cancel}>
+                  Cancel changes
+                </Action>
+                <Action
+                  variant="primary"
+                  type="submit"
+                  disabled={saving || (!!store && !dirty)}
+                >
+                  <WorkspaceIcon name="check" size={16} />
+                  {saving ? "Saving…" : store ? "Save changes" : "Create store"}
+                </Action>
+              </Box>
+            </Box>
+          </Box>
+
+          <Box className="w-settings-aside">
+            <Panel title="Your store at a glance" subtitle="How your saved profile appears">
+              <Box className="w-profile-copy">
+                <Text as="h2" variant="heading">
+                  {savedName || "Your store name"}
+                </Text>
+                <Text variant="small" tone="muted">
+                  {savedDescription || "Add a description so customers know what you sell."}
+                </Text>
+                {store && (
+                  <PlatformLink href={`/stores/${store.slug}`} className="p-text-link">
+                    View public store
+                    <WorkspaceIcon name="arrowRight" size={14} />
+                  </PlatformLink>
+                )}
+              </Box>
+            </Panel>
+          </Box>
+        </Box>
+      )}
+    </Screen>
+  );
 }
