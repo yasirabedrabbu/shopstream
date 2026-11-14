@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Sora, Manrope } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/components/Toast";
+import { AssistantWidget } from "@/components/AssistantWidget";
 
 const sora = Sora({
   variable: "--font-heading",
@@ -30,7 +31,10 @@ export default function RootLayout({
     <html lang="en" className={`${sora.variable} ${manrope.variable}`} suppressHydrationWarning>
       {/* suppressHydrationWarning on body: browser extensions (Grammarly etc.) add attributes to body */}
       <body suppressHydrationWarning>
-        <ToastProvider>{children}</ToastProvider>
+        <ToastProvider>
+          {children}
+          <AssistantWidget />
+        </ToastProvider>
       </body>
     </html>
   );

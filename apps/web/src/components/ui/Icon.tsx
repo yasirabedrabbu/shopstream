@@ -29,6 +29,8 @@ import {
   Loading03Icon,
   InformationCircleIcon,
   CheckmarkCircle02Icon,
+  Message01Icon,
+  SentIcon,
 } from "@hugeicons/core-free-icons";
 
 export type IconName =
@@ -59,7 +61,9 @@ export type IconName =
   | "bell"
   | "loading"
   | "info"
-  | "checkCircle";
+  | "checkCircle"
+  | "chat"
+  | "send";
 
 const icons: Record<IconName, IconSvgElement> = {
   dashboard: DashboardSquare01Icon,
@@ -90,6 +94,8 @@ const icons: Record<IconName, IconSvgElement> = {
   loading: Loading03Icon,
   info: InformationCircleIcon,
   checkCircle: CheckmarkCircle02Icon,
+  chat: Message01Icon,
+  send: SentIcon,
 };
 
 interface IconProps {
