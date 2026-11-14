@@ -22,7 +22,12 @@ public record ProductResponse(
         String categoryName,
         List<String> imageUrls,
         Instant createdAt,
-        Instant updatedAt) {
+        Instant updatedAt,
+        String seoTitle,
+        String seoDescription,
+        Long costPriceCents,
+        Instant publishAt,
+        List<String> tags) {
 
     public static ProductResponse from(Product p) {
         Instant now = Instant.now();
@@ -44,6 +49,11 @@ public record ProductResponse(
                 p.getCategory().getName(),
                 List.copyOf(p.getImageUrls()),
                 p.getCreatedAt(),
-                p.getUpdatedAt());
+                p.getUpdatedAt(),
+                p.getSeoTitle(),
+                p.getSeoDescription(),
+                p.getCostPriceCents(),
+                p.getPublishAt(),
+                p.getTags().stream().sorted().toList());
     }
 }

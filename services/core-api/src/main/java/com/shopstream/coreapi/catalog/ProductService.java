@@ -2,8 +2,10 @@ package com.shopstream.coreapi.catalog;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -23,6 +25,7 @@ import com.shopstream.coreapi.vendor.VendorStatus;
 public class ProductService {
 
     private static final Duration MAX_SALE_DURATION = Duration.ofDays(30);
+    private static final String DEFAULT_CURRENCY = "BDT";
 
     public record Filter(String q, String category, String store, Long minPrice, Long maxPrice) {
     }
@@ -45,19 +48,26 @@ public class ProductService {
         Category category = requireCategory(request.categoryId());
         ProductStatus status = request.status() == null ? ProductStatus.DRAFT : request.status();
         ensurePublishable(vendor, status);
+        Instant publishAt = resolvePublishAt(status, request.publishAt());
 
         String name = request.name().trim();
+        String slugBase = hasText(request.slug()) ? request.slug().trim() : name;
         Product product = new Product(
                 vendor,
                 category,
                 name,
-                uniqueSlug(name),
+                uniqueSlug(slugBase),
                 cleanDescription(request.description()),
                 request.priceCents(),
                 normalizeCurrency(request.currency()),
                 request.stockQuantity(),
                 status,
                 normalizeImages(request.imageUrls()));
+        product.setSeoTitle(cleanOrNull(request.seoTitle()));
+        product.setSeoDescription(cleanOrNull(request.seoDescription()));
+        product.setCostPriceCents(request.costPriceCents());
+        product.setPublishAt(publishAt);
+        product.replaceTags(normalizeTags(request.tags()));
         return products.save(product);
     }
 
@@ -74,8 +84,30 @@ public class ProductService {
 
         if (request.status() != null) {
             ensurePublishable(product.getVendor(), request.status());
+            Instant publishAt = resolvePublishAt(request.status(), request.publishAt());
             product.setStatus(request.status());
+            product.setPublishAt(publishAt);
         }
+        if (hasText(request.slug()) && !request.slug().trim().equals(product.getSlug())) {
+            String slug = request.slug().trim();
+            if (products.existsBySlug(slug)) {
+                throw new ApiException(HttpStatus.CONFLICT, "This slug is already in use");
+            }
+            product.setSlug(slug);
+        }
+        if (request.seoTitle() != null) {
+            product.setSeoTitle(cleanOrNull(request.seoTitle()));
+        }
+        if (request.seoDescription() != null) {
+            product.setSeoDescription(cleanOrNull(request.seoDescription()));
+        }
+        if (request.costPriceCents() != null) {
+            product.setCostPriceCents(request.costPriceCents());
+        }
+        if (request.tags() != null) {
+            product.replaceTags(normalizeTags(request.tags()));
+        }
+
         product.update(
                 category,
                 request.name().trim(),
@@ -149,6 +181,7 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public Page<Product> search(Filter filter, Pageable pageable) {
+        Instant now = Instant.now();
         Specification<Product> spec = ProductSpecs.publiclyVisible();
 
         if (filter.q() != null && !filter.q().isBlank()) {
@@ -161,10 +194,10 @@ public class ProductService {
             spec = spec.and(ProductSpecs.fromStore(filter.store().trim()));
         }
         if (filter.minPrice() != null) {
-            spec = spec.and(ProductSpecs.minPrice(filter.minPrice()));
+            spec = spec.and(ProductSpecs.minPrice(filter.minPrice(), now));
         }
         if (filter.maxPrice() != null) {
-            spec = spec.and(ProductSpecs.maxPrice(filter.maxPrice()));
+            spec = spec.and(ProductSpecs.maxPrice(filter.maxPrice(), now));
         }
         return products.findAll(spec, pageable);
     }
@@ -219,6 +252,20 @@ public class ProductService {
         }
     }
 
+    /** SCHEDULED needs a future time. Any other status has no publish time. */
+    private static Instant resolvePublishAt(ProductStatus status, Instant publishAt) {
+        if (status != ProductStatus.SCHEDULED) {
+            return null;
+        }
+        if (publishAt == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "publishAt is required when status is SCHEDULED");
+        }
+        if (!publishAt.isAfter(Instant.now())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "publishAt must be in the future");
+        }
+        return publishAt;
+    }
+
     private String uniqueSlug(String name) {
         String base = Slugs.slugify(name, "product");
         String candidate = base;
@@ -229,16 +276,21 @@ public class ProductService {
         return candidate;
     }
 
+    private static boolean hasText(String value) {
+        return value != null && !value.isBlank();
+    }
+
+    private static String cleanOrNull(String value) {
+        return hasText(value) ? value.trim() : null;
+    }
+
     private static String cleanDescription(String description) {
-        if (description == null || description.isBlank()) {
-            return null;
-        }
-        return description.trim();
+        return cleanOrNull(description);
     }
 
     private static String normalizeCurrency(String currency) {
         if (currency == null || currency.isBlank()) {
-            return "USD";
+            return DEFAULT_CURRENCY;
         }
         return currency.trim().toUpperCase(Locale.ROOT);
     }
@@ -248,5 +300,18 @@ public class ProductService {
             return List.of();
         }
         return urls.stream().map(String::trim).toList();
+    }
+
+    private static Set<String> normalizeTags(List<String> tags) {
+        Set<String> result = new LinkedHashSet<>();
+        if (tags == null) {
+            return result;
+        }
+        for (String tag : tags) {
+            if (hasText(tag)) {
+                result.add(tag.trim().toLowerCase(Locale.ROOT));
+            }
+        }
+        return result;
     }
 }
