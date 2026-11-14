@@ -1,7 +1,7 @@
 // apps/web/src/components/LegalPage.tsx
 import type { ReactNode } from "react";
-import Nav from "@/components/Nav";
-import Footer from "@/components/Footer";
+import { Nav } from "@/components/Nav";
+import { Footer } from "@/components/Footer";
 
 interface LegalPageProps {
   title: string;

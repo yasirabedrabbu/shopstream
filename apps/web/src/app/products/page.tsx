@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Nav } from "@/components/Nav";
+import { Footer } from "@/components/Footer";
 import { ProductCard } from "@/components/ProductCard";
 import { productApi, categoryApi } from "@/lib/api";
 import type { PublicProductResponse, CategoryResponse } from "@/lib/types";
@@ -134,17 +135,20 @@ export default function ProductsPage() {
   return (
     <div style={{ background: "var(--bg)", minHeight: "100vh" }}>
       <Nav />
-      <Suspense fallback={
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {Array.from({ length: 16 }).map((_, i) => (
-              <div key={i} className="aspect-square rounded-2xl animate-pulse" style={{ background: "var(--surface)" }} />
-            ))}
+      <Suspense
+        fallback={
+          <div className="max-w-7xl mx-auto px-4 py-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {Array.from({ length: 16 }).map((_, i) => (
+                <div key={i} className="aspect-square rounded-2xl animate-pulse" style={{ background: "var(--surface)" }} />
+              ))}
+            </div>
           </div>
-        </div>
-      }>
+        }
+      >
         <ProductsContent />
       </Suspense>
+      <Footer />
     </div>
   );
 }

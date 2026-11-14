@@ -11,7 +11,21 @@ const accountLinks = [
   { href: "/auth/register", label: "Create account" },
 ];
 
+const companyLinks = [
+  { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
+  { href: "/privacy", label: "Privacy policy" },
+  { href: "/terms", label: "Terms of service" },
+  { href: "/refund", label: "Refund policy" },
+];
+
 const paymentMethods = ["SSLCOMMERZ", "COD"];
+
+const linkClass =
+  "w-fit rounded-md text-sm text-[var(--text)] transition-colors hover:text-[var(--text-muted)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-accent/30";
+
+const headingClass =
+  "mb-1 text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)]";
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -21,7 +35,7 @@ export function Footer() {
       className="mt-16 border-t"
       style={{ background: "var(--surface)", borderColor: "var(--border)" }}
     >
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 md:grid-cols-3">
+      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:grid-cols-2 md:grid-cols-4">
         <div className="flex flex-col gap-3">
           <span
             className="text-base font-bold tracking-tight text-[var(--text)]"
@@ -35,30 +49,27 @@ export function Footer() {
         </div>
 
         <nav aria-label="Shop" className="flex flex-col gap-2">
-          <h2 className="mb-1 text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)]">
-            Shop
-          </h2>
+          <h2 className={headingClass}>Shop</h2>
           {shopLinks.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className="w-fit rounded-md text-sm text-[var(--text)] transition-colors hover:text-[var(--text-muted)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-accent/30"
-            >
+            <Link key={l.href} href={l.href} className={linkClass}>
               {l.label}
             </Link>
           ))}
         </nav>
 
         <nav aria-label="Account" className="flex flex-col gap-2">
-          <h2 className="mb-1 text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)]">
-            Account
-          </h2>
+          <h2 className={headingClass}>Account</h2>
           {accountLinks.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className="w-fit rounded-md text-sm text-[var(--text)] transition-colors hover:text-[var(--text-muted)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-accent/30"
-            >
+            <Link key={l.href} href={l.href} className={linkClass}>
+              {l.label}
+            </Link>
+          ))}
+        </nav>
+
+        <nav aria-label="Company" className="flex flex-col gap-2">
+          <h2 className={headingClass}>Company</h2>
+          {companyLinks.map((l) => (
+            <Link key={l.href} href={l.href} className={linkClass}>
               {l.label}
             </Link>
           ))}
