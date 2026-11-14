@@ -1,5 +1,6 @@
 server:
   port: ${PORT:8080}
+    forward-headers-strategy: native
 
 spring:
   application:
@@ -65,6 +66,8 @@ app:
   marketplace:
     commission-percent: 10
     low-stock-threshold: 5
+  assistant:
+    whatsapp-url: ${ASSISTANT_WHATSAPP_URL:}
   seed:
     enabled: ${SEED_ENABLED:false}
     vendor-password: ${SEED_VENDOR_PASSWORD:}
