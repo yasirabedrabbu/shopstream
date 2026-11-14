@@ -37,4 +37,11 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
     @Query(value = "UPDATE products SET stock_quantity = stock_quantity + :qty, updated_at = now() "
             + "WHERE id = :id", nativeQuery = true)
     int incrementStock(@Param("id") UUID id, @Param("qty") int qty);
+
+    /** Publishes scheduled products whose time has come. Only approved stores go live. Returns rows changed. */
+    @Modifying
+    @Query(value = "UPDATE products SET status = 'ACTIVE', updated_at = now() "
+            + "WHERE status = 'SCHEDULED' AND publish_at <= now() "
+            + "AND vendor_id IN (SELECT id FROM vendors WHERE status = 'APPROVED')", nativeQuery = true)
+    int activateDueScheduled();
 }

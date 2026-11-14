@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import com.shopstream.coreapi.vendor.PublicStoreResponse;
 
+/** Public view. It never exposes cost price or the publish schedule. */
 public record PublicProductResponse(
         UUID id,
         String name,
@@ -20,7 +21,10 @@ public record PublicProductResponse(
         boolean inStock,
         CategoryResponse category,
         PublicStoreResponse store,
-        List<String> imageUrls) {
+        List<String> imageUrls,
+        String seoTitle,
+        String seoDescription,
+        List<String> tags) {
 
     public static PublicProductResponse from(Product p) {
         Instant now = Instant.now();
@@ -39,6 +43,9 @@ public record PublicProductResponse(
                 p.getStockQuantity() > 0,
                 CategoryResponse.from(p.getCategory()),
                 PublicStoreResponse.from(p.getVendor()),
-                List.copyOf(p.getImageUrls()));
+                List.copyOf(p.getImageUrls()),
+                p.getSeoTitle(),
+                p.getSeoDescription(),
+                p.getTags().stream().sorted().toList());
     }
 }

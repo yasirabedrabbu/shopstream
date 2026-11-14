@@ -7,6 +7,11 @@ import org.springframework.data.jpa.domain.Specification;
 
 import com.shopstream.coreapi.vendor.VendorStatus;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+
 public final class ProductSpecs {
 
     private ProductSpecs() {
@@ -39,12 +44,23 @@ public final class ProductSpecs {
         return (root, query, cb) -> cb.equal(root.get("vendor").get("slug"), storeSlug);
     }
 
-    public static Specification<Product> minPrice(long cents) {
-        return (root, query, cb) -> cb.greaterThanOrEqualTo(root.<Long>get("priceCents"), cents);
+    /** Filters on the price the customer actually pays at this moment (sale price while a sale is live). */
+    public static Specification<Product> minPrice(long cents, Instant now) {
+        return (root, query, cb) -> cb.greaterThanOrEqualTo(effectivePrice(root, cb, now), cents);
     }
 
-    public static Specification<Product> maxPrice(long cents) {
-        return (root, query, cb) -> cb.lessThanOrEqualTo(root.<Long>get("priceCents"), cents);
+    public static Specification<Product> maxPrice(long cents, Instant now) {
+        return (root, query, cb) -> cb.lessThanOrEqualTo(effectivePrice(root, cb, now), cents);
+    }
+
+    private static Expression<Long> effectivePrice(Root<Product> root, CriteriaBuilder cb, Instant now) {
+        Predicate saleLive = cb.and(
+                cb.isNotNull(root.get("salePriceCents")),
+                cb.lessThanOrEqualTo(root.<Instant>get("saleStartsAt"), now),
+                cb.greaterThan(root.<Instant>get("saleEndsAt"), now));
+        return cb.<Long>selectCase()
+                .when(saleLive, root.<Long>get("salePriceCents"))
+                .otherwise(root.<Long>get("priceCents"));
     }
 
     private static String escapeLike(String value) {

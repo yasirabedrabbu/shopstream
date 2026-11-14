@@ -2,7 +2,9 @@ package com.shopstream.coreapi.catalog;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import com.shopstream.coreapi.vendor.Vendor;
@@ -71,11 +73,28 @@ public class Product {
     @Column(name = "sale_ends_at")
     private Instant saleEndsAt;
 
+    @Column(name = "seo_title", length = 70)
+    private String seoTitle;
+
+    @Column(name = "seo_description", length = 160)
+    private String seoDescription;
+
+    @Column(name = "cost_price_cents")
+    private Long costPriceCents;
+
+    @Column(name = "publish_at")
+    private Instant publishAt;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "product_images", joinColumns = @JoinColumn(name = "product_id"))
     @OrderColumn(name = "sort_order")
     @Column(name = "url", nullable = false, length = 1000)
     private List<String> imageUrls = new ArrayList<>();
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "product_tags", joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "tag", nullable = false, length = 40)
+    private Set<String> tags = new LinkedHashSet<>();
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -126,6 +145,31 @@ public class Product {
 
     public void setStatus(ProductStatus status) {
         this.status = status;
+    }
+
+    public void setSlug(String slug) {
+        this.slug = slug;
+    }
+
+    public void setSeoTitle(String seoTitle) {
+        this.seoTitle = seoTitle;
+    }
+
+    public void setSeoDescription(String seoDescription) {
+        this.seoDescription = seoDescription;
+    }
+
+    public void setCostPriceCents(Long costPriceCents) {
+        this.costPriceCents = costPriceCents;
+    }
+
+    public void setPublishAt(Instant publishAt) {
+        this.publishAt = publishAt;
+    }
+
+    public void replaceTags(Set<String> newTags) {
+        this.tags.clear();
+        this.tags.addAll(newTags);
     }
 
     // ---------- flash sale ----------
@@ -212,8 +256,28 @@ public class Product {
         return saleEndsAt;
     }
 
+    public String getSeoTitle() {
+        return seoTitle;
+    }
+
+    public String getSeoDescription() {
+        return seoDescription;
+    }
+
+    public Long getCostPriceCents() {
+        return costPriceCents;
+    }
+
+    public Instant getPublishAt() {
+        return publishAt;
+    }
+
     public List<String> getImageUrls() {
         return imageUrls;
+    }
+
+    public Set<String> getTags() {
+        return tags;
     }
 
     public Instant getCreatedAt() {
