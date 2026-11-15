@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { vendorApi } from "@/lib/api";
 import { formatMoney } from "@/lib/money";
 import type { FulfillmentStatus, Page, VendorOrderItemResponse } from "@/lib/types";
+import { Icon } from "@/components/ui/Icon";
 import { Avatar, Button, Card, FULFILL, NEXT_STEP, PageHeader, Pill, SearchBox, Segmented, shortId, timeAgo } from "@/components/studio/ui";
 
 type Tab = "ALL" | FulfillmentStatus;
@@ -92,14 +93,14 @@ export default function StudioOrdersPage() {
         ))}
       </div>
 
-      {notice && <p role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">{notice}</p>}
-      {error && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</p>}
+      {notice && <p role="status" className="rounded-xl border border-tone-green/30 bg-tone-green-soft p-3 text-sm text-tone-green">{notice}</p>}
+      {error && <p role="alert" className="rounded-xl border border-tone-red/30 bg-tone-red-soft p-3 text-sm text-tone-red">{error}</p>}
 
       <Card>
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-200 px-6 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border px-6 py-4">
           <div>
             <h2 className="text-base font-semibold">All orders</h2>
-            <p className="text-sm text-stone-500">Totals in BDT · click an order for details</p>
+            <p className="text-sm text-text-muted">Totals in BDT · click an order for details</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <SearchBox label="Search orders" value={query} onChange={setQuery} placeholder="Search order, product, customer" />
@@ -112,12 +113,12 @@ export default function StudioOrdersPage() {
           </div>
         </div>
 
-        {!data && !error && <div role="status" className="space-y-px p-6">{Array.from({ length: 5 }, (_, i) => <div key={i} className="h-14 animate-pulse rounded-lg bg-stone-100 mb-2" />)}</div>}
+        {!data && !error && <div role="status" className="space-y-px p-6">{Array.from({ length: 5 }, (_, i) => <div key={i} className="h-14 animate-pulse rounded-lg bg-surface mb-2" />)}</div>}
 
         {data && rows.length === 0 && (
           <div className="px-6 py-16 text-center">
             <p className="font-medium">No orders here</p>
-            <p className="mt-1 text-sm text-stone-500">Try another status or clear the search.</p>
+            <p className="mt-1 text-sm text-text-muted">Try another status or clear the search.</p>
           </div>
         )}
 
@@ -125,7 +126,7 @@ export default function StudioOrdersPage() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[860px] text-left text-sm">
               <caption className="sr-only">Orders</caption>
-              <thead className="bg-stone-50 text-xs uppercase tracking-wider text-stone-500">
+              <thead className="bg-surface text-xs uppercase tracking-wider text-text-muted">
                 <tr>
                   <th scope="col" className="px-6 py-3 font-medium">Order ID</th>
                   <th scope="col" className="px-4 py-3 font-medium">Customer</th>
@@ -137,11 +138,11 @@ export default function StudioOrdersPage() {
                   <th scope="col" className="px-6 py-3 text-right font-medium">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-stone-100">
+              <tbody className="divide-y divide-border">
                 {rows.map((i) => {
                   const next = NEXT_STEP[i.fulfillmentStatus];
                   return (
-                    <tr key={i.itemId} className="hover:bg-stone-50">
+                    <tr key={i.itemId} className="hover:bg-surface">
                       <td className="px-6 py-4">
                         <button onClick={() => setSelected(i)} className="font-medium tabular-nums underline-offset-4 hover:underline">
                           #{shortId(i.orderId)}
@@ -152,22 +153,22 @@ export default function StudioOrdersPage() {
                           <Avatar name={i.shippingAddress.fullName} />
                           <div>
                             <p>{i.shippingAddress.fullName}</p>
-                            <p className="text-xs text-stone-500">{i.shippingAddress.city}</p>
+                            <p className="text-xs text-text-muted">{i.shippingAddress.city}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="max-w-[220px] truncate px-4 py-4 text-stone-600">{i.productName}</td>
+                      <td className="max-w-[220px] truncate px-4 py-4 text-text-muted">{i.productName}</td>
                       <td className="px-4 py-4 text-right tabular-nums">{i.quantity}</td>
                       <td className="px-4 py-4 text-right font-medium tabular-nums">{formatMoney(i.lineTotalCents, i.currency)}</td>
                       <td className="px-4 py-4"><Pill tone={FULFILL[i.fulfillmentStatus].tone}>{FULFILL[i.fulfillmentStatus].label}</Pill></td>
-                      <td className="px-4 py-4 text-stone-500">{timeAgo(i.placedAt)}</td>
+                      <td className="px-4 py-4 text-text-muted">{timeAgo(i.placedAt)}</td>
                       <td className="px-6 py-4 text-right">
                         {next ? (
                           <Button variant="light" className="min-h-9 px-3 text-xs" disabled={busyId === i.itemId} onClick={() => advance(i)}>
                             {busyId === i.itemId ? "Saving…" : next.label}
                           </Button>
                         ) : (
-                          <button onClick={() => setSelected(i)} className="text-xs text-stone-500 underline underline-offset-4">View</button>
+                          <button onClick={() => setSelected(i)} className="text-xs text-text-muted underline underline-offset-4">View</button>
                         )}
                       </td>
                     </tr>
@@ -179,8 +180,8 @@ export default function StudioOrdersPage() {
         )}
 
         {data && data.totalPages > 1 && (
-          <nav aria-label="Order pages" className="flex items-center justify-end gap-2 border-t border-stone-200 px-6 py-4 text-sm">
-            <span className="mr-2 tabular-nums text-stone-500">Page {page + 1} of {data.totalPages}</span>
+          <nav aria-label="Order pages" className="flex items-center justify-end gap-2 border-t border-border px-6 py-4 text-sm">
+            <span className="mr-2 tabular-nums text-text-muted">Page {page + 1} of {data.totalPages}</span>
             <Button variant="light" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>Previous</Button>
             <Button variant="light" disabled={page >= data.totalPages - 1} onClick={() => setPage((p) => p + 1)}>Next</Button>
           </nav>
@@ -188,50 +189,50 @@ export default function StudioOrdersPage() {
       </Card>
 
       {selected && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-stone-900/30" onMouseDown={() => setSelected(null)}>
+        <div className="fixed inset-0 z-50 flex justify-end bg-black/40" onMouseDown={() => setSelected(null)}>
           <aside
             role="dialog"
             aria-modal="true"
             aria-label={`Order ${shortId(selected.orderId)}`}
             onMouseDown={(e) => e.stopPropagation()}
-            className="flex h-full w-full max-w-md flex-col bg-white shadow-2xl"
+            className="flex h-full w-full max-w-md flex-col bg-card shadow-2xl"
           >
-            <div className="flex items-center justify-between border-b border-stone-200 p-5">
+            <div className="flex items-center justify-between border-b border-border p-5">
               <div>
-                <p className="text-xs text-stone-500">Order</p>
+                <p className="text-xs text-text-muted">Order</p>
                 <h2 className="font-semibold tabular-nums">#{shortId(selected.orderId)}</h2>
               </div>
-              <button onClick={() => setSelected(null)} aria-label="Close" className="grid h-10 w-10 place-items-center rounded-xl hover:bg-stone-100">✕</button>
+              <button onClick={() => setSelected(null)} aria-label="Close" className="grid h-10 w-10 place-items-center rounded-xl hover:bg-surface"><Icon name="close" size={18} /></button>
             </div>
             <div className="flex-1 space-y-6 overflow-y-auto p-5">
               <Pill tone={FULFILL[selected.fulfillmentStatus].tone}>{FULFILL[selected.fulfillmentStatus].label}</Pill>
               <section>
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-stone-500">Customer</h3>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted">Customer</h3>
                 <p className="mt-2 font-medium">{selected.shippingAddress.fullName}</p>
-                <p className="text-sm text-stone-600">{selected.shippingAddress.phone}</p>
-                <p className="mt-1 text-sm text-stone-600">
+                <p className="text-sm text-text-muted">{selected.shippingAddress.phone}</p>
+                <p className="mt-1 text-sm text-text-muted">
                   {[selected.shippingAddress.line1, selected.shippingAddress.line2, selected.shippingAddress.city, selected.shippingAddress.postalCode].filter(Boolean).join(", ")}
                 </p>
               </section>
               <section>
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-stone-500">Item</h3>
-                <div className="mt-2 flex justify-between gap-4 rounded-xl border border-stone-200 p-4 text-sm">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted">Item</h3>
+                <div className="mt-2 flex justify-between gap-4 rounded-xl border border-border p-4 text-sm">
                   <div>
                     <p className="font-medium">{selected.productName}</p>
-                    <p className="text-stone-500">{selected.quantity} × {formatMoney(selected.unitPriceCents, selected.currency)}</p>
+                    <p className="text-text-muted">{selected.quantity} × {formatMoney(selected.unitPriceCents, selected.currency)}</p>
                   </div>
                   <p className="font-semibold tabular-nums">{formatMoney(selected.lineTotalCents, selected.currency)}</p>
                 </div>
               </section>
-              <p className="text-xs text-stone-500">Placed {timeAgo(selected.placedAt)}</p>
+              <p className="text-xs text-text-muted">Placed {timeAgo(selected.placedAt)}</p>
             </div>
-            <div className="border-t border-stone-200 p-5">
+            <div className="border-t border-border p-5">
               {NEXT_STEP[selected.fulfillmentStatus] ? (
                 <Button variant="dark" className="w-full" disabled={busyId === selected.itemId} onClick={() => advance(selected)}>
                   {NEXT_STEP[selected.fulfillmentStatus]!.label}
                 </Button>
               ) : (
-                <p className="text-center text-sm text-stone-500">No further status changes for this order.</p>
+                <p className="text-center text-sm text-text-muted">No further status changes for this order.</p>
               )}
             </div>
           </aside>
@@ -254,17 +255,17 @@ function StatCard({
   active: boolean;
   tone?: "amber" | "blue" | "violet" | "green" | "red" | "stone";
 }) {
-  const dot: Record<string, string> = { amber: "bg-amber-500", blue: "bg-sky-500", violet: "bg-violet-500", green: "bg-emerald-500", red: "bg-red-500", stone: "bg-stone-400" };
+  const dot: Record<string, string> = { amber: "bg-tone-amber-dot", blue: "bg-tone-blue-dot", violet: "bg-tone-violet-dot", green: "bg-tone-green-soft0", red: "bg-tone-red-soft0", stone: "bg-tone-stone-dot" };
   return (
     <button
       onClick={onClick}
       aria-pressed={active}
-      className={`rounded-2xl border bg-white p-5 text-left transition ${
-        active ? "border-stone-900 ring-1 ring-stone-900" : "border-stone-200 hover:border-stone-400"
+      className={`rounded-2xl border bg-card p-5 text-left transition ${
+        active ? "border-text ring-1 ring-text" : "border-border hover:border-text/40"
       }`}
     >
       <div className="flex items-center justify-between">
-        <p className="text-sm text-stone-500">{label}</p>
+        <p className="text-sm text-text-muted">{label}</p>
         <span className={`h-2 w-2 rounded-full ${dot[tone ?? "stone"]}`} aria-hidden="true" />
       </div>
       <p className="mt-3 text-2xl font-semibold tabular-nums tracking-tight">{value}</p>

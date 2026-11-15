@@ -1,12 +1,11 @@
-// apps/web/src/components/ui/Card.tsx
 import type { HTMLAttributes } from "react";
 
 export type CardVariant = "flat" | "elevated" | "bordered";
 
 const variants: Record<CardVariant, string> = {
-  flat: "bg-[var(--surface)]",
-  elevated: "bg-[var(--bg)] shadow-[var(--shadow-card)] border border-[var(--border)]",
-  bordered: "bg-[var(--bg)] border border-[var(--border)]",
+  flat: "bg-surface",
+  elevated: "bg-card shadow-[var(--shadow-card)] border border-border",
+  bordered: "bg-card border border-border",
 };
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {

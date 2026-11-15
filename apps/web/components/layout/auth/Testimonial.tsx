@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "@/components/ui/SafeImage";
 import { AuthIcon } from "@/components/auth/AuthIcon";
 import { authDimensions } from "@/lib/auth-pages/dimensions";
 export interface TestimonialProps {

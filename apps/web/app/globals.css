@@ -1,42 +1,89 @@
 @import "tailwindcss";
 
-/* ───────────── Semantic tokens: light ───────────── */
+/* ═════════════════════════════════════════════════════════════════
+   ShopStream design tokens — SINGLE SOURCE OF TRUTH FOR COLOUR.
+   Components must use semantic classes (bg-card, text-text-muted,
+   bg-accent, bg-ink ...). Never raw hex or stone-/orange- palette classes.
+   Brand: orange #f97316 + ink black on warm stone neutrals.
+   ═════════════════════════════════════════════════════════════════ */
+
+/* ───────────── Light ───────────── */
 :root {
-  --bg: #ffffff;
-  --surface: #f4f4f5;
-  --border: #e4e4e7;
-  --text: #18181b;
-  --text-muted: #6b6b76; /* 5:1+ on #fff and #f4f4f5 */
-  --accent: #e8f44a;
-  --accent-hover: #dbe93c;
-  --accent-text: #18181b;
-  --focus: #555f15;
+  /* Surfaces */
+  --bg: #ffffff;          /* storefront page + cards */
+  --canvas: #f5f5f4;      /* dashboard canvas behind cards */
+  --card: #ffffff;
+  --surface: #f5f5f4;     /* muted fills: inputs, chips, empty states */
+  --border: #e7e5e4;
+
+  /* Text */
+  --text: #1c1917;
+  --text-muted: #6b6560;  /* 5.7:1 on white, 5.3:1 on surface */
+
+  /* Ink = primary CTA (black in light, off-white in dark) */
+  --ink: #1c1917;
+  --ink-text: #fafaf9;
+
+  /* Brand = orange. Fill with ink text (6.2:1). Orange as TEXT uses brand-strong (5.2:1). */
+  --accent: #f97316;
+  --accent-hover: #ea580c;
+  --accent-text: #1c1917;
+  --accent-soft: #fff1e6;
+  --brand-strong: #c2410c;
+  --focus: #c2410c;
+
+  /* Feedback */
   --danger: #dc2626;
   --success: #047857;
 
-  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.05);
-  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px rgb(0 0 0 / 0.06);
-  --shadow-lift: 0 4px 12px rgb(0 0 0 / 0.08), 0 16px 40px rgb(0 0 0 / 0.08);
+  /* Status tones: text / soft background / dot */
+  --tone-amber: #92400e;  --tone-amber-soft: #fffbeb;  --tone-amber-dot: #f59e0b;
+  --tone-blue: #075985;   --tone-blue-soft: #f0f9ff;   --tone-blue-dot: #0ea5e9;
+  --tone-violet: #5b21b6; --tone-violet-soft: #f5f3ff; --tone-violet-dot: #8b5cf6;
+  --tone-green: #065f46;  --tone-green-soft: #ecfdf5;  --tone-green-dot: #10b981;
+  --tone-red: #991b1b;    --tone-red-soft: #fef2f2;    --tone-red-dot: #ef4444;
+  --tone-stone: #44403c;  --tone-stone-soft: #f5f5f4;  --tone-stone-dot: #a8a29e;
 
-  --accent-gradient: linear-gradient(135deg, #e8f44a 0%, #c9e02a 100%);
+  --shadow-sm: 0 1px 2px rgb(28 25 23 / 0.05);
+  --shadow-card: 0 1px 2px rgb(28 25 23 / 0.04), 0 8px 24px rgb(28 25 23 / 0.06);
+  --shadow-lift: 0 4px 12px rgb(28 25 23 / 0.08), 0 16px 40px rgb(28 25 23 / 0.08);
+
+  --accent-gradient: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
   --transition: 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
   color-scheme: light;
 }
 
-/* ───────────── Semantic tokens: dark (system preference) ───────────── */
+/* ───────────── Dark (system preference) ───────────── */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #1a1a1a;
-    --surface: #242424;
-    --border: #333333;
-    --text: #f4f4f5;
-    --text-muted: #a1a1aa;
-    --accent: #e8f44a;
-    --accent-hover: #f1fa6a;
-    --accent-text: #18181b;
-    --focus: #e8f44a;
+    --bg: #141211;
+    --canvas: #0c0a09;
+    --card: #1c1917;
+    --surface: #242120;
+    --border: #2e2a27;
+
+    --text: #fafaf9;
+    --text-muted: #a8a29e;
+
+    --ink: #fafaf9;
+    --ink-text: #1c1917;
+
+    --accent: #f97316;
+    --accent-hover: #fb923c;
+    --accent-text: #1c1917;
+    --accent-soft: rgb(249 115 22 / 0.14);
+    --brand-strong: #fb923c;
+    --focus: #fb923c;
+
     --danger: #f87171;
     --success: #34d399;
+
+    --tone-amber: #fcd34d;  --tone-amber-soft: rgb(245 158 11 / 0.14);  --tone-amber-dot: #f59e0b;
+    --tone-blue: #7dd3fc;   --tone-blue-soft: rgb(14 165 233 / 0.14);   --tone-blue-dot: #38bdf8;
+    --tone-violet: #c4b5fd; --tone-violet-soft: rgb(139 92 246 / 0.16); --tone-violet-dot: #a78bfa;
+    --tone-green: #6ee7b7;  --tone-green-soft: rgb(16 185 129 / 0.14);  --tone-green-dot: #34d399;
+    --tone-red: #fca5a5;    --tone-red-soft: rgb(239 68 68 / 0.14);     --tone-red-dot: #f87171;
+    --tone-stone: #d6d3d1;  --tone-stone-soft: rgb(168 162 158 / 0.14); --tone-stone-dot: #a8a29e;
 
     --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
     --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.35);
@@ -45,19 +92,36 @@
   }
 }
 
-/* ───────────── Semantic tokens: dark (manual toggle) ───────────── */
+/* ───────────── Dark (manual toggle) ───────────── */
 :root[data-theme="dark"] {
-  --bg: #1a1a1a;
-  --surface: #242424;
-  --border: #333333;
-  --text: #f4f4f5;
-  --text-muted: #a1a1aa;
-  --accent: #e8f44a;
-  --accent-hover: #f1fa6a;
-  --accent-text: #18181b;
-  --focus: #e8f44a;
+  --bg: #141211;
+  --canvas: #0c0a09;
+  --card: #1c1917;
+  --surface: #242120;
+  --border: #2e2a27;
+
+  --text: #fafaf9;
+  --text-muted: #a8a29e;
+
+  --ink: #fafaf9;
+  --ink-text: #1c1917;
+
+  --accent: #f97316;
+  --accent-hover: #fb923c;
+  --accent-text: #1c1917;
+  --accent-soft: rgb(249 115 22 / 0.14);
+  --brand-strong: #fb923c;
+  --focus: #fb923c;
+
   --danger: #f87171;
   --success: #34d399;
+
+  --tone-amber: #fcd34d;  --tone-amber-soft: rgb(245 158 11 / 0.14);  --tone-amber-dot: #f59e0b;
+  --tone-blue: #7dd3fc;   --tone-blue-soft: rgb(14 165 233 / 0.14);   --tone-blue-dot: #38bdf8;
+  --tone-violet: #c4b5fd; --tone-violet-soft: rgb(139 92 246 / 0.16); --tone-violet-dot: #a78bfa;
+  --tone-green: #6ee7b7;  --tone-green-soft: rgb(16 185 129 / 0.14);  --tone-green-dot: #34d399;
+  --tone-red: #fca5a5;    --tone-red-soft: rgb(239 68 68 / 0.14);     --tone-red-dot: #f87171;
+  --tone-stone: #d6d3d1;  --tone-stone-soft: rgb(168 162 158 / 0.14); --tone-stone-dot: #a8a29e;
 
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
   --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.35);
@@ -65,18 +129,32 @@
   color-scheme: dark;
 }
 
-/* ───────────── Tailwind mapping (components use these classes) ───────────── */
+/* ───────────── Tailwind mapping ───────────── */
 @theme inline {
   --color-bg: var(--bg);
+  --color-canvas: var(--canvas);
+  --color-card: var(--card);
   --color-surface: var(--surface);
   --color-border: var(--border);
   --color-text: var(--text);
   --color-text-muted: var(--text-muted);
+  --color-ink: var(--ink);
+  --color-ink-text: var(--ink-text);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-text: var(--accent-text);
+  --color-accent-soft: var(--accent-soft);
+  --color-brand-strong: var(--brand-strong);
+  --color-focus: var(--focus);
   --color-danger: var(--danger);
   --color-success: var(--success);
+
+  --color-tone-amber: var(--tone-amber);   --color-tone-amber-soft: var(--tone-amber-soft);   --color-tone-amber-dot: var(--tone-amber-dot);
+  --color-tone-blue: var(--tone-blue);     --color-tone-blue-soft: var(--tone-blue-soft);     --color-tone-blue-dot: var(--tone-blue-dot);
+  --color-tone-violet: var(--tone-violet); --color-tone-violet-soft: var(--tone-violet-soft); --color-tone-violet-dot: var(--tone-violet-dot);
+  --color-tone-green: var(--tone-green);   --color-tone-green-soft: var(--tone-green-soft);   --color-tone-green-dot: var(--tone-green-dot);
+  --color-tone-red: var(--tone-red);       --color-tone-red-soft: var(--tone-red-soft);       --color-tone-red-dot: var(--tone-red-dot);
+  --color-tone-stone: var(--tone-stone);   --color-tone-stone-soft: var(--tone-stone-soft);   --color-tone-stone-dot: var(--tone-stone-dot);
 
   --radius-control: 0.75rem;
   --radius-card: 1rem;
@@ -122,7 +200,7 @@ h6 {
 
 /* Fallback focus ring for anything without its own */
 :focus-visible {
-  outline: 2px solid var(--text);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 

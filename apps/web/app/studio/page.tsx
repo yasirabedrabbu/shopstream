@@ -34,7 +34,7 @@ export default function StudioOverviewPage() {
 
   if (error) {
     return (
-      <p role="alert" className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+      <p role="alert" className="rounded-2xl border border-tone-red/30 bg-tone-red-soft p-4 text-sm text-tone-red">
         {error}
       </p>
     );
@@ -75,10 +75,10 @@ export default function StudioOverviewPage() {
         subtitle={`${todayLabel()} · Here is how your store is doing.`}
         actions={
           <>
-            <Link href="/studio/inventory" className="inline-flex min-h-10 items-center rounded-xl border border-stone-200 bg-white px-4 text-sm font-medium hover:border-stone-400">
+            <Link href="/studio/inventory" className="inline-flex min-h-10 items-center rounded-xl border border-border bg-card px-4 text-sm font-medium hover:border-text/40">
               Inventory
             </Link>
-            <Link href="/vendor/products/new" className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-orange-500 px-4 text-sm font-medium text-white hover:bg-orange-600">
+            <Link href="/vendor/products/new" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-accent-text hover:bg-accent-hover">
               New product <span aria-hidden="true">+</span>
             </Link>
           </>
@@ -88,13 +88,13 @@ export default function StudioOverviewPage() {
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {kpis.map((k) => (
           <Link key={k.label} href={k.href} className="group">
-            <Card className="h-full p-5 transition group-hover:border-stone-300">
+            <Card className="h-full p-5 transition group-hover:border-text/30">
               <div className="flex items-start justify-between">
-                <p className="text-sm text-stone-500">{k.label}</p>
-                <span aria-hidden="true" className="text-stone-400 transition group-hover:text-stone-900">↗</span>
+                <p className="text-sm text-text-muted">{k.label}</p>
+                <span aria-hidden="true" className="text-text-muted transition group-hover:text-text">↗</span>
               </div>
               <p className="mt-3 text-2xl font-semibold tabular-nums tracking-tight md:text-[28px]">{k.value}</p>
-              <p className="mt-2 text-xs text-stone-500">{k.hint}</p>
+              <p className="mt-2 text-xs text-text-muted">{k.hint}</p>
             </Card>
           </Link>
         ))}
@@ -105,20 +105,20 @@ export default function StudioOverviewPage() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <h2 className="text-base font-semibold">Daily revenue</h2>
-              <p className="text-sm text-stone-500">Last 14 days · each column is one day</p>
+              <p className="text-sm text-text-muted">Last 14 days · each column is one day</p>
             </div>
-            <div className="flex items-center gap-2 text-xs text-stone-500">
-              <span className="h-2 w-2 rounded-full bg-orange-500" /> Gross revenue
+            <div className="flex items-center gap-2 text-xs text-text-muted">
+              <span className="h-2 w-2 rounded-full bg-accent-soft0" /> Gross revenue
             </div>
           </div>
           <div className="mt-6">
             {sparkValues.some((v) => v > 0) ? (
               <DotSpark values={sparkValues} rows={8} dot={6} gap={5} />
             ) : (
-              <p className="py-12 text-center text-sm text-stone-500">No sales in this period yet.</p>
+              <p className="py-12 text-center text-sm text-text-muted">No sales in this period yet.</p>
             )}
           </div>
-          <div className="mt-4 flex justify-between text-xs tabular-nums text-stone-400">
+          <div className="mt-4 flex justify-between text-xs tabular-nums text-text-muted">
             <span>{firstDay}</span>
             <span>{lastDay}</span>
           </div>
@@ -126,7 +126,7 @@ export default function StudioOverviewPage() {
 
         <Card className="p-6">
           <h2 className="text-base font-semibold">Order pipeline</h2>
-          <p className="text-sm text-stone-500">Items by fulfilment stage</p>
+          <p className="text-sm text-text-muted">Items by fulfilment stage</p>
           <div className="mt-5 space-y-4">
             {STATUSES.map((s) => {
               const count = dash.pipeline[s] ?? 0;
@@ -136,8 +136,8 @@ export default function StudioOverviewPage() {
                     <Pill tone={FULFILL[s].tone}>{FULFILL[s].label}</Pill>
                     <span className="tabular-nums font-medium">{count}</span>
                   </div>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-stone-100">
-                    <div className="h-full rounded-full bg-stone-900" style={{ width: `${(count / pipelineTotal) * 100}%` }} />
+                  <div className="h-1.5 overflow-hidden rounded-full bg-surface">
+                    <div className="h-full rounded-full bg-ink" style={{ width: `${(count / pipelineTotal) * 100}%` }} />
                   </div>
                 </div>
               );
@@ -150,22 +150,22 @@ export default function StudioOverviewPage() {
       </div>
 
       <Card>
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 px-6 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-6 py-4">
           <div>
             <h2 className="text-base font-semibold">Recent transactions</h2>
-            <p className="text-sm text-stone-500">Latest order items across your store</p>
+            <p className="text-sm text-text-muted">Latest order items across your store</p>
           </div>
           <Link href="/studio/orders" className="text-sm font-medium underline underline-offset-4">
             View all
           </Link>
         </div>
         {items.length === 0 ? (
-          <p className="px-6 py-12 text-center text-sm text-stone-500">No transactions yet. Orders will appear here.</p>
+          <p className="px-6 py-12 text-center text-sm text-text-muted">No transactions yet. Orders will appear here.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] text-left text-sm">
               <caption className="sr-only">Recent transactions</caption>
-              <thead className="bg-stone-50 text-xs uppercase tracking-wider text-stone-500">
+              <thead className="bg-surface text-xs uppercase tracking-wider text-text-muted">
                 <tr>
                   <th scope="col" className="px-6 py-3 font-medium">Order</th>
                   <th scope="col" className="px-4 py-3 font-medium">Customer</th>
@@ -176,9 +176,9 @@ export default function StudioOverviewPage() {
                   <th scope="col" className="px-6 py-3 text-right font-medium">Placed</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-stone-100">
+              <tbody className="divide-y divide-border">
                 {items.slice(0, 8).map((i) => (
-                  <tr key={i.itemId} className="hover:bg-stone-50">
+                  <tr key={i.itemId} className="hover:bg-surface">
                     <td className="px-6 py-4 font-medium tabular-nums">#{shortId(i.orderId)}</td>
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
@@ -186,11 +186,11 @@ export default function StudioOverviewPage() {
                         <span>{i.shippingAddress.fullName}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-4 text-stone-600">{i.productName}</td>
+                    <td className="px-4 py-4 text-text-muted">{i.productName}</td>
                     <td className="px-4 py-4 text-right tabular-nums">{i.quantity}</td>
                     <td className="px-4 py-4 text-right font-medium tabular-nums">{formatMoney(i.lineTotalCents, i.currency)}</td>
                     <td className="px-4 py-4"><Pill tone={FULFILL[i.fulfillmentStatus].tone}>{FULFILL[i.fulfillmentStatus].label}</Pill></td>
-                    <td className="px-6 py-4 text-right text-stone-500">{timeAgo(i.placedAt)}</td>
+                    <td className="px-6 py-4 text-right text-text-muted">{timeAgo(i.placedAt)}</td>
                   </tr>
                 ))}
               </tbody>

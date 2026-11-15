@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import Image from "@/components/ui/SafeImage";
 import type { PublicProductResponse } from "@/lib/types";
 import { formatMoney } from "@/lib/money";
 import { DEMO_MODE } from "@/lib/demo";
