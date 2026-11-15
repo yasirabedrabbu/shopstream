@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { isLoggedIn } from "@/lib/auth";
 
-// Sends signed-out visitors to login, then returns them to the page they wanted.
 export function RequireAuth({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();

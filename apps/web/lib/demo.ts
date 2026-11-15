@@ -7,7 +7,6 @@ import type {
 import type { ProductListParams } from "./api";
 
 // Demo mode is permanently off. The app always uses the live API.
-// Demo banners, sample text and sample data no longer appear anywhere.
 export const DEMO_MODE = false;
 
 // Empty placeholders. Kept so existing imports still compile.
@@ -15,9 +14,7 @@ export const DEMO_CATEGORIES: CategoryResponse[] = [];
 export const DEMO_STORES: PublicStoreResponse[] = [];
 export const DEMO_PRODUCTS: PublicProductResponse[] = [];
 
-export function listDemoProducts(
-  _params: ProductListParams = {},
-): Page<PublicProductResponse> {
+export function listDemoProducts(_params: ProductListParams = {}): Page<PublicProductResponse> {
   return { content: [], page: 0, size: 0, totalElements: 0, totalPages: 0 };
 }
 

@@ -81,7 +81,6 @@ function CheckoutContent() {
   const sp = useSearchParams();
   const cart = useCart();
 
-  // Single product checkout: /checkout?product=slug&qty=2. Otherwise checkout uses the bag.
   const directSlug = sp.get("product") ?? "";
   const directQty = clampQty(sp.get("qty"), 100);
   const source: "direct" | "cart" = directSlug ? "direct" : "cart";
@@ -105,7 +104,6 @@ function CheckoutContent() {
     if (step !== "details") heading.current?.focus();
   }, [step]);
 
-  // Login check. Return to this exact URL after signing in.
   useEffect(() => {
     if (!hydrated) return;
     if (!isLoggedIn()) {
@@ -118,7 +116,6 @@ function CheckoutContent() {
 
   const cartKey = cart.lines.map((l) => `${l.slug}:${l.quantity}`).join("|");
 
-  // Load product details for the items to buy.
   useEffect(() => {
     if (!hydrated || !signedIn) return;
     let active = true;
@@ -144,31 +141,27 @@ function CheckoutContent() {
           .then((product) => ({ product, quantity: r.quantity }) as CheckoutItem)
           .catch(() => null),
       ),
-    ).then((results) => {
-      if (!active) return;
-      const ok = results.filter((r): r is CheckoutItem => r !== null);
-      setItems(ok);
-      if (ok.length !== results.length) {
-        setLoadError(
-          "Some products could not be loaded. Remove them from your bag to continue.",
-        );
-      }
-    }).finally(() => {
-      if (active) setLoading(false);
-    });
+    )
+      .then((results) => {
+        if (!active) return;
+        const ok = results.filter((r): r is CheckoutItem => r !== null);
+        setItems(ok);
+        if (ok.length !== results.length) {
+          setLoadError("Some products could not be loaded. Remove them from your bag to continue.");
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
 
     return () => {
       active = false;
     };
-    // cartKey covers cart.lines changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated, signedIn, source, directSlug, directQty, cartKey]);
 
   const currency = items[0]?.product.currency ?? "BDT";
-  const subtotal = items.reduce(
-    (sum, i) => sum + i.product.effectivePriceCents * i.quantity,
-    0,
-  );
+  const subtotal = items.reduce((sum, i) => sum + i.product.effectivePriceCents * i.quantity, 0);
   const unavailable = items.filter((i) => !i.product.inStock);
   const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
 
@@ -214,11 +207,7 @@ function CheckoutContent() {
       );
       orderId = order.id;
     } catch (err) {
-      setFormError(
-        err instanceof Error
-          ? err.message
-          : "Your order could not be placed. Nothing has been charged.",
-      );
+      setFormError(err instanceof Error ? err.message : "Your order could not be placed. Nothing has been charged.");
       setSubmitting(false);
       return;
     }
@@ -237,8 +226,6 @@ function CheckoutContent() {
     router.push(`/account/orders/${orderId}`);
   }
 
-  // ─── Render states ───────────────────────────────────────────────────────
-
   if (!hydrated || !signedIn || loading) {
     return (
       <div role="status" className="h-80 animate-pulse rounded-2xl bg-surface">
@@ -251,9 +238,7 @@ function CheckoutContent() {
     return (
       <div className="rounded-2xl bg-surface p-10 text-center">
         <h1 className="text-2xl font-semibold">Your bag is empty.</h1>
-        <p className="mt-3 text-sm text-text-muted">
-          Add something you love, then come back to checkout.
-        </p>
+        <p className="mt-3 text-sm text-text-muted">Add something you love, then come back to checkout.</p>
         <Link href="/products" className={buttonClasses({ className: "mt-6" })}>
           Explore products
         </Link>
@@ -277,17 +262,11 @@ function CheckoutContent() {
           {step === "review" ? "One last look." : "Where should we send it?"}
         </h1>
         <ol aria-label="Checkout progress" className="mt-5 flex gap-5 text-sm">
-          <li
-            aria-current={step === "details" ? "step" : undefined}
-            className={step === "details" ? "font-semibold" : "text-text-muted"}
-          >
+          <li aria-current={step === "details" ? "step" : undefined} className={step === "details" ? "font-semibold" : "text-text-muted"}>
             1. Delivery details
           </li>
           <li aria-hidden="true" className="text-text-muted">/</li>
-          <li
-            aria-current={step === "review" ? "step" : undefined}
-            className={step === "review" ? "font-semibold" : "text-text-muted"}
-          >
+          <li aria-current={step === "review" ? "step" : undefined} className={step === "review" ? "font-semibold" : "text-text-muted"}>
             2. Review
           </li>
         </ol>
@@ -329,9 +308,7 @@ function CheckoutContent() {
                   </div>
                 ))}
                 <div className="sm:col-span-2">
-                  <p className="text-sm text-text-muted">
-                    We currently deliver within Bangladesh.
-                  </p>
+                  <p className="text-sm text-text-muted">We currently deliver within Bangladesh.</p>
                 </div>
               </div>
               <button type="submit" className={buttonClasses({ size: "lg", className: "w-full" })}>
@@ -414,9 +391,7 @@ function CheckoutContent() {
                   <p className="mt-1 text-xs text-text-muted">
                     Qty {quantity} · {formatMoney(product.effectivePriceCents, currency)} each
                   </p>
-                  {!product.inStock && (
-                    <p className="mt-1 text-xs text-red-600">Out of stock</p>
-                  )}
+                  {!product.inStock && <p className="mt-1 text-xs text-red-600">Out of stock</p>}
                 </div>
               </li>
             ))}

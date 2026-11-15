@@ -29,7 +29,6 @@ export function useRecovery() {
     form.setStatus("loading");
 
     try {
-      // Pass the email now. The old version called requestReset() with no email and always threw.
       await requestReset(form.values.email);
       if (!form.active.current) return;
       context.setEmail(form.values.email.trim());

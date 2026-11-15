@@ -15,12 +15,9 @@ const btn =
 
 export default function CartPage() {
   const cart = useCart();
-  const [products, setProducts] = useState<
-    Record<string, PublicProductResponse | null>
-  >({});
+  const [products, setProducts] = useState<Record<string, PublicProductResponse | null>>({});
   const [loading, setLoading] = useState(true);
 
-  // Re-fetch when the set of slugs changes, not on every quantity change.
   const slugsKey = cart.lines.map((l) => l.slug).join(",");
 
   useEffect(() => {
@@ -49,10 +46,7 @@ export default function CartPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slugsKey]);
 
-  const rows = cart.lines.map((line) => ({
-    line,
-    product: products[line.slug],
-  }));
+  const rows = cart.lines.map((line) => ({ line, product: products[line.slug] }));
 
   const subtotal = rows.reduce((sum, { line, product }) => {
     if (!product || !product.inStock) return sum;
@@ -64,9 +58,7 @@ export default function CartPage() {
       <Nav />
       <main id="main-content" tabIndex={-1} className="page-width pb-16 pt-8">
         <h1 className="text-3xl font-semibold tracking-tight">Shopping bag</h1>
-        <p className="mt-2 text-sm text-text-muted">
-          Good choices, all together.
-        </p>
+        <p className="mt-2 text-sm text-text-muted">Good choices, all together.</p>
 
         {cart.lines.length === 0 ? (
           <div className="mt-10 rounded-xl border border-border bg-surface px-6 py-16 text-center">
@@ -97,9 +89,7 @@ export default function CartPage() {
                       key={line.slug}
                       className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-4"
                     >
-                      <p className="text-sm">
-                        This product is no longer available.
-                      </p>
+                      <p className="text-sm">This product is no longer available.</p>
                       <button
                         className="min-h-11 rounded-xl border border-border px-4 text-sm"
                         onClick={() => cart.remove(line.slug)}
@@ -110,10 +100,7 @@ export default function CartPage() {
                   );
                 }
                 return (
-                  <li
-                    key={line.slug}
-                    className="flex gap-4 rounded-xl border border-border p-4"
-                  >
+                  <li key={line.slug} className="flex gap-4 rounded-xl border border-border p-4">
                     <div className="relative h-24 w-20 shrink-0 overflow-hidden rounded-lg bg-surface">
                       {product.imageUrls[0] && (
                         <Image
@@ -121,21 +108,17 @@ export default function CartPage() {
                           alt=""
                           fill
                           sizes="80px"
+                          unoptimized={!product.imageUrls[0].startsWith("/")}
                           className="object-cover"
                         />
                       )}
                     </div>
                     <div className="flex flex-1 flex-col gap-2">
                       <div>
-                        <Link
-                          href={`/products/${product.slug}`}
-                          className="font-medium hover:underline"
-                        >
+                        <Link href={`/products/${product.slug}`} className="font-medium hover:underline">
                           {product.name}
                         </Link>
-                        <p className="text-sm text-text-muted">
-                          {product.store.storeName}
-                        </p>
+                        <p className="text-sm text-text-muted">{product.store.storeName}</p>
                         {!product.inStock && (
                           <p role="alert" className="text-sm text-red-600">
                             Out of stock. Remove it or check back later.
@@ -187,9 +170,7 @@ export default function CartPage() {
                 <span className="text-text-muted">Items subtotal</span>
                 <span>{formatMoney(subtotal, "BDT")}</span>
               </div>
-              <p className="mt-3 text-xs text-text-muted">
-                Delivery is calculated at checkout.
-              </p>
+              <p className="mt-3 text-xs text-text-muted">Delivery is calculated at checkout.</p>
               <Link
                 href="/checkout"
                 className="mt-6 flex min-h-12 items-center justify-center rounded-xl bg-accent font-medium text-accent-text"

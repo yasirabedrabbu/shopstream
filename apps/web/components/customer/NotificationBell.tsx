@@ -4,15 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { notificationApi, type NotificationItem } from "@/lib/api";
 import { isLoggedIn } from "@/lib/auth";
 import { DEMO_MODE } from "@/lib/demo";
-import {
-  Action,
-  Box,
-  CustomerIcon,
-  Dialog,
-  IconButton,
-  PlatformLink,
-  Text,
-} from "./ui";
+import { Action, Box, CustomerIcon, Dialog, IconButton, PlatformLink, Text } from "./ui";
 
 const POLL_MS = 60_000;
 
@@ -35,7 +27,6 @@ export function NotificationBell() {
     }
   }, []);
 
-  // Load the badge on mount, then poll every minute.
   useEffect(() => {
     refreshCount();
     const id = window.setInterval(refreshCount, POLL_MS);
@@ -58,9 +49,7 @@ export function NotificationBell() {
       const page = await notificationApi.list(0, 20);
       setItems(page.content);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Notifications could not be loaded.",
-      );
+      setError(err instanceof Error ? err.message : "Notifications could not be loaded.");
     } finally {
       setLoading(false);
     }
@@ -68,9 +57,7 @@ export function NotificationBell() {
 
   async function markOne(item: NotificationItem) {
     if (item.read) return;
-    setItems((list) =>
-      list.map((n) => (n.id === item.id ? { ...n, read: true } : n)),
-    );
+    setItems((list) => list.map((n) => (n.id === item.id ? { ...n, read: true } : n)));
     setCount((c) => Math.max(0, c - 1));
     try {
       await notificationApi.markRead(item.id);
@@ -104,11 +91,7 @@ export function NotificationBell() {
   return (
     <>
       <Box className="c-notification-icon">
-        <IconButton
-          icon="bell"
-          label={`Notifications, ${count} unread`}
-          onClick={openPanel}
-        />
+        <IconButton icon="bell" label={`Notifications, ${count} unread`} onClick={openPanel} />
         {count > 0 && <span className="c-unread-dot" />}
       </Box>
 
@@ -128,13 +111,11 @@ export function NotificationBell() {
               Loading…
             </Text>
           )}
-
           {error && (
             <Text variant="small" tone="muted">
               {error}
             </Text>
           )}
-
           {!loading && !error && items.length === 0 && (
             <Text variant="small" tone="muted">
               No notifications yet.

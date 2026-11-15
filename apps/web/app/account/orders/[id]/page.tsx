@@ -49,17 +49,19 @@ export default function OrderDetailPage() {
 
   useEffect(() => {
     let cancelled = false;
-    orderApi.get(id).then((o) => {
-      if (!cancelled) setOrder(o);
-    }).catch((err) => {
-      if (!cancelled) setLoadError(errorText(err, "This order could not be loaded."));
-    });
+    orderApi
+      .get(id)
+      .then((o) => {
+        if (!cancelled) setOrder(o);
+      })
+      .catch((err) => {
+        if (!cancelled) setLoadError(errorText(err, "This order could not be loaded."));
+      });
     return () => {
       cancelled = true;
     };
   }, [id]);
 
-  // Pay for an order that is still waiting for payment (or whose payment failed).
   async function payNow() {
     if (!order || paying) return;
     setPaying(true);
@@ -152,8 +154,7 @@ export default function OrderDetailPage() {
               <section className="rounded-xl border border-border p-5 text-sm">
                 <h2 className="font-semibold">Payment</h2>
                 <p className="mt-2 text-text-muted">
-                  This order is waiting for payment. You can pay now or try again if a payment
-                  did not go through.
+                  This order is waiting for payment. You can pay now or try again if a payment did not go through.
                 </p>
                 {payError && (
                   <p role="alert" className="mt-3 text-danger">
@@ -173,13 +174,11 @@ export default function OrderDetailPage() {
             {order.status === "PAID" && (
               <p className="text-sm text-text-muted">Payment received. Thank you for your order.</p>
             )}
-
             {order.status === "EXPIRED" && (
               <p className="text-sm text-text-muted">
                 This order expired before payment was completed. Please place a new order.
               </p>
             )}
-
             {order.cancelReason && (
               <p className="text-sm text-text-muted">Reason: {order.cancelReason}</p>
             )}

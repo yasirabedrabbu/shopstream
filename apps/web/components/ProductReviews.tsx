@@ -1,11 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import {
-  reviewApi,
-  type ReviewItem,
-  type ReviewSummaryData,
-} from "@/lib/api";
+import { reviewApi, type ReviewItem, type ReviewSummaryData } from "@/lib/api";
 import { isLoggedIn } from "@/lib/auth";
 
 export function ProductReviews({ slug }: { slug: string }) {
@@ -42,9 +38,7 @@ export function ProductReviews({ slug }: { slug: string }) {
       })
       .catch((err) => {
         if (!active) return;
-        setLoadError(
-          err instanceof Error ? err.message : "Reviews could not be loaded.",
-        );
+        setLoadError(err instanceof Error ? err.message : "Reviews could not be loaded.");
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -74,9 +68,7 @@ export function ProductReviews({ slug }: { slug: string }) {
       setFormMessage("Your review is saved.");
       setReloadKey((k) => k + 1);
     } catch (err) {
-      setFormMessage(
-        err instanceof Error ? err.message : "Your review could not be saved.",
-      );
+      setFormMessage(err instanceof Error ? err.message : "Your review could not be saved.");
     } finally {
       setSaving(false);
     }
@@ -93,9 +85,7 @@ export function ProductReviews({ slug }: { slug: string }) {
       setFormMessage("Your review was deleted.");
       setReloadKey((k) => k + 1);
     } catch (err) {
-      setFormMessage(
-        err instanceof Error ? err.message : "Your review could not be deleted.",
-      );
+      setFormMessage(err instanceof Error ? err.message : "Your review could not be deleted.");
     } finally {
       setSaving(false);
     }
@@ -142,10 +132,7 @@ export function ProductReviews({ slug }: { slug: string }) {
                 <li key={star} className="flex items-center gap-3 text-sm">
                   <span className="w-12 text-text">{star} star</span>
                   <span className="relative h-2 flex-1 overflow-hidden rounded bg-border">
-                    <span
-                      className="absolute inset-y-0 left-0 bg-[var(--accent)]"
-                      style={{ width: `${pct}%` }}
-                    />
+                    <span className="absolute inset-y-0 left-0 bg-[var(--accent)]" style={{ width: `${pct}%` }} />
                   </span>
                   <span className="w-10 text-right text-text-muted">{count}</span>
                 </li>

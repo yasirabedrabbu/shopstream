@@ -1,11 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import {
-  vendorApi,
-  type VariantBody,
-  type VariantItem,
-} from "@/lib/api";
+import { vendorApi, type VariantBody, type VariantItem } from "@/lib/api";
 import type { ProductResponse } from "@/lib/types";
 import { formatMoney } from "@/lib/money";
 
@@ -14,8 +10,7 @@ const inputClass =
 const labelClass = "text-sm font-medium text-text";
 const primaryBtn =
   "min-h-11 rounded-xl px-5 font-medium bg-[var(--accent)] text-[var(--accent-text)] disabled:opacity-60";
-const ghostBtn =
-  "min-h-11 rounded-xl border border-border px-5 font-medium text-text disabled:opacity-60";
+const ghostBtn = "min-h-11 rounded-xl border border-border px-5 font-medium text-text disabled:opacity-60";
 const dangerBtn =
   "min-h-11 rounded-xl border border-red-600 px-5 font-medium text-red-600 disabled:opacity-60";
 const cardClass = "rounded-2xl border border-border p-5 flex flex-col gap-4";
@@ -24,17 +19,12 @@ function errorMessage(err: unknown, fallback: string): string {
   return err instanceof Error ? err.message : fallback;
 }
 
-// ISO string -> value for <input type="datetime-local"> in the user's local time.
 function toLocalInput(iso: string | null): string {
   if (!iso) return "";
   const d = new Date(iso);
   const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
-    d.getHours(),
-  )}:${pad(d.getMinutes())}`;
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
-
-// ─── Flash sale ──────────────────────────────────────────────────────────────
 
 export function FlashSaleSection({
   productId,
@@ -194,13 +184,11 @@ export function FlashSaleSection({
   );
 }
 
-// ─── Variants ────────────────────────────────────────────────────────────────
-
 type VariantDraft = {
   id?: string;
   sku: string;
-  options: string; // "size: M, color: Red"
-  delta: string; // BDT, can be negative
+  options: string;
+  delta: string;
   stock: string;
   active: boolean;
 };
@@ -213,7 +201,6 @@ const EMPTY_DRAFT: VariantDraft = {
   active: true,
 };
 
-// Parses "size: M, color: Red" into { size: "M", color: "Red" }. Returns a message on error.
 function parseOptions(text: string): Record<string, string> | string {
   const pairs = text
     .split(",")
@@ -249,8 +236,7 @@ function toBody(d: VariantDraft): VariantBody | string {
   if (!Number.isFinite(delta)) return "The price change must be a number.";
 
   const stock = Number(d.stock);
-  if (!Number.isInteger(stock) || stock < 0)
-    return "Stock must be a whole number, 0 or more.";
+  if (!Number.isInteger(stock) || stock < 0) return "Stock must be a whole number, 0 or more.";
 
   return {
     sku,
@@ -364,9 +350,7 @@ export function VariantsSection({ productId }: { productId: string }) {
         </p>
       )}
 
-      {!loading && items.length === 0 && (
-        <p className="text-text-muted">No variants yet.</p>
-      )}
+      {!loading && items.length === 0 && <p className="text-text-muted">No variants yet.</p>}
 
       {items.length > 0 && (
         <ul className="flex flex-col gap-3">
@@ -391,12 +375,7 @@ export function VariantsSection({ productId }: { productId: string }) {
                 <button type="button" onClick={() => startEdit(v)} className={ghostBtn}>
                   Edit
                 </button>
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => remove(v)}
-                  className={dangerBtn}
-                >
+                <button type="button" disabled={busy} onClick={() => remove(v)} className={dangerBtn}>
                   Delete
                 </button>
               </div>

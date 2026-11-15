@@ -14,9 +14,7 @@ import type { PublicProductResponse } from "@/lib/types";
 export default function WishlistPage() {
   const wishlist = useWishlist();
   const cart = useCart();
-  const [products, setProducts] = useState<
-    Record<string, PublicProductResponse | null>
-  >({});
+  const [products, setProducts] = useState<Record<string, PublicProductResponse | null>>({});
   const [loading, setLoading] = useState(true);
 
   const slugsKey = wishlist.slugs.join(",");
@@ -52,9 +50,7 @@ export default function WishlistPage() {
       <Nav />
       <main id="main-content" tabIndex={-1} className="page-width pb-16 pt-8">
         <h1 className="text-3xl font-semibold tracking-tight">Favorites</h1>
-        <p className="mt-2 text-sm text-text-muted">
-          Things you want to come back to.
-        </p>
+        <p className="mt-2 text-sm text-text-muted">Things you want to come back to.</p>
 
         {wishlist.slugs.length === 0 ? (
           <div className="mt-10 rounded-xl border border-border bg-surface px-6 py-16 text-center">
@@ -81,10 +77,7 @@ export default function WishlistPage() {
               if (product === undefined) return null;
               if (product === null) {
                 return (
-                  <li
-                    key={slug}
-                    className="flex flex-col gap-3 rounded-xl border border-border p-4"
-                  >
+                  <li key={slug} className="flex flex-col gap-3 rounded-xl border border-border p-4">
                     <p className="text-sm">This product is no longer available.</p>
                     <button
                       className="min-h-11 rounded-xl border border-border px-4 text-sm"
@@ -105,6 +98,7 @@ export default function WishlistPage() {
                           alt=""
                           fill
                           sizes="(min-width: 1024px) 30vw, 50vw"
+                          unoptimized={!product.imageUrls[0].startsWith("/")}
                           className="object-cover"
                         />
                       )}

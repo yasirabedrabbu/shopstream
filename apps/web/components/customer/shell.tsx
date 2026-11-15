@@ -1,12 +1,12 @@
 "use client";
 import{useEffect,useState,type CSSProperties,type ReactNode}from"react";
 import Image from"next/image";
+import { NotificationBell } from "./NotificationBell";
 import{usePathname,useRouter}from"next/navigation";
 import{DEMO_MODE}from"@/lib/demo";
 import{platformTokenStyle}from"@/lib/platform/design";
 import{initials}from"@/lib/platform/data";
 import{downloadFile}from"@/lib/platform/export";
-import { NotificationBell } from "./NotificationBell";
 import{customerColors,customerSpec}from"@/lib/customer/design";
 import{CustomerProvider,useCustomer,type CustomerMode}from"./state";
 import{Action,Box,CustomerIcon,Dialog,IconButton,PlatformLink,SearchField,SelectField,Text}from"./ui";

@@ -7,7 +7,6 @@ import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { ProductCard } from "@/components/ProductCard";
 import { productApi, type ProductListParams } from "@/lib/api";
-import { DEMO_MODE } from "@/lib/demo";
 import { useLiveCategories } from "@/lib/useLiveCategories";
 import { formatMoney } from "@/lib/money";
 import { Icon } from "@/components/ui/Icon";
@@ -23,16 +22,10 @@ const sorts = [
 
 function ProductSkeletons() {
   return (
-    <div
-      role="status"
-      className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:gap-6"
-    >
+    <div role="status" className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:gap-6">
       <span className="sr-only">Loading products</span>
       {Array.from({ length: 6 }, (_, i) => (
-        <div
-          key={i}
-          className="aspect-[3/4] animate-pulse rounded-xl bg-surface"
-        />
+        <div key={i} className="aspect-[3/4] animate-pulse rounded-xl bg-surface" />
       ))}
     </div>
   );
@@ -45,27 +38,16 @@ function ProductsContent() {
   const q = sp.get("q") ?? "";
   const category = sp.get("category") ?? "";
   const rawMaxPrice = Number(sp.get("maxPrice"));
-  const maxPrice =
-    Number.isSafeInteger(rawMaxPrice) && rawMaxPrice > 0
-      ? rawMaxPrice
-      : undefined;
+  const maxPrice = Number.isSafeInteger(rawMaxPrice) && rawMaxPrice > 0 ? rawMaxPrice : undefined;
   const priceLabel =
-    maxPrice === 199999
-      ? "Under ৳2,000"
-      : maxPrice
-        ? `Up to ${formatMoney(maxPrice, "BDT")}`
-        : "";
+    maxPrice === 199999 ? "Under ৳2,000" : maxPrice ? `Up to ${formatMoney(maxPrice, "BDT")}` : "";
   const requestedSort = sp.get("sort") ?? "newest";
   const sort = (
     sorts.some((s) => s.value === requestedSort) ? requestedSort : "newest"
   ) as ProductListParams["sort"];
-  const page = Math.max(
-    0,
-    (Number.parseInt(sp.get("page") ?? "1", 10) || 1) - 1,
-  );
-  const [result, setResult] = useState<Page<PublicProductResponse> | null>(
-    null,
-  );
+  const page = Math.max(0, (Number.parseInt(sp.get("page") ?? "1", 10) || 1) - 1);
+
+  const [result, setResult] = useState<Page<PublicProductResponse> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
@@ -78,15 +60,12 @@ function ProductsContent() {
       if (value) params.set(key, value);
       else params.delete(key);
     }
-    router.push(`/products${params.size ? `?${params.toString()}` : ""}`, {
-      scroll: false,
-    });
+    router.push(`/products${params.size ? `?${params.toString()}` : ""}`, { scroll: false });
   }
+
   function search(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    navigate({
-      q: String(new FormData(event.currentTarget).get("q") ?? "").trim(),
-    });
+    navigate({ q: String(new FormData(event.currentTarget).get("q") ?? "").trim() });
   }
 
   useEffect(() => {
@@ -120,28 +99,17 @@ function ProductsContent() {
             </span>
             <span>Shop</span>
           </nav>
-          <p className="eyebrow mb-3 text-text-muted">
-            Good things, all together
-          </p>
+          <p className="eyebrow mb-3 text-text-muted">Good things, all together</p>
           <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
             {selectedCategory ? selectedCategory.name : "Shop all finds"}
           </h1>
           <p className="mt-3 max-w-lg text-sm leading-relaxed text-text-muted">
-            Everyday essentials and unexpected favorites from independent
-            stores.
+            Everyday essentials and unexpected favorites from independent stores.
           </p>
         </div>
-        {DEMO_MODE && (
-          <p className="w-fit rounded-lg border border-border bg-surface px-3 py-2 text-xs text-text-muted">
-            Sample collection · No live inventory
-          </p>
-        )}
       </div>
-      <form
-        onSubmit={search}
-        role="search"
-        className="mb-6 flex max-w-2xl gap-2"
-      >
+
+      <form onSubmit={search} role="search" className="mb-6 flex max-w-2xl gap-2">
         <div className="flex min-w-0 flex-1 items-center gap-3 rounded-xl border border-border bg-surface px-4 focus-within:ring-2 focus-within:ring-[var(--focus)]">
           <Icon name="search" className="shrink-0 text-text-muted" />
           <label htmlFor="product-search" className="sr-only">
@@ -157,30 +125,24 @@ function ProductsContent() {
             className="h-12 min-w-0 flex-1 bg-transparent text-base outline-none"
           />
         </div>
-        <button
-          type="submit"
-          className={buttonClasses({ className: "min-h-12 px-4" })}
-        >
+        <button type="submit" className={buttonClasses({ className: "min-h-12 px-4" })}>
           Search
         </button>
       </form>
-      <div
-        aria-label="Filter by category"
-        className="mb-7 flex flex-wrap gap-2"
-      >
-        {[{ id: "all", name: "All finds", slug: "" }, ...categories].map(
-          (c) => (
-            <button
-              key={c.id}
-              onClick={() => navigate({ category: c.slug })}
-              aria-pressed={category === c.slug}
-              className={`min-h-11 rounded-full border px-4 text-sm transition-colors ${category === c.slug ? "border-text bg-text text-bg" : "border-border text-text-muted hover:border-text hover:text-text"}`}
-            >
-              {c.name}
-            </button>
-          ),
-        )}
+
+      <div aria-label="Filter by category" className="mb-7 flex flex-wrap gap-2">
+        {[{ id: "all", name: "All finds", slug: "" }, ...categories].map((c) => (
+          <button
+            key={c.id}
+            onClick={() => navigate({ category: c.slug })}
+            aria-pressed={category === c.slug}
+            className={`min-h-11 rounded-full border px-4 text-sm transition-colors ${category === c.slug ? "border-text bg-text text-bg" : "border-border text-text-muted hover:border-text hover:text-text"}`}
+          >
+            {c.name}
+          </button>
+        ))}
       </div>
+
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-5">
         <p role="status" aria-live="polite" className="text-sm text-text-muted">
           {loading
@@ -207,6 +169,7 @@ function ProductsContent() {
           </select>
         </div>
       </div>
+
       {(q || category || maxPrice) && (
         <div className="mb-6 flex flex-wrap items-center gap-2">
           {q && (
@@ -224,8 +187,7 @@ function ProductsContent() {
               className="flex min-h-11 items-center gap-2 rounded-lg bg-surface px-3 text-sm"
               aria-label="Remove category filter"
             >
-              {selectedCategory?.name ?? category}{" "}
-              <Icon name="close" size={14} />
+              {selectedCategory?.name ?? category} <Icon name="close" size={14} />
             </button>
           )}
           {maxPrice && (
@@ -246,17 +208,13 @@ function ProductsContent() {
           </Link>
         </div>
       )}
+
       {loading ? (
         <ProductSkeletons />
       ) : error ? (
-        <div
-          role="alert"
-          className="rounded-xl border border-border bg-surface p-10 text-center"
-        >
+        <div role="alert" className="rounded-xl border border-border bg-surface p-10 text-center">
           <Icon name="alert" size={28} className="mx-auto mb-4" />
-          <h2 className="text-xl font-semibold">
-            A little trouble finding your finds.
-          </h2>
+          <h2 className="text-xl font-semibold">A little trouble finding your finds.</h2>
           <p className="mt-3 text-sm text-text-muted">
             The collection couldn’t load. Your filters have been kept.
           </p>
@@ -266,10 +224,7 @@ function ProductsContent() {
               setError(false);
               setAttempt((a) => a + 1);
             }}
-            className={buttonClasses({
-              variant: "secondary",
-              className: "mt-5",
-            })}
+            className={buttonClasses({ variant: "secondary", className: "mt-5" })}
           >
             Try again
           </button>
@@ -282,29 +237,19 @@ function ProductsContent() {
         </div>
       ) : (
         <div className="rounded-xl border border-border bg-surface px-6 py-16 text-center">
-          <Icon
-            name="search"
-            size={30}
-            className="mx-auto mb-5 text-text-muted"
-          />
+          <Icon name="search" size={30} className="mx-auto mb-5 text-text-muted" />
           <h2 className="text-xl font-semibold">No finds this time.</h2>
           <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-text-muted">
-            Try a different search, choose another category, or explore the full
-            collection.
+            Try a different search, choose another category, or explore the full collection.
           </p>
-          <Link
-            href="/products"
-            className={buttonClasses({ className: "mt-6" })}
-          >
+          <Link href="/products" className={buttonClasses({ className: "mt-6" })}>
             Explore all finds <Icon name="arrowRight" size={16} />
           </Link>
         </div>
       )}
+
       {!loading && !error && result && result.totalPages > 1 && (
-        <nav
-          aria-label="Product pages"
-          className="mt-10 flex flex-wrap items-center justify-center gap-2"
-        >
+        <nav aria-label="Product pages" className="mt-10 flex flex-wrap items-center justify-center gap-2">
           <button
             disabled={page === 0}
             onClick={() => navigate({ page: String(page) })}
@@ -347,11 +292,7 @@ export default function ProductsPage() {
   return (
     <div className="min-h-screen bg-bg text-text">
       <Nav />
-      <main
-        id="main-content"
-        tabIndex={-1}
-        className="page-width pb-12 pt-6 md:pt-10"
-      >
+      <main id="main-content" tabIndex={-1} className="page-width pb-12 pt-6 md:pt-10">
         <Suspense fallback={<ProductSkeletons />}>
           <KeyedProductsContent />
         </Suspense>

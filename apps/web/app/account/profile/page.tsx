@@ -20,8 +20,7 @@ export default function ProfilePage() {
         if (!cancelled) setUser(u);
       })
       .catch((err) => {
-        if (!cancelled)
-          setError(err instanceof Error ? err.message : "Your profile could not be loaded.");
+        if (!cancelled) setError(err instanceof Error ? err.message : "Your profile could not be loaded.");
       });
     return () => {
       cancelled = true;

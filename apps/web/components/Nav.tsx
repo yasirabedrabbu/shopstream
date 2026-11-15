@@ -6,9 +6,11 @@ import { useEffect, useRef, useState } from "react";
 import { useStoredUser, clearSession } from "@/lib/auth";
 import { DEMO_MODE } from "@/lib/demo";
 import { useLiveCategories } from "@/lib/useLiveCategories";
+import { useCart } from "@/lib/cart";
 import { Icon } from "@/components/ui/Icon";
 import { buttonClasses } from "@/components/ui/Button";
 import { DemoBanner } from "./DemoBanner";
+import { NotificationBell } from "./customer/NotificationBell";
 
 const links = [
   { href: "/products", label: "Shop all" },
@@ -18,14 +20,15 @@ const links = [
 
 export function Nav() {
   const { categories } = useLiveCategories();
+  const cart = useCart();
   const pathname = usePathname();
   const router = useRouter();
-  const [open, setOpen] = useState<"categories" | "account" | "mobile" | null>(
-    null,
-  );
+  const [open, setOpen] = useState<"categories" | "account" | "mobile" | null>(null);
   const user = useStoredUser();
   const wrap = useRef<HTMLElement>(null);
   const trigger = useRef<HTMLButtonElement | null>(null);
+
+  const bagCount = cart.lines.reduce((sum, l) => sum + l.quantity, 0);
 
   useEffect(() => {
     if (!open) return;
@@ -50,6 +53,7 @@ export function Nav() {
     trigger.current = element;
     setOpen(open === value ? null : value);
   }
+
   function logout() {
     clearSession();
     setOpen(null);
@@ -87,6 +91,7 @@ export function Nav() {
             ShopStream<span className="text-[#727b28]">.</span>
           </span>
         </Link>
+
         <div className="hidden items-center gap-1 lg:flex">
           {links.map((link) => (
             <Link
@@ -126,6 +131,7 @@ export function Nav() {
             )}
           </div>
         </div>
+
         <div className="flex items-center gap-1 sm:gap-3">
           <Link
             href="/#for-sellers"
@@ -133,6 +139,22 @@ export function Nav() {
           >
             For sellers
           </Link>
+
+          <Link
+            href="/account/cart"
+            aria-label={`Shopping bag, ${bagCount} ${bagCount === 1 ? "item" : "items"}`}
+            className="relative grid h-11 w-11 place-items-center rounded-xl hover:bg-surface"
+          >
+            <Icon name="box" size={20} />
+            {bagCount > 0 && (
+              <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1 text-[11px] font-semibold text-accent-text">
+                {bagCount > 99 ? "99+" : bagCount}
+              </span>
+            )}
+          </Link>
+
+          {!DEMO_MODE && user && <NotificationBell />}
+
           {!DEMO_MODE && user ? (
             <div className="relative">
               <button
@@ -149,9 +171,7 @@ export function Nav() {
                   id="account-navigation"
                   className="absolute right-0 mt-2 w-56 rounded-2xl border border-border bg-bg p-2 shadow-lg"
                 >
-                  <p className="truncate px-3 py-2 text-sm font-semibold">
-                    {user.fullName}
-                  </p>
+                  <p className="truncate px-3 py-2 text-sm font-semibold">{user.fullName}</p>
                   <Link
                     href="/account/orders"
                     onClick={() => setOpen(null)}
@@ -179,20 +199,15 @@ export function Nav() {
           ) : (
             <Link
               href="/auth/login"
-              className={buttonClasses({
-                variant: "secondary",
-                size: "sm",
-                className: "gap-2",
-              })}
+              className={buttonClasses({ variant: "secondary", size: "sm", className: "gap-2" })}
             >
               <Icon name="user" size={16} />
               <span>Sign in</span>
             </Link>
           )}
+
           <button
-            aria-label={
-              open === "mobile" ? "Close navigation" : "Open navigation"
-            }
+            aria-label={open === "mobile" ? "Close navigation" : "Open navigation"}
             aria-expanded={open === "mobile"}
             aria-controls="mobile-navigation"
             onClick={(e) => toggle("mobile", e.currentTarget)}
@@ -202,6 +217,7 @@ export function Nav() {
           </button>
         </div>
       </nav>
+
       {open === "mobile" && (
         <nav
           id="mobile-navigation"
@@ -220,9 +236,7 @@ export function Nav() {
               </Link>
             ))}
           </div>
-          <p className="eyebrow px-3 pb-2 pt-5 text-text-muted">
-            Explore categories
-          </p>
+          <p className="eyebrow px-3 pb-2 pt-5 text-text-muted">Explore categories</p>
           <div className="grid grid-cols-2 gap-1">
             {categories.map((c) => (
               <Link
@@ -240,8 +254,7 @@ export function Nav() {
             onClick={() => setOpen(null)}
             className="mt-3 flex min-h-11 items-center rounded-xl border-t border-border px-3 text-sm"
           >
-            Explore selling{" "}
-            <Icon name="arrowRight" size={16} className="ml-auto" />
+            Explore selling <Icon name="arrowRight" size={16} className="ml-auto" />
           </Link>
         </nav>
       )}

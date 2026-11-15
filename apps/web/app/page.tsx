@@ -18,11 +18,7 @@ const edits = [
   { id: "all", label: "The whole edit", href: "/products" },
   { id: "home", label: "For your space", href: "/products?category=home" },
   { id: "fashion", label: "Everyday wear", href: "/products?category=fashion" },
-  {
-    id: "under",
-    label: "Under ৳2,000",
-    href: "/products?maxPrice=199999&sort=price_asc",
-  },
+  { id: "under", label: "Under ৳2,000", href: "/products?maxPrice=199999&sort=price_asc" },
 ] as const;
 
 const questions = [
@@ -32,22 +28,19 @@ const questions = [
       "A place to discover everyday favorites from independent stores across Bangladesh. Explore fashion, home, beauty, books, groceries, and tech in one thoughtfully organized collection.",
   },
   {
-    question: "Can I buy something in this preview?",
-    answer: DEMO_MODE
-      ? "This is a frontend demo, not a live marketplace. You can explore sample products and try checkout, but no order is placed, no payment is taken, and nothing is delivered."
-      : "Open a product, choose your quantity, and continue to checkout. Review the full order details before placing your order.",
+    question: "Can I buy something here?",
+    answer:
+      "Open a product, choose your quantity, and add it to your bag or buy it now. Review the full order details before placing your order.",
   },
   {
     question: "Do I need an account to explore?",
-    answer: DEMO_MODE
-      ? "Not at all. Browse every sample store and try checkout as a guest. Use the example details provided at checkout—there’s no need to enter personal information."
-      : "You can browse without an account. You’ll be asked to sign in when you’re ready to place an order, then returned to your checkout.",
+    answer:
+      "You can browse without an account. You’ll be asked to sign in when you’re ready to place an order, then returned to your checkout.",
   },
   {
     question: "I have a store. Can I join?",
-    answer: DEMO_MODE
-      ? "We’ve created a seller concept page to show the intended experience. Registration, inventory, and seller dashboards are not live in this demo, and no business details are collected."
-      : "Visit the seller page to explore the intended experience and learn how to get started with your store.",
+    answer:
+      "Visit the seller page to explore the intended experience and learn how to get started with your store.",
   },
 ];
 
@@ -55,18 +48,14 @@ const questions = [
 const KNOWN_CATEGORY_IMAGES = ["home", "beauty", "fashion", "books", "grocery", "tech"];
 
 function categoryImage(slug: string): string {
-  return KNOWN_CATEGORY_IMAGES.includes(slug)
-    ? `/images/cat-${slug}.webp`
-    : "/images/cat-home.webp";
+  return KNOWN_CATEGORY_IMAGES.includes(slug) ? `/images/cat-${slug}.webp` : "/images/cat-home.webp";
 }
 
 export default function HomePage() {
   const { categories } = useLiveCategories();
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const [products, setProducts] = useState<PublicProductResponse[] | null>(
-    null,
-  );
+  const [products, setProducts] = useState<PublicProductResponse[] | null>(null);
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [edit, setEdit] = useState<(typeof edits)[number]["id"]>("all");
@@ -94,12 +83,9 @@ export default function HomePage() {
 
   function search(event: FormEvent) {
     event.preventDefault();
-    router.push(
-      query.trim()
-        ? `/products?q=${encodeURIComponent(query.trim())}`
-        : "/products",
-    );
+    router.push(query.trim() ? `/products?q=${encodeURIComponent(query.trim())}` : "/products");
   }
+
   const selectedEdit = edits.find((item) => item.id === edit)!;
   const selectedProducts = products
     ?.filter(
@@ -119,8 +105,7 @@ export default function HomePage() {
           <div className={`page-width ${styles.heroGrid}`}>
             <div className={styles.heroCopy}>
               <p className={styles.kicker}>
-                <span className={styles.statusDot} /> Independent spirit.
-                Everyday finds.
+                <span className={styles.statusDot} /> Independent spirit. Everyday finds.
               </p>
               <h1 id="hero-heading">
                 Not just things.
@@ -130,8 +115,8 @@ export default function HomePage() {
                 of <span className={styles.highlight}>things.</span>
               </h1>
               <p className={styles.heroDescription}>
-                For the way you live, the things you love, and the little stores
-                worth discovering. Find a little more you.
+                For the way you live, the things you love, and the little stores worth discovering.
+                Find a little more you.
               </p>
               <div className={styles.heroActions}>
                 <Link href="/products" className={styles.primaryLink}>
@@ -162,6 +147,7 @@ export default function HomePage() {
                 <span>Bangladesh, beautifully everyday.</span>
               </p>
             </div>
+
             <div className={styles.heroVisual}>
               <div className={styles.heroPhoto}>
                 <Image
@@ -176,10 +162,7 @@ export default function HomePage() {
                   THE EVERYDAY ISSUE <span>NO. 01</span>
                 </span>
               </div>
-              <Link
-                href="/products?category=beauty"
-                className={styles.heroMiniCard}
-              >
+              <Link href="/products?category=beauty" className={styles.heroMiniCard}>
                 <div className={styles.miniImage}>
                   <Image
                     src="/images/cat-beauty.webp"
@@ -225,16 +208,12 @@ export default function HomePage() {
               <Icon name="heart" size={18} /> Chosen for everyday living
             </span>
             <span>
-              <Icon name="search" size={18} /> A new favorite around every
-              corner
+              <Icon name="search" size={18} /> A new favorite around every corner
             </span>
           </div>
         </div>
 
-        <section
-          className={`page-width ${styles.section}`}
-          aria-labelledby="category-heading"
-        >
+        <section className={`page-width ${styles.section}`} aria-labelledby="category-heading">
           <div className={styles.sectionHeading}>
             <div>
               <p className={styles.kicker}>01 / FIND YOUR CORNER</p>
@@ -270,19 +249,14 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section
-          id="the-edit"
-          className={styles.editSection}
-          aria-labelledby="edit-heading"
-        >
+        <section id="the-edit" className={styles.editSection} aria-labelledby="edit-heading">
           <div className="page-width">
             <div className={styles.sectionHeading}>
               <div>
                 <p className={styles.kicker}>02 / THE SHOPSTREAM EDIT</p>
                 <h2 id="edit-heading">A few things you’ll love.</h2>
                 <p className={styles.sectionDescription}>
-                  Useful. Beautiful. A little unexpected. Start with something
-                  that feels like you.
+                  Useful. Beautiful. A little unexpected. Start with something that feels like you.
                 </p>
               </div>
               <Link href={selectedEdit.href} className={styles.textLink}>
@@ -290,36 +264,25 @@ export default function HomePage() {
               </Link>
             </div>
             <div className={styles.editToolbar}>
-              <div
-                className={styles.editFilters}
-                aria-label="Choose a product edit"
-              >
+              <div className={styles.editFilters} aria-label="Choose a product edit">
                 {edits.map((item) => (
                   <button
                     type="button"
                     key={item.id}
                     onClick={() => setEdit(item.id)}
                     aria-pressed={edit === item.id}
-                    className={
-                      edit === item.id ? styles.activeFilter : styles.filter
-                    }
+                    className={edit === item.id ? styles.activeFilter : styles.filter}
                   >
                     {item.label}
                   </button>
                 ))}
               </div>
-              {DEMO_MODE && (
-                <p className={styles.sampleNote}>
-                  Sample collection · Illustrative prices
-                </p>
-              )}
             </div>
+
             {error ? (
               <div role="alert" className={styles.emptyState}>
                 <h3>The collection needs a little moment.</h3>
-                <p>
-                  We couldn’t load these finds. Your selection has been kept.
-                </p>
+                <p>We couldn’t load these finds. Your selection has been kept.</p>
                 <button
                   className={styles.primaryLink}
                   onClick={() => {
@@ -339,11 +302,7 @@ export default function HomePage() {
                 ))}
               </div>
             ) : selectedProducts?.length ? (
-              <div
-                className={styles.productGrid}
-                aria-live="polite"
-                aria-atomic="false"
-              >
+              <div className={styles.productGrid} aria-live="polite" aria-atomic="false">
                 {selectedProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
@@ -360,10 +319,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section
-          className={`page-width ${styles.section}`}
-          aria-labelledby="mood-heading"
-        >
+        <section className={`page-width ${styles.section}`} aria-labelledby="mood-heading">
           <div className={styles.sectionHeading}>
             <div>
               <p className={styles.kicker}>03 / LESS SEARCHING, MORE FEELING</p>
@@ -391,9 +347,7 @@ export default function HomePage() {
                 <div>
                   <p className={styles.kicker}>A softer place to land</p>
                   <h3>Make room for slow.</h3>
-                  <p>
-                    Natural textures. Quiet corners. A home that feels like you.
-                  </p>
+                  <p>Natural textures. Quiet corners. A home that feels like you.</p>
                 </div>
                 <span className={styles.roundArrow}>
                   <Icon name="arrowRight" size={22} />
@@ -429,97 +383,26 @@ export default function HomePage() {
         </section>
 
         {DEMO_MODE && (
-          <section
-            className={styles.spotlight}
-            aria-labelledby="spotlight-heading"
-          >
-            <div className={`page-width ${styles.spotlightGrid}`}>
-              <div className={styles.spotlightImage}>
-                <Image
-                  src="/images/hero-seller.webp"
-                  alt="A textile seller thoughtfully preparing blue fabric in his independent store"
-                  fill
-                  sizes="(min-width: 768px) 50vw, 100vw"
-                  className={styles.cover}
-                />
-                <span className={styles.spotlightImageLabel}>
-                  <Icon name="store" size={16} /> THE PEOPLE BEHIND THE FINDS
-                </span>
-              </div>
-              <div className={styles.spotlightCopy}>
-                <p className={styles.kicker}>04 / SMALL STORE SPOTLIGHT</p>
-                <h2 id="spotlight-heading">
-                  Good things.
-                  <br />
-                  Human stories.
-                </h2>
-                <span className={styles.spotlightRule} />
-                <p className={styles.spotlightName}>Bengal &amp; Thread</p>
-                <p className={styles.spotlightDescription}>
-                  Everyday clothing with a considered point of view. Explore a
-                  collection inspired by natural fabrics, familiar details, and an
-                  independent spirit.
-                </p>
-                <Link href="/stores/bengal-thread" className={styles.lightLink}>
-                  Step inside the store <Icon name="arrowRight" size={18} />
-                </Link>
-                <p className={styles.spotlightDisclaimer}>
-                  A sample storefront. Photography is illustrative.
-                </p>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {DEMO_MODE && (
-          <section
-            className={`page-width ${styles.section}`}
-            aria-labelledby="stores-heading"
-          >
+          <section className={`page-width ${styles.section}`} aria-labelledby="stores-heading">
             <div className={styles.sectionHeading}>
               <div>
                 <p className={styles.kicker}>05 / YOUR NEXT FAVORITE STORE</p>
                 <h2 id="stores-heading">Different stores. Same good spirit.</h2>
               </div>
-              <p className={styles.headingAside}>
-                Three sample stores to get to know.
-              </p>
             </div>
             <div className={styles.storeGrid}>
-              {DEMO_STORES.map((store, index) => (
-                <Link
-                  key={store.slug}
-                  href={`/stores/${store.slug}`}
-                  className={styles.storeCard}
-                >
-                  <span className={styles.storeInitial}>
-                    {store.storeName[0]}
-                  </span>
-                  <span className={styles.storeType}>
-                    {
-                      [
-                        "FASHION & EVERYDAY WEAR",
-                        "HOME & DAILY RITUALS",
-                        "FRESH & SEASONAL",
-                      ][index]
-                    }
-                  </span>
+              {DEMO_STORES.map((store) => (
+                <Link key={store.slug} href={`/stores/${store.slug}`} className={styles.storeCard}>
+                  <span className={styles.storeInitial}>{store.storeName[0]}</span>
                   <h3>{store.storeName}</h3>
                   <p>{store.description}</p>
-                  <span className={styles.storeLink}>
-                    Explore store <Icon name="arrowRight" size={17} />
-                  </span>
                 </Link>
               ))}
             </div>
           </section>
         )}
 
-        <section
-          id="how-it-works"
-          className={styles.howSection}
-          aria-labelledby="how-heading"
-        >
+        <section id="how-it-works" className={styles.howSection} aria-labelledby="how-heading">
           <div className={`page-width ${styles.howGrid}`}>
             <div>
               <p className={styles.kicker}>06 / LESS FUSS. MORE FINDS.</p>
@@ -546,12 +429,8 @@ export default function HomePage() {
                   text: "Take a closer look at the product, its price, and the independent store behind it.",
                 },
                 {
-                  title: DEMO_MODE
-                    ? "Try it, without the commitment"
-                    : "Make it yours",
-                  text: DEMO_MODE
-                    ? "Explore a sample checkout. Nothing is charged, submitted, or saved."
-                    : "Review your details and your order before confirming your purchase.",
+                  title: "Make it yours",
+                  text: "Review your details and your order before confirming your purchase.",
                 },
               ].map((step, index) => (
                 <li key={step.title}>
@@ -566,10 +445,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section
-          className={`page-width ${styles.faqSection}`}
-          aria-labelledby="faq-heading"
-        >
+        <section className={`page-width ${styles.faqSection}`} aria-labelledby="faq-heading">
           <div>
             <p className={styles.kicker}>07 / A LITTLE CLARITY</p>
             <h2 id="faq-heading">
@@ -600,11 +476,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section
-          id="for-sellers"
-          className={`page-width ${styles.sellerSection}`}
-          aria-labelledby="seller-heading"
-        >
+        <section id="for-sellers" className={`page-width ${styles.sellerSection}`} aria-labelledby="seller-heading">
           <div className={styles.sellerPanel}>
             <div>
               <p className={styles.kicker}>FOR THE INDEPENDENT-MINDED</p>
@@ -614,17 +486,11 @@ export default function HomePage() {
               </h2>
               <p>
                 Bring your craft, your collection, your point of view.
-                <br className={styles.desktopBreak} /> There’s a place for your
-                story here.
+                <br className={styles.desktopBreak} /> There’s a place for your story here.
               </p>
               <Link href="/sell" className={styles.darkLink}>
                 Explore selling with us <Icon name="arrowRight" size={18} />
               </Link>
-              {DEMO_MODE && (
-                <span className={styles.sellerNote}>
-                  Seller concept only. Registration is not live.
-                </span>
-              )}
             </div>
             <div className={styles.sellerIllustration} aria-hidden="true">
               <span className={styles.sellerWord}>

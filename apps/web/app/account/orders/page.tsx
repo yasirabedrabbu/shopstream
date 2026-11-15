@@ -32,8 +32,7 @@ export default function OrdersPage() {
         setTotalPages(data.totalPages);
       })
       .catch((err) => {
-        if (!cancelled)
-          setError(err instanceof Error ? err.message : "Orders could not be loaded.");
+        if (!cancelled) setError(err instanceof Error ? err.message : "Orders could not be loaded.");
       });
     return () => {
       cancelled = true;
@@ -84,9 +83,7 @@ export default function OrdersPage() {
                 </div>
                 <div className="text-right">
                   <p className="font-semibold">{formatMoney(order.totalCents, order.currency)}</p>
-                  <p className="text-sm text-text-muted">
-                    {STATUS_LABEL[order.status] ?? order.status}
-                  </p>
+                  <p className="text-sm text-text-muted">{STATUS_LABEL[order.status] ?? order.status}</p>
                 </div>
               </Link>
             </li>
