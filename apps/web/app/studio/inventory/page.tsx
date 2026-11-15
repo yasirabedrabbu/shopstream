@@ -131,7 +131,7 @@ export default function StudioInventoryPage() {
             <Segmented
               label="Stock filter"
               value={tab}
-              onChange={setTab}
+                            onChange={(v) => setTab(v as StockTab)}
               options={[
                 { value: "all", label: "All", count: counts.all },
                 { value: "in", label: "In stock", count: counts.in },

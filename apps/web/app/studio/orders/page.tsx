@@ -106,7 +106,7 @@ export default function StudioOrdersPage() {
             <Segmented
               label="Order status"
               value={tab}
-              onChange={setTab}
+              onChange={(v) => setTab(v as Tab)}
               options={[{ value: "ALL", label: "All" }, ...ORDER_STATES.map((s) => ({ value: s, label: FULFILL[s].label }))]}
             />
           </div>
