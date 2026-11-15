@@ -42,7 +42,7 @@ export default function VendorProductsPage() {
         </h1>
         <Link
           href="/vendor/products/new"
-          className="px-4 py-2 rounded-xl bg-[#E8F44A] text-zinc-900 text-sm font-semibold min-h-[44px] flex items-center"
+          className="px-4 py-2 rounded-xl bg-accent text-accent-text text-sm font-semibold min-h-11 flex items-center hover:bg-accent-hover"
         >
           + Add product
         </Link>
@@ -111,8 +111,8 @@ export default function VendorProductsPage() {
             <button
               key={i}
               onClick={() => load(i)}
-              className={`w-9 h-9 rounded-full text-sm font-medium border ${
-                i === page ? "bg-[#E8F44A] text-zinc-900 border-[#E8F44A]" : ""
+                            className={`min-h-11 min-w-11 rounded-full text-sm font-medium border ${
+                i === page ? "bg-ink text-ink-text border-ink" : "border-border"
               }`}
               style={i !== page ? { borderColor: "var(--border)", color: "var(--text)" } : {}}
             >

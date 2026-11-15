@@ -26,8 +26,8 @@ const ToastContext = createContext<ToastContextValue>({ toast: () => {} });
 const TOAST_DURATION_MS = 3500;
 
 const styles: Record<ToastType, string> = {
-  success: "bg-emerald-800 text-white",
-  error: "bg-red-800 text-white",
+  success: "bg-tone-green text-white",
+  error: "bg-tone-red text-white",
   info: "bg-[var(--text)] text-[var(--bg)]",
 };
 

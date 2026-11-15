@@ -92,7 +92,7 @@ export default function VendorOrdersPage() {
                     <button
                       onClick={() => advance(item)}
                       disabled={busy === item.itemId}
-                      className="h-9 px-4 rounded-xl bg-[#E8F44A] text-zinc-900 text-xs font-semibold disabled:opacity-60 min-h-[44px]"
+                      className="min-h-11 px-4 rounded-xl bg-accent text-accent-text text-sm font-semibold hover:bg-accent-hover disabled:opacity-604px]"
                     >
                       {busy === item.itemId ? "Saving..." : NEXT_LABEL[next]}
                     </button>

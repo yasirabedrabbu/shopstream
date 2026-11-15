@@ -255,7 +255,7 @@ function StatCard({
   active: boolean;
   tone?: "amber" | "blue" | "violet" | "green" | "red" | "stone";
 }) {
-  const dot: Record<string, string> = { amber: "bg-tone-amber-dot", blue: "bg-tone-blue-dot", violet: "bg-tone-violet-dot", green: "bg-tone-green-soft0", red: "bg-tone-red-soft0", stone: "bg-tone-stone-dot" };
+  const dot: Record<string, string> = { amber: "bg-tone-amber-dot", blue: "bg-tone-blue-dot", violet: "bg-tone-violet-dot", green: "bg-tone-green-dot", red: "bg-tone-red-dot", stone: "bg-tone-stone-dot" };
   return (
     <button
       onClick={onClick}

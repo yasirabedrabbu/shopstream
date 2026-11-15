@@ -95,7 +95,7 @@ export function ProductForm({ title, categories, initial, submitLabel, onSubmit 
             maxLength={200}
             value={form.name}
             onChange={(e) => set("name", e.target.value)}
-            className="h-11 px-4 rounded-xl border text-sm outline-none focus:border-[#E8F44A]"
+            className="h-11 px-4 rounded-xl border text-sm outline-none focus:border-text"
             style={inputStyle}
           />
         </Field>
@@ -108,7 +108,7 @@ export function ProductForm({ title, categories, initial, submitLabel, onSubmit 
             step="0.01"
             value={form.price}
             onChange={(e) => set("price", e.target.value)}
-            className="h-11 px-4 rounded-xl border text-sm outline-none focus:border-[#E8F44A]"
+            className="h-11 px-4 rounded-xl border text-sm outline-none focus:border-text"
             style={inputStyle}
           />
         </Field>
@@ -120,7 +120,7 @@ export function ProductForm({ title, categories, initial, submitLabel, onSubmit 
             min={0}
             value={form.stock}
             onChange={(e) => set("stock", e.target.value)}
-            className="h-11 px-4 rounded-xl border text-sm outline-none focus:border-[#E8F44A]"
+            className="h-11 px-4 rounded-xl border text-sm outline-none focus:border-text"
             style={inputStyle}
           />
         </Field>
@@ -130,7 +130,7 @@ export function ProductForm({ title, categories, initial, submitLabel, onSubmit 
             required
             value={form.categoryId}
             onChange={(e) => set("categoryId", e.target.value)}
-            className="h-11 px-4 rounded-xl border text-sm outline-none focus:border-[#E8F44A]"
+            className="h-11 px-4 rounded-xl border text-sm outline-none focus:border-text"
             style={inputStyle}
           >
             <option value="">Select category</option>
@@ -148,7 +148,7 @@ export function ProductForm({ title, categories, initial, submitLabel, onSubmit 
             maxLength={5000}
             value={form.description}
             onChange={(e) => set("description", e.target.value)}
-            className="px-4 py-3 rounded-xl border text-sm outline-none focus:border-[#E8F44A] resize-none"
+            className="px-4 py-3 rounded-xl border text-sm outline-none focus:border-text resize-none"
             style={inputStyle}
           />
         </Field>
@@ -159,7 +159,7 @@ export function ProductForm({ title, categories, initial, submitLabel, onSubmit 
             value={form.imageUrls}
             onChange={(e) => set("imageUrls", e.target.value)}
             placeholder="https://..., https://..."
-            className="h-11 px-4 rounded-xl border text-sm outline-none focus:border-[#E8F44A]"
+            className="h-11 px-4 rounded-xl border text-sm outline-none focus:border-text"
             style={inputStyle}
           />
         </Field>
@@ -168,7 +168,7 @@ export function ProductForm({ title, categories, initial, submitLabel, onSubmit 
           <select
             value={form.status}
             onChange={(e) => set("status", e.target.value as ProductFormValues["status"])}
-            className="h-11 px-4 rounded-xl border text-sm outline-none focus:border-[#E8F44A]"
+            className="h-11 px-4 rounded-xl border text-sm outline-none focus:border-text"
             style={inputStyle}
           >
             <option value="ACTIVE">Active</option>
@@ -189,7 +189,7 @@ export function ProductForm({ title, categories, initial, submitLabel, onSubmit 
           <button
             type="submit"
             disabled={saving}
-            className="flex-1 h-11 rounded-xl bg-[#E8F44A] text-zinc-900 font-semibold text-sm disabled:opacity-60"
+            className="flex-1 h-11 rounded-xl bg-accent text-accent-text font-semibold text-sm hover:bg-accent-hover disabled:opacity-60"
           >
             {saving ? "Saving..." : submitLabel}
           </button>

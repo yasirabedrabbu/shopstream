@@ -11,6 +11,6 @@ test("auth export includes eight frames, four states, shared brand tokens and ex
   assert.equal(spec.components.RoleCard.width, 100);
   assert.equal(spec.components.OTPBox.height, 56);
   assert.equal(spec.components.ResendCode.cooldown, 60);
-  assert.equal(spec.variables.brandPanel.background, "#111114");
+  assert.equal(spec.variables.brandPanel.background, "#1c1917");
   assert.ok(spec.format.includes("not a native"));
 });

@@ -231,7 +231,7 @@ export default function OrderDetailPage() {
                 <button
                   onClick={pay}
                   disabled={busy !== null}
-                  className="flex-1 h-11 rounded-xl bg-[#E8F44A] text-zinc-900 font-semibold text-sm disabled:opacity-60"
+                  className="flex-1 h-11 rounded-xl bg-accent text-accent-text font-semibold text-sm hover:bg-accent-hover disabled:opacity-60"
                 >
                   {busy === "pay" ? "Processing..." : "Pay now (mock)"}
                 </button>

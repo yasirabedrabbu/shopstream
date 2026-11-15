@@ -3,15 +3,15 @@ export type PlatformTheme = "dark" | "light";
 // Brand values live only in this token source. UI styles consume variable aliases.
 export const platformColors = {
   dark: {
-    bg: "#0a0a0b", surface: "#111114", border: "#1e1e24", text: "#f1f1f3",
+    bg: "#0a0a0b", surface: "#1c1917", border: "#1e1e24", text: "#f1f1f3",
     "text-muted": "#6b7280", "text-muted-readable": "#9299a6",
-    accent: "#e8f44a", "accent-text": "#111114", danger: "#ef4444", success: "#22c55e",
+    accent: "#f97316", "accent-text": "#1c1917", danger: "#ef4444", success: "#22c55e",
     "chart-secondary": "#9299a6", "chart-tertiary": "#bbc0ca", "chart-quaternary": "#657044",
   },
   light: {
-    bg: "#f8f9fa", surface: "#ffffff", border: "#e5e7eb", text: "#111114",
+    bg: "#f8f9fa", surface: "#ffffff", border: "#e5e7eb", text: "#1c1917",
     "text-muted": "#6b7280", "text-muted-readable": "#626976",
-    accent: "#e8f44a", "accent-text": "#111114", danger: "#ef4444", success: "#22c55e",
+    accent: "#f97316", "accent-text": "#1c1917", danger: "#ef4444", success: "#22c55e",
     "chart-secondary": "#6b7280", "chart-tertiary": "#a9aeb9", "chart-quaternary": "#657044",
   },
 } as const;

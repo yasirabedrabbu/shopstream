@@ -88,7 +88,7 @@ export function Nav() {
             S<span className="sr-only">hopStream</span>
           </span>
           <span className="hidden text-lg font-bold tracking-tight text-text min-[360px]:inline">
-            ShopStream<span className="text-[#727b28]">.</span>
+            ShopStream<span className="text-brand-strong">.</span>
           </span>
         </Link>
 
