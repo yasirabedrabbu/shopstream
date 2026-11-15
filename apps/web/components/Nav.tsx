@@ -17,6 +17,7 @@ const links = [
 ];
 
 export function Nav() {
+    const { categories } = useLiveCategories();
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState<"categories" | "account" | "mobile" | null>(
@@ -111,7 +112,7 @@ export function Nav() {
                 id="category-navigation"
                 className="absolute left-0 top-full mt-2 grid w-80 grid-cols-2 gap-1 rounded-2xl border border-border bg-bg p-2 shadow-lg"
               >
-                {DEMO_CATEGORIES.map((category) => (
+                {categories.map((category) => (
                   <Link
                     key={category.id}
                     href={`/products?category=${category.slug}`}
@@ -223,7 +224,7 @@ export function Nav() {
             Explore categories
           </p>
           <div className="grid grid-cols-2 gap-1">
-            {DEMO_CATEGORIES.map((c) => (
+            {categories.map((c) => (
               <Link
                 key={c.id}
                 onClick={() => setOpen(null)}
