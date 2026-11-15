@@ -71,6 +71,7 @@ app:
   seed:
     enabled: ${SEED_ENABLED:false}
     vendor-password: ${SEED_VENDOR_PASSWORD:}
+    test-accounts: ${SEED_TEST_ACCOUNTS:false}
 
 management:
   endpoints:
