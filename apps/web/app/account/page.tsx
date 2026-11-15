@@ -1,2 +1,5 @@
-import{redirect}from"next/navigation";
-export default function Page(){redirect("/account/overview");}
+import { redirect } from "next/navigation";
+
+export default function AccountIndex(): never {
+  redirect("/account/orders");
+}
