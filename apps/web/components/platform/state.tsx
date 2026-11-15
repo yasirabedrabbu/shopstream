@@ -168,7 +168,7 @@ function usePlatformState() {
     }
   }
 
-  function resetAccess() {
+  function resetAccess(_id: string) {
     setNotice("Sending password reset links from the admin panel is not connected yet.");
   }
 
