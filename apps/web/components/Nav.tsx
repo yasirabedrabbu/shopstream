@@ -17,7 +17,7 @@ const links = [
 ];
 
 export function Nav() {
-    const { categories } = useLiveCategories();
+  const { categories } = useLiveCategories();
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState<"categories" | "account" | "mobile" | null>(
@@ -67,7 +67,7 @@ export function Nav() {
       <a href="#main-content" className="skip-link">
         Skip to content
       </a>
-      <DemoBanner />
+      {DEMO_MODE && <DemoBanner />}
       <nav
         aria-label="Main navigation"
         className="page-width flex h-[76px] items-center justify-between gap-3"

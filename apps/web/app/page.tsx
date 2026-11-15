@@ -3,7 +3,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
-  const { categories } = useLiveCategories();
 import { useRouter } from "next/navigation";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
@@ -11,7 +10,8 @@ import { ProductCard } from "@/components/ProductCard";
 import { Icon } from "@/components/ui/Icon";
 import { productApi } from "@/lib/api";
 import { DEMO_MODE, DEMO_STORES } from "@/lib/demo";
-import { useLiveCategories } from "@/lib/useLiveCategories";import type { PublicProductResponse } from "@/lib/types";
+import { useLiveCategories } from "@/lib/useLiveCategories";
+import type { PublicProductResponse } from "@/lib/types";
 import styles from "./home.module.css";
 
 const edits = [
@@ -51,7 +51,17 @@ const questions = [
   },
 ];
 
+// Category images exist only for some slugs. Other slugs fall back to the home image.
+const KNOWN_CATEGORY_IMAGES = ["home", "beauty", "fashion", "books", "grocery", "tech"];
+
+function categoryImage(slug: string): string {
+  return KNOWN_CATEGORY_IMAGES.includes(slug)
+    ? `/images/cat-${slug}.webp`
+    : "/images/cat-home.webp";
+}
+
 export default function HomePage() {
+  const { categories } = useLiveCategories();
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [products, setProducts] = useState<PublicProductResponse[] | null>(
@@ -243,7 +253,7 @@ export default function HomePage() {
               >
                 <div className={styles.categoryImage}>
                   <Image
-                    src={`/images/cat-${category.slug}.webp`}
+                    src={categoryImage(category.slug)}
                     alt=""
                     fill
                     sizes="(min-width: 768px) 16vw, 33vw"
@@ -418,92 +428,92 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section
-          className={styles.spotlight}
-          aria-labelledby="spotlight-heading"
-        >
-          <div className={`page-width ${styles.spotlightGrid}`}>
-            <div className={styles.spotlightImage}>
-              <Image
-                src="/images/hero-seller.webp"
-                alt="A textile seller thoughtfully preparing blue fabric in his independent store"
-                fill
-                sizes="(min-width: 768px) 50vw, 100vw"
-                className={styles.cover}
-              />
-              <span className={styles.spotlightImageLabel}>
-                <Icon name="store" size={16} /> THE PEOPLE BEHIND THE FINDS
-              </span>
-            </div>
-            <div className={styles.spotlightCopy}>
-              <p className={styles.kicker}>04 / SMALL STORE SPOTLIGHT</p>
-              <h2 id="spotlight-heading">
-                Good things.
-                <br />
-                Human stories.
-              </h2>
-              <span className={styles.spotlightRule} />
-              <p className={styles.spotlightName}>Bengal &amp; Thread</p>
-              <p className={styles.spotlightDescription}>
-                Everyday clothing with a considered point of view. Explore a
-                collection inspired by natural fabrics, familiar details, and an
-                independent spirit.
-              </p>
-              <Link href="/stores/bengal-thread" className={styles.lightLink}>
-                Step inside the store <Icon name="arrowRight" size={18} />
-              </Link>
-              {DEMO_MODE && (
+        {DEMO_MODE && (
+          <section
+            className={styles.spotlight}
+            aria-labelledby="spotlight-heading"
+          >
+            <div className={`page-width ${styles.spotlightGrid}`}>
+              <div className={styles.spotlightImage}>
+                <Image
+                  src="/images/hero-seller.webp"
+                  alt="A textile seller thoughtfully preparing blue fabric in his independent store"
+                  fill
+                  sizes="(min-width: 768px) 50vw, 100vw"
+                  className={styles.cover}
+                />
+                <span className={styles.spotlightImageLabel}>
+                  <Icon name="store" size={16} /> THE PEOPLE BEHIND THE FINDS
+                </span>
+              </div>
+              <div className={styles.spotlightCopy}>
+                <p className={styles.kicker}>04 / SMALL STORE SPOTLIGHT</p>
+                <h2 id="spotlight-heading">
+                  Good things.
+                  <br />
+                  Human stories.
+                </h2>
+                <span className={styles.spotlightRule} />
+                <p className={styles.spotlightName}>Bengal &amp; Thread</p>
+                <p className={styles.spotlightDescription}>
+                  Everyday clothing with a considered point of view. Explore a
+                  collection inspired by natural fabrics, familiar details, and an
+                  independent spirit.
+                </p>
+                <Link href="/stores/bengal-thread" className={styles.lightLink}>
+                  Step inside the store <Icon name="arrowRight" size={18} />
+                </Link>
                 <p className={styles.spotlightDisclaimer}>
                   A sample storefront. Photography is illustrative.
                 </p>
-              )}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
-        <section
-          className={`page-width ${styles.section}`}
-          aria-labelledby="stores-heading"
-        >
-          <div className={styles.sectionHeading}>
-            <div>
-              <p className={styles.kicker}>05 / YOUR NEXT FAVORITE STORE</p>
-              <h2 id="stores-heading">Different stores. Same good spirit.</h2>
+        {DEMO_MODE && (
+          <section
+            className={`page-width ${styles.section}`}
+            aria-labelledby="stores-heading"
+          >
+            <div className={styles.sectionHeading}>
+              <div>
+                <p className={styles.kicker}>05 / YOUR NEXT FAVORITE STORE</p>
+                <h2 id="stores-heading">Different stores. Same good spirit.</h2>
+              </div>
+              <p className={styles.headingAside}>
+                Three sample stores to get to know.
+              </p>
             </div>
-            <p className={styles.headingAside}>
-              {DEMO_MODE
-                ? "Three sample stores to get to know."
-                : "A few independent stores to get to know."}
-            </p>
-          </div>
-          <div className={styles.storeGrid}>
-            {DEMO_STORES.map((store, index) => (
-              <Link
-                key={store.slug}
-                href={`/stores/${store.slug}`}
-                className={styles.storeCard}
-              >
-                <span className={styles.storeInitial}>
-                  {store.storeName[0]}
-                </span>
-                <span className={styles.storeType}>
-                  {
-                    [
-                      "FASHION & EVERYDAY WEAR",
-                      "HOME & DAILY RITUALS",
-                      "FRESH & SEASONAL",
-                    ][index]
-                  }
-                </span>
-                <h3>{store.storeName}</h3>
-                <p>{store.description}</p>
-                <span className={styles.storeLink}>
-                  Explore store <Icon name="arrowRight" size={17} />
-                </span>
-              </Link>
-            ))}
-          </div>
-        </section>
+            <div className={styles.storeGrid}>
+              {DEMO_STORES.map((store, index) => (
+                <Link
+                  key={store.slug}
+                  href={`/stores/${store.slug}`}
+                  className={styles.storeCard}
+                >
+                  <span className={styles.storeInitial}>
+                    {store.storeName[0]}
+                  </span>
+                  <span className={styles.storeType}>
+                    {
+                      [
+                        "FASHION & EVERYDAY WEAR",
+                        "HOME & DAILY RITUALS",
+                        "FRESH & SEASONAL",
+                      ][index]
+                    }
+                  </span>
+                  <h3>{store.storeName}</h3>
+                  <p>{store.description}</p>
+                  <span className={styles.storeLink}>
+                    Explore store <Icon name="arrowRight" size={17} />
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section
           id="how-it-works"

@@ -39,6 +39,7 @@ function ProductSkeletons() {
 }
 
 function ProductsContent() {
+  const { categories } = useLiveCategories();
   const router = useRouter();
   const sp = useSearchParams();
   const q = sp.get("q") ?? "";
@@ -68,7 +69,6 @@ function ProductsContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
-    const { categories } = useLiveCategories();
   const selectedCategory = categories.find((c) => c.slug === category);
 
   function navigate(updates: Record<string, string>) {
