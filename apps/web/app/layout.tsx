@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     template: "%s · ShopStream",
   },
   description:
-    "Discover everyday favorites from independent stores across Bangladesh. Explore the ShopStream frontend demo.",
+    "Discover everyday favorites from independent stores across Bangladesh.",
 };
 
 export default function RootLayout({

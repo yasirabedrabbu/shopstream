@@ -7,7 +7,8 @@ import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { ProductCard } from "@/components/ProductCard";
 import { productApi, type ProductListParams } from "@/lib/api";
-import { DEMO_CATEGORIES, DEMO_MODE } from "@/lib/demo";
+import { DEMO_MODE } from "@/lib/demo";
+import { useLiveCategories } from "@/lib/useLiveCategories";
 import { formatMoney } from "@/lib/money";
 import { Icon } from "@/components/ui/Icon";
 import { buttonClasses } from "@/components/ui/Button";
@@ -67,7 +68,8 @@ function ProductsContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
-  const selectedCategory = DEMO_CATEGORIES.find((c) => c.slug === category);
+    const { categories } = useLiveCategories();
+  const selectedCategory = categories.find((c) => c.slug === category);
 
   function navigate(updates: Record<string, string>) {
     const params = new URLSearchParams(sp.toString());
@@ -166,7 +168,7 @@ function ProductsContent() {
         aria-label="Filter by category"
         className="mb-7 flex flex-wrap gap-2"
       >
-        {[{ id: "all", name: "All finds", slug: "" }, ...DEMO_CATEGORIES].map(
+        {[{ id: "all", name: "All finds", slug: "" }, ...categories].map(
           (c) => (
             <button
               key={c.id}

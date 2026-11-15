@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
+  const { categories } = useLiveCategories();
 import { useRouter } from "next/navigation";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
@@ -234,7 +235,7 @@ export default function HomePage() {
             </Link>
           </div>
           <div className={styles.categories}>
-            {DEMO_CATEGORIES.map((category, index) => (
+            {categories.map((category, index) => (
               <Link
                 href={`/products?category=${category.slug}`}
                 key={category.id}
