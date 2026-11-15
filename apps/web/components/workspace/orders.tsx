@@ -2,11 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { apiFetch, vendorApi } from "@/lib/api";
-import type {
-  FulfillmentStatus,
-  Page,
-  VendorOrderItemResponse,
-} from "@/lib/types";
+import type { FulfillmentStatus, Page, VendorOrderItemResponse } from "@/lib/types";
 import { downloadCSV } from "@/lib/platform/export";
 import { formatMoney } from "@/lib/money";
 import type { Column } from "@/components/platform/ui";
@@ -148,9 +144,7 @@ export function OrdersScreen() {
       setDetail(null);
       reload();
     } catch (err) {
-      setActionError(
-        err instanceof Error ? err.message : "The status could not be updated.",
-      );
+      setActionError(err instanceof Error ? err.message : "The status could not be updated.");
     } finally {
       setBusyId(null);
     }
@@ -234,11 +228,7 @@ export function OrdersScreen() {
               View
             </Action>
             {next && (
-              <Action
-                variant="ghost"
-                disabled={busyId === i.itemId}
-                onClick={() => advance(i, next.to)}
-              >
+              <Action variant="ghost" disabled={busyId === i.itemId} onClick={() => advance(i, next.to)}>
                 {next.label}
                 <WorkspaceIcon name="arrowRight" size={14} />
               </Action>
@@ -353,10 +343,7 @@ export function OrdersScreen() {
             <Action disabled={page === 0 || loading} onClick={() => setPage(page - 1)}>
               Previous
             </Action>
-            <Action
-              disabled={page >= totalPages - 1 || loading}
-              onClick={() => setPage(page + 1)}
-            >
+            <Action disabled={page >= totalPages - 1 || loading} onClick={() => setPage(page + 1)}>
               Next
             </Action>
           </Box>

@@ -290,6 +290,35 @@ export interface AssistantFaqBody {
   active?: boolean;
 }
 
+export interface ImportResultItem {
+  total: number;
+  created: number;
+  failed: number;
+  errors: { row: number; message: string }[];
+}
+
+export interface ProductWriteBody {
+  name: string;
+  description?: string;
+  priceCents: number;
+  currency: string;
+  stockQuantity: number;
+  categoryId: string;
+  status: ProductStatus;
+  imageUrls?: string[];
+}
+
+export interface ProductListParams {
+  page?: number;
+  size?: number;
+  q?: string;
+  category?: string;
+  store?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  sort?: "newest" | "price_asc" | "price_desc" | "name";
+}
+
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
 export const authApi = {
@@ -328,17 +357,6 @@ export const authApi = {
 };
 
 // ─── Catalog (public) ────────────────────────────────────────────────────────
-
-export interface ProductListParams {
-  page?: number;
-  size?: number;
-  q?: string;
-  category?: string;
-  store?: string;
-  minPrice?: number;
-  maxPrice?: number;
-  sort?: "newest" | "price_asc" | "price_desc" | "name";
-}
 
 export const productApi = {
   list: (params: ProductListParams = {}) => {
@@ -499,24 +517,6 @@ export const orderApi = {
 
 // ─── Vendor ──────────────────────────────────────────────────────────────────
 
-export interface ProductWriteBody {
-  name: string;
-  description?: string;
-  priceCents: number;
-  currency: string;
-  stockQuantity: number;
-  categoryId: string;
-  status: ProductStatus;
-  imageUrls?: string[];
-}
-
-export interface ImportResultItem {
-  total: number;
-  created: number;
-  failed: number;
-  errors: { row: number; message: string }[];
-}
-
 export const vendorApi = {
   store: () => apiFetch<VendorResponse>("/vendor/store"),
 
@@ -668,7 +668,6 @@ export const adminApi = {
       body: { status },
     }),
 
-  // Public list, since the backend has no GET /admin/categories.
   categories: () => categoryApi.list(),
 
   createCategory: (name: string) =>

@@ -242,21 +242,23 @@ export function ProductsScreen() {
     },
   ];
 
+  const filtersActive = status !== "ALL" || !!query || lowOnly;
+
   const emptyState = (
     <EmptyState
       title={
-        status !== "ALL" || query || lowOnly
+        filtersActive
           ? "No products match your filters"
           : "Every good store starts with one product"
       }
       text={
-        status !== "ALL" || query || lowOnly
+        filtersActive
           ? "Try a different keyword, status, or stock filter."
           : "Add your first product and give your customers something to discover."
       }
       icon="box"
       action={
-        status !== "ALL" || query || lowOnly ? (
+        filtersActive ? (
           <Action
             onClick={() => {
               setQuery("");
@@ -342,23 +344,13 @@ export function ProductsScreen() {
         <Box className="p-bulk">
           <Text>{selectedRows.length} selected</Text>
           <Box className="p-action-row">
-            <Action
-              disabled={busy}
-              onClick={() => setBulkStatus(selectedRows, "ACTIVE")}
-            >
+            <Action disabled={busy} onClick={() => setBulkStatus(selectedRows, "ACTIVE")}>
               Publish
             </Action>
-            <Action
-              disabled={busy}
-              onClick={() => setBulkStatus(selectedRows, "DRAFT")}
-            >
+            <Action disabled={busy} onClick={() => setBulkStatus(selectedRows, "DRAFT")}>
               Unpublish
             </Action>
-            <Action
-              variant="danger"
-              disabled={busy}
-              onClick={() => setConfirmArchive(selectedRows)}
-            >
+            <Action variant="danger" disabled={busy} onClick={() => setConfirmArchive(selectedRows)}>
               <WorkspaceIcon name="delete" size={16} />
               Archive
             </Action>
@@ -374,10 +366,7 @@ export function ProductsScreen() {
           Loading products…
         </Text>
       ) : rows.length > 0 ? (
-        <Panel
-          title="Product collection"
-          subtitle={`Page ${page + 1} of ${Math.max(totalPages, 1)}`}
-        >
+        <Panel title="Product collection" subtitle={`Page ${page + 1} of ${Math.max(totalPages, 1)}`}>
           <DataTable data={rows} columns={columns} label="Products" empty={emptyState} />
         </Panel>
       ) : (
@@ -443,11 +432,7 @@ export function ProductsScreen() {
         </Box>
       </Dialog>
 
-      <Dialog
-        open={importOpen}
-        title="Import products from CSV"
-        onClose={() => setImportOpen(false)}
-      >
+      <Dialog open={importOpen} title="Import products from CSV" onClose={() => setImportOpen(false)}>
         <ImportPanel
           onClose={() => {
             setImportOpen(false);

@@ -7,7 +7,6 @@ export const metadata: Metadata = {
   description: "Your ShopStream orders, favorites, shopping bag and profile.",
 };
 
-// Account pages render their own frame (see components/account/AccountFrame.tsx).
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }

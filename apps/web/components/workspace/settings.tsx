@@ -31,10 +31,8 @@ export function StoreSettingsScreen() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
 
-  // Form state
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  // Last saved values, used for "dirty" checks and Cancel.
   const [savedName, setSavedName] = useState("");
   const [savedDescription, setSavedDescription] = useState("");
 
@@ -202,11 +200,7 @@ export function StoreSettingsScreen() {
                 <Action disabled={!dirty || saving} onClick={cancel}>
                   Cancel changes
                 </Action>
-                <Action
-                  variant="primary"
-                  type="submit"
-                  disabled={saving || (!!store && !dirty)}
-                >
+                <Action variant="primary" type="submit" disabled={saving || (!!store && !dirty)}>
                   <WorkspaceIcon name="check" size={16} />
                   {saving ? "Saving…" : store ? "Save changes" : "Create store"}
                 </Action>

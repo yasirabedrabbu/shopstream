@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { categoryApi } from "@/lib/api";
 import type { CategoryResponse } from "@/lib/types";
 
-// Loads categories from the API. Returns an empty list on failure, so no demo data shows in live mode.
 export function useLiveCategories() {
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
   const [loading, setLoading] = useState(true);

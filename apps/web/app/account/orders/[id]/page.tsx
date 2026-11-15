@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { AccountFrame } from "@/components/account/AccountFrame";
@@ -24,27 +24,61 @@ const ITEM_LABEL: Record<FulfillmentStatus, string> = {
   CANCELLED: "Cancelled",
 };
 
+function errorText(err: unknown, fallback: string): string {
+  return err instanceof Error ? err.message : fallback;
+}
+
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [order, setOrder] = useState<OrderResponse | null>(null);
-  const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
+  const [payError, setPayError] = useState("");
+  const [paying, setPaying] = useState(false);
+
+  const load = useCallback(() => {
+    return orderApi
+      .get(id)
+      .then((o) => {
+        setOrder(o);
+        setLoadError("");
+      })
+      .catch((err) => {
+        setLoadError(errorText(err, "This order could not be loaded."));
+      });
+  }, [id]);
 
   useEffect(() => {
     let cancelled = false;
-    orderApi
-      .get(id)
-      .then((o) => {
-        if (!cancelled) setOrder(o);
-      })
-      .catch((err) => {
-        if (!cancelled)
-          setError(err instanceof Error ? err.message : "This order could not be loaded.");
-      });
+    orderApi.get(id).then((o) => {
+      if (!cancelled) setOrder(o);
+    }).catch((err) => {
+      if (!cancelled) setLoadError(errorText(err, "This order could not be loaded."));
+    });
     return () => {
       cancelled = true;
     };
   }, [id]);
 
+  // Pay for an order that is still waiting for payment (or whose payment failed).
+  async function payNow() {
+    if (!order || paying) return;
+    setPaying(true);
+    setPayError("");
+    try {
+      const session = await orderApi.pay(order.id, "SSLCOMMERZ");
+      if (session.redirectUrl) {
+        window.location.assign(session.redirectUrl);
+        return;
+      }
+      setPayError("Payment could not be started. Please try again in a moment.");
+    } catch (err) {
+      setPayError(errorText(err, "Payment could not be started. Please try again."));
+    } finally {
+      setPaying(false);
+    }
+  }
+
+  const canPay = order?.status === "AWAITING_PAYMENT" || order?.status === "PENDING";
   const addr = order?.shippingAddress;
 
   return (
@@ -56,12 +90,22 @@ export default function OrderDetailPage() {
         Back to orders
       </Link>
 
-      {error && (
-        <p role="alert" className="mt-6 text-sm text-red-600">
-          {error}
-        </p>
+      {loadError && (
+        <div role="alert" className="mt-6 rounded-xl border border-danger p-4 text-sm text-danger">
+          <p>{loadError}</p>
+          <button
+            onClick={() => {
+              setLoadError("");
+              load();
+            }}
+            className="mt-3 min-h-11 rounded-xl border border-border px-4 text-text"
+          >
+            Try again
+          </button>
+        </div>
       )}
-      {!order && !error && (
+
+      {!order && !loadError && (
         <p role="status" className="mt-6 text-text-muted">
           Loading order…
         </p>
@@ -103,11 +147,39 @@ export default function OrderDetailPage() {
                 </p>
               </section>
             )}
-            {order.status === "AWAITING_PAYMENT" && (
+
+            {canPay && (
+              <section className="rounded-xl border border-border p-5 text-sm">
+                <h2 className="font-semibold">Payment</h2>
+                <p className="mt-2 text-text-muted">
+                  This order is waiting for payment. You can pay now or try again if a payment
+                  did not go through.
+                </p>
+                {payError && (
+                  <p role="alert" className="mt-3 text-danger">
+                    {payError}
+                  </p>
+                )}
+                <button
+                  onClick={payNow}
+                  disabled={paying}
+                  className="mt-4 min-h-12 w-full rounded-xl bg-accent px-5 font-medium text-accent-text disabled:opacity-60"
+                >
+                  {paying ? "Opening payment…" : "Pay now"}
+                </button>
+              </section>
+            )}
+
+            {order.status === "PAID" && (
+              <p className="text-sm text-text-muted">Payment received. Thank you for your order.</p>
+            )}
+
+            {order.status === "EXPIRED" && (
               <p className="text-sm text-text-muted">
-                Payment is still pending for this order.
+                This order expired before payment was completed. Please place a new order.
               </p>
             )}
+
             {order.cancelReason && (
               <p className="text-sm text-text-muted">Reason: {order.cancelReason}</p>
             )}

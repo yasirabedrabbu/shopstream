@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -8,13 +8,26 @@ import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import { Icon } from "@/components/ui/Icon";
 import { buttonClasses } from "@/components/ui/Button";
-import { productApi, orderApi } from "@/lib/api";
+import { orderApi, productApi } from "@/lib/api";
 import { isLoggedIn } from "@/lib/auth";
-import { DEMO_MODE } from "@/lib/demo";
 import { formatMoney } from "@/lib/money";
-import type { PublicProductResponse, ShippingAddress } from "@/lib/types";
+import { useCart } from "@/lib/cart";
+import type { PublicProductResponse } from "@/lib/types";
 
-const emptyAddress: ShippingAddress = {
+type AddressForm = {
+  fullName: string;
+  phone: string;
+  line1: string;
+  line2: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  countryCode: string;
+};
+
+type CheckoutItem = { product: PublicProductResponse; quantity: number };
+
+const emptyAddress: AddressForm = {
   fullName: "",
   phone: "",
   line1: "",
@@ -24,238 +37,244 @@ const emptyAddress: ShippingAddress = {
   postalCode: "",
   countryCode: "BD",
 };
-const fields = [
-  {
-    field: "fullName",
-    label: "Full name",
-    autoComplete: "shipping name",
-    type: "text",
-    required: true,
-  },
-  {
-    field: "phone",
-    label: "Phone number",
-    autoComplete: "shipping tel",
-    type: "tel",
-    required: true,
-  },
-  {
-    field: "line1",
-    label: "Street address",
-    autoComplete: "shipping address-line1",
-    type: "text",
-    required: true,
-  },
-  {
-    field: "line2",
-    label: "Apartment, floor, etc. (optional)",
-    autoComplete: "shipping address-line2",
-    type: "text",
-    required: false,
-  },
-  {
-    field: "city",
-    label: "City",
-    autoComplete: "shipping address-level2",
-    type: "text",
-    required: true,
-  },
-  {
-    field: "state",
-    label: "District (optional)",
-    autoComplete: "shipping address-level1",
-    type: "text",
-    required: false,
-  },
-  {
-    field: "postalCode",
-    label: "Postal code",
-    autoComplete: "shipping postal-code",
-    type: "text",
-    required: true,
-  },
-] as const;
+
+const FIELDS: {
+  key: Exclude<keyof AddressForm, "countryCode">;
+  label: string;
+  autoComplete: string;
+  type: string;
+  required: boolean;
+  full?: boolean;
+}[] = [
+  { key: "fullName", label: "Full name", autoComplete: "shipping name", type: "text", required: true },
+  { key: "phone", label: "Mobile number", autoComplete: "shipping tel", type: "tel", required: true },
+  { key: "line1", label: "Street address", autoComplete: "shipping address-line1", type: "text", required: true, full: true },
+  { key: "line2", label: "Apartment, floor, etc. (optional)", autoComplete: "shipping address-line2", type: "text", required: false, full: true },
+  { key: "city", label: "City", autoComplete: "shipping address-level2", type: "text", required: true },
+  { key: "state", label: "District (optional)", autoComplete: "shipping address-level1", type: "text", required: false },
+  { key: "postalCode", label: "Postal code", autoComplete: "shipping postal-code", type: "text", required: true },
+];
+
+const BD_MOBILE = /^(?:\+?880|0)1[3-9]\d{8}$/;
+const POSTAL = /^[0-9A-Za-z -]{3,10}$/;
+
+function validateAddress(a: AddressForm): string {
+  if (!a.fullName.trim()) return "Enter your full name.";
+  if (!BD_MOBILE.test(a.phone.replace(/[\s()-]/g, "")))
+    return "Enter a valid Bangladeshi mobile number, for example 01712345678.";
+  if (!a.line1.trim()) return "Enter your street address.";
+  if (!a.city.trim()) return "Enter your city.";
+  if (!POSTAL.test(a.postalCode.trim())) return "Enter a valid postal code.";
+  return "";
+}
+
+function clampQty(raw: string | null, max: number): number {
+  const n = Number.parseInt(raw ?? "1", 10);
+  return Number.isFinite(n) ? Math.min(max, Math.max(1, n)) : 1;
+}
+
+const inputClass =
+  "min-h-12 w-full rounded-xl border border-border bg-bg px-3 text-base text-text outline-none focus:ring-2 focus:ring-[var(--focus)]";
 
 function CheckoutContent() {
   const router = useRouter();
   const sp = useSearchParams();
-  const slug = sp.get("product") ?? "";
-  const qty = Math.min(
-    100,
-    Math.max(1, Number.parseInt(sp.get("qty") ?? "1", 10) || 1),
-  );
-  const [product, setProduct] = useState<PublicProductResponse | null>(null);
+  const cart = useCart();
+
+  // Single product checkout: /checkout?product=slug&qty=2. Otherwise checkout uses the bag.
+  const directSlug = sp.get("product") ?? "";
+  const directQty = clampQty(sp.get("qty"), 100);
+  const source: "direct" | "cart" = directSlug ? "direct" : "cart";
+
+  const [hydrated, setHydrated] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
+  const [items, setItems] = useState<CheckoutItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
+  const [address, setAddress] = useState<AddressForm>(emptyAddress);
+  const [step, setStep] = useState<"details" | "review">("details");
+  const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [address, setAddress] = useState<ShippingAddress>(emptyAddress);
-  const [step, setStep] = useState<"details" | "review" | "done">("details");
-  const [payment, setPayment] = useState("cod");
   const heading = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
   useEffect(() => {
     if (step !== "details") heading.current?.focus();
   }, [step]);
+
+  // Login check. Return to this exact URL after signing in.
   useEffect(() => {
-    let active = true;
-    if (!DEMO_MODE && !isLoggedIn()) {
-      router.replace(
-        `/auth/login?next=${encodeURIComponent(`/checkout?product=${encodeURIComponent(slug)}&qty=${qty}`)}`,
-      );
+    if (!hydrated) return;
+    if (!isLoggedIn()) {
+      const returnTo = window.location.pathname + window.location.search;
+      router.replace(`/auth/login?next=${encodeURIComponent(returnTo)}`);
       return;
     }
-    if (!slug) return;
-    productApi
-      .get(slug)
-      .then((data) => {
-        if (active) {
-          setProduct(data);
-          if (!data.inStock)
-            setError(
-              "This product is no longer available. Please choose another find.",
-            );
-        }
-      })
-      .catch(() => {
-        if (active)
-          setError(
-            "We couldn’t load your product. Please return to the collection and try again.",
-          );
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
+    setSignedIn(true);
+  }, [hydrated, router]);
+
+  const cartKey = cart.lines.map((l) => `${l.slug}:${l.quantity}`).join("|");
+
+  // Load product details for the items to buy.
+  useEffect(() => {
+    if (!hydrated || !signedIn) return;
+    let active = true;
+
+    const requests =
+      source === "direct"
+        ? [{ slug: directSlug, quantity: directQty }]
+        : cart.lines.map((l) => ({ slug: l.slug, quantity: l.quantity }));
+
+    if (requests.length === 0) {
+      setItems([]);
+      setLoadError("");
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setLoadError("");
+    Promise.all(
+      requests.map((r) =>
+        productApi
+          .get(r.slug)
+          .then((product) => ({ product, quantity: r.quantity }) as CheckoutItem)
+          .catch(() => null),
+      ),
+    ).then((results) => {
+      if (!active) return;
+      const ok = results.filter((r): r is CheckoutItem => r !== null);
+      setItems(ok);
+      if (ok.length !== results.length) {
+        setLoadError(
+          "Some products could not be loaded. Remove them from your bag to continue.",
+        );
+      }
+    }).finally(() => {
+      if (active) setLoading(false);
+    });
+
     return () => {
       active = false;
     };
-  }, [slug, qty, router]);
+    // cartKey covers cart.lines changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated, signedIn, source, directSlug, directQty, cartKey]);
 
-  function review(event: React.FormEvent<HTMLFormElement>) {
+  const currency = items[0]?.product.currency ?? "BDT";
+  const subtotal = items.reduce(
+    (sum, i) => sum + i.product.effectivePriceCents * i.quantity,
+    0,
+  );
+  const unavailable = items.filter((i) => !i.product.inStock);
+  const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
+
+  function review(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError("");
+    const problem = validateAddress(address);
+    if (problem) {
+      setFormError(problem);
+      return;
+    }
+    setFormError("");
     setStep("review");
   }
-  async function confirm() {
-    if (!product || submitting) return;
+
+  async function placeOrder() {
+    if (submitting) return;
+    if (items.length === 0) {
+      setFormError("Your bag is empty.");
+      return;
+    }
+    if (unavailable.length > 0) {
+      setFormError("Remove unavailable items before placing your order.");
+      return;
+    }
+
     setSubmitting(true);
-    setError("");
-    if (DEMO_MODE) {
-      setStep("done");
-      setAddress(emptyAddress);
+    setFormError("");
+
+    let orderId: string;
+    try {
+      const order = await orderApi.create(
+        items.map((i) => ({ productId: i.product.id, quantity: i.quantity })),
+        {
+          fullName: address.fullName.trim(),
+          phone: address.phone.trim(),
+          line1: address.line1.trim(),
+          line2: address.line2.trim() || null,
+          city: address.city.trim(),
+          state: address.state.trim() || null,
+          postalCode: address.postalCode.trim(),
+          countryCode: "BD",
+        },
+      );
+      orderId = order.id;
+    } catch (err) {
+      setFormError(
+        err instanceof Error
+          ? err.message
+          : "Your order could not be placed. Nothing has been charged.",
+      );
       setSubmitting(false);
       return;
     }
-    try {
-      const order = await orderApi.create(
-        [{ productId: product.id, quantity: qty }],
-        {
-          ...address,
-          line2: address.line2 || null,
-          state: address.state || null,
-        },
-      );
-      router.push(`/account/orders/${order.id}`);
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Your order could not be placed. Nothing has been charged. Please try again.",
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  }
-  const subtotal = (product?.effectivePriceCents ?? 0) * qty;
-  const delivery = DEMO_MODE ? 8000 : 0;
-  const money = (value: number) =>
-    formatMoney(value, product?.currency ?? "BDT");
-  const inputClass =
-    "min-h-12 w-full rounded-xl border border-border bg-bg px-3 text-base text-text outline-none focus:ring-2 focus:ring-[var(--focus)]";
 
-  if (!slug)
+    if (source === "cart") cart.clear();
+
+    try {
+      const session = await orderApi.pay(orderId, "SSLCOMMERZ");
+      if (session.redirectUrl) {
+        window.location.assign(session.redirectUrl);
+        return;
+      }
+    } catch {
+      // The order exists. The order page lets the customer retry payment.
+    }
+    router.push(`/account/orders/${orderId}`);
+  }
+
+  // ─── Render states ───────────────────────────────────────────────────────
+
+  if (!hydrated || !signedIn || loading) {
     return (
-      <div className="rounded-xl bg-surface p-10 text-center">
-        <h1 className="text-2xl font-semibold">Start with a little find.</h1>
+      <div role="status" className="h-80 animate-pulse rounded-2xl bg-surface">
+        <span className="sr-only">Loading checkout</span>
+      </div>
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="rounded-2xl bg-surface p-10 text-center">
+        <h1 className="text-2xl font-semibold">Your bag is empty.</h1>
         <p className="mt-3 text-sm text-text-muted">
-          Choose a product before continuing to checkout.
+          Add something you love, then come back to checkout.
         </p>
         <Link href="/products" className={buttonClasses({ className: "mt-6" })}>
           Explore products
         </Link>
       </div>
     );
-  if (loading)
-    return (
-      <div role="status" className="h-80 animate-pulse rounded-2xl bg-surface">
-        <span className="sr-only">Loading checkout</span>
-      </div>
-    );
-  if (!product || (!product.inStock && step !== "done"))
-    return (
-      <div role="alert" className="rounded-2xl bg-surface p-10 text-center">
-        <h1 className="text-2xl font-semibold">
-          Let’s find you something else.
-        </h1>
-        <p className="mt-3 text-sm text-text-muted">{error}</p>
-        <Link href="/products" className={buttonClasses({ className: "mt-6" })}>
-          Back to the collection
-        </Link>
-      </div>
-    );
-  if (step === "done")
-    return (
-      <section className="mx-auto max-w-xl py-12 text-center">
-        <span className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-full bg-accent text-accent-text">
-          <Icon name="check" size={28} />
-        </span>
-        <p className="eyebrow mb-3 text-text-muted">
-          Just a preview. A real sense of ease.
-        </p>
-        <h1
-          ref={heading}
-          tabIndex={-1}
-          className="text-3xl font-semibold tracking-tight"
-        >
-          You’ve tried the checkout.
-        </h1>
-        <p className="mt-5 text-sm leading-relaxed text-text-muted">
-          Your sample order for {qty} × {product.name} is complete. No real
-          order was created, no payment was taken, and your address was not
-          saved or sent.
-        </p>
-        <div className="mt-7 rounded-xl border border-border bg-surface p-5 text-left">
-          <div className="flex justify-between gap-3 text-sm">
-            <span>Sample order total</span>
-            <span className="font-bold">{money(subtotal + delivery)}</span>
-          </div>
-          <p className="mt-2 text-xs text-text-muted">
-            Includes the illustrative ৳80 delivery fee.
-          </p>
-        </div>
-        <Link href="/products" className={buttonClasses({ className: "mt-8" })}>
-          Keep exploring <Icon name="arrowRight" size={16} />
-        </Link>
-      </section>
-    );
+  }
 
   return (
     <>
       <Link
-        href={`/products/${product.slug}`}
+        href={source === "cart" ? "/account/cart" : `/products/${directSlug}`}
         className="mb-6 inline-flex min-h-11 items-center gap-2 text-sm text-text-muted"
       >
         <Icon name="arrowLeft" size={16} />
-        Back to product
+        {source === "cart" ? "Back to bag" : "Back to product"}
       </Link>
+
       <div className="mb-8">
-        <p className="eyebrow mb-3 text-text-muted">
-          {DEMO_MODE ? "A no-pressure practice run" : "Almost yours"}
-        </p>
-        <h1
-          ref={heading}
-          tabIndex={-1}
-          className="text-3xl font-semibold tracking-tight"
-        >
-          {step === "review" ? "One last look." : "The final little details."}
+        <p className="eyebrow mb-3 text-text-muted">Almost yours</p>
+        <h1 ref={heading} tabIndex={-1} className="text-3xl font-semibold tracking-tight">
+          {step === "review" ? "One last look." : "Where should we send it?"}
         </h1>
         <ol aria-label="Checkout progress" className="mt-5 flex gap-5 text-sm">
           <li
@@ -264,9 +283,7 @@ function CheckoutContent() {
           >
             1. Delivery details
           </li>
-          <li aria-hidden="true" className="text-text-muted">
-            /
-          </li>
+          <li aria-hidden="true" className="text-text-muted">/</li>
           <li
             aria-current={step === "review" ? "step" : undefined}
             className={step === "review" ? "font-semibold" : "text-text-muted"}
@@ -275,179 +292,50 @@ function CheckoutContent() {
           </li>
         </ol>
       </div>
-      {DEMO_MODE && (
-        <div className="mb-7 flex items-start gap-3 rounded-xl border border-border bg-surface p-4 text-sm">
-          <Icon name="info" className="mt-0.5 shrink-0" />
-          <div>
-            <p className="font-semibold">Demo checkout — no real purchase</p>
-            <p className="mt-1 text-xs leading-relaxed text-text-muted">
-              Use example details. Nothing is submitted, charged, or saved.
-              Delivery prices and timings are illustrative.
-            </p>
-          </div>
-        </div>
-      )}
+
       <div className="grid items-start gap-8 lg:grid-cols-5 lg:gap-12">
         <section aria-label="Checkout details" className="lg:col-span-3">
-          {error && (
-            <p
-              role="alert"
-              className="mb-5 rounded-xl border border-danger bg-bg p-4 text-sm text-danger"
-            >
-              {error}
+          {loadError && (
+            <p role="alert" className="mb-5 rounded-xl border border-danger bg-bg p-4 text-sm text-danger">
+              {loadError}
             </p>
           )}
+          {formError && (
+            <p role="alert" className="mb-5 rounded-xl border border-danger bg-bg p-4 text-sm text-danger">
+              {formError}
+            </p>
+          )}
+
           {step === "details" ? (
-            <form onSubmit={review} className="space-y-5">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-lg font-semibold">Delivery address</h2>
-                {DEMO_MODE && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setAddress({
-                        fullName: "Demo Shopper",
-                        phone: "01700000000",
-                        line1: "123 Example Road",
-                        line2: "",
-                        city: "Dhaka",
-                        state: "Dhaka",
-                        postalCode: "1207",
-                        countryCode: "BD",
-                      })
-                    }
-                    className="min-h-11 text-sm font-semibold underline underline-offset-4"
-                  >
-                    Use example details
-                  </button>
-                )}
-              </div>
+            <form onSubmit={review} className="space-y-5" noValidate>
+              <h2 className="text-lg font-semibold">Delivery address</h2>
               <div className="grid gap-4 sm:grid-cols-2">
-                {fields.map(
-                  ({ field, label, autoComplete, type, required }) => (
-                    <div
-                      key={field}
-                      className={
-                        field === "line1" || field === "line2"
-                          ? "sm:col-span-2"
-                          : ""
-                      }
-                    >
-                      <label
-                        htmlFor={`address-${field}`}
-                        className="mb-2 block text-sm font-medium"
-                      >
-                        {label}
-                      </label>
-                      <input
-                        id={`address-${field}`}
-                        name={field}
-                        type={type}
-                        autoComplete={autoComplete}
-                        required={required}
-                        maxLength={
-                          field === "postalCode"
-                            ? 10
-                            : field === "phone"
-                              ? 20
-                              : 160
-                        }
-                        pattern={
-                          field === "phone"
-                            ? "[+0-9 ()-]{7,20}"
-                            : field === "postalCode"
-                              ? "[0-9A-Za-z -]{3,10}"
-                              : required
-                                ? ".*\\S.*"
-                                : undefined
-                        }
-                        title={
-                          field === "phone"
-                            ? "Enter a phone number with 7 to 20 characters."
-                            : field === "postalCode"
-                              ? "Enter a postal code with 3 to 10 letters or numbers."
-                              : undefined
-                        }
-                        value={address[field] ?? ""}
-                        onChange={(e) =>
-                          setAddress((a) => ({ ...a, [field]: e.target.value }))
-                        }
-                        className={inputClass}
-                      />
-                    </div>
-                  ),
-                )}
+                {FIELDS.map((f) => (
+                  <div key={f.key} className={f.full ? "sm:col-span-2" : ""}>
+                    <label htmlFor={`address-${f.key}`} className="mb-2 block text-sm font-medium">
+                      {f.label}
+                    </label>
+                    <input
+                      id={`address-${f.key}`}
+                      name={f.key}
+                      type={f.type}
+                      autoComplete={f.autoComplete}
+                      required={f.required}
+                      maxLength={f.key === "phone" ? 20 : f.key === "postalCode" ? 10 : 160}
+                      value={address[f.key]}
+                      onChange={(e) => setAddress((a) => ({ ...a, [f.key]: e.target.value }))}
+                      className={inputClass}
+                    />
+                  </div>
+                ))}
                 <div className="sm:col-span-2">
-                  <label
-                    htmlFor="country"
-                    className="mb-2 block text-sm font-medium"
-                  >
-                    Country
-                  </label>
-                  <select
-                    id="country"
-                    name="countryCode"
-                    autoComplete="shipping country"
-                    value={address.countryCode}
-                    onChange={(e) =>
-                      setAddress((a) => ({ ...a, countryCode: e.target.value }))
-                    }
-                    className={inputClass}
-                  >
-                    <option value="BD">Bangladesh</option>
-                  </select>
-                  <p className="mt-2 text-xs text-text-muted">
-                    This checkout preview supports delivery within Bangladesh.
+                  <p className="text-sm text-text-muted">
+                    We currently deliver within Bangladesh.
                   </p>
                 </div>
               </div>
-              {DEMO_MODE && (
-                <fieldset className="space-y-3 border-t border-border pt-6">
-                  <legend className="text-lg font-semibold">
-                    Payment preview
-                  </legend>
-                  {[
-                    {
-                      id: "cod",
-                      title: "Cash on delivery",
-                      desc: "Illustrative only. No parcel or payment is requested.",
-                    },
-                    {
-                      id: "online",
-                      title: "Online payment",
-                      desc: "Preview selection only. No card details will be collected.",
-                    },
-                  ].map((option) => (
-                    <label
-                      key={option.id}
-                      className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 ${payment === option.id ? "border-text bg-surface" : "border-border"}`}
-                    >
-                      <input
-                        type="radio"
-                        name="payment"
-                        value={option.id}
-                        checked={payment === option.id}
-                        onChange={() => setPayment(option.id)}
-                        className="mt-1 h-4 w-4 accent-[var(--text)]"
-                      />
-                      <span>
-                        <span className="block text-sm font-semibold">
-                          {option.title}
-                        </span>
-                        <span className="mt-1 block text-xs leading-relaxed text-text-muted">
-                          {option.desc}
-                        </span>
-                      </span>
-                    </label>
-                  ))}
-                </fieldset>
-              )}
-              <button
-                type="submit"
-                className={buttonClasses({ size: "lg", className: "w-full" })}
-              >
-                Review {DEMO_MODE ? "sample " : ""}order
-                <Icon name="arrowRight" size={17} />
+              <button type="submit" className={buttonClasses({ size: "lg", className: "w-full" })}>
+                Review order <Icon name="arrowRight" size={17} />
               </button>
             </form>
           ) : (
@@ -458,7 +346,7 @@ function CheckoutContent() {
                   <button
                     onClick={() => {
                       setStep("details");
-                      setError("");
+                      setFormError("");
                     }}
                     className="min-h-11 px-2 text-sm font-semibold underline underline-offset-4"
                   >
@@ -469,108 +357,95 @@ function CheckoutContent() {
                   {address.fullName}
                   <br />
                   {address.line1}
-                  {address.line2 ? `, ${address.line2}` : ""}
+                  {address.line2.trim() ? `, ${address.line2.trim()}` : ""}
                   <br />
-                  {address.city}, {address.postalCode}
+                  {address.city}
+                  {address.state.trim() ? `, ${address.state.trim()}` : ""}
+                  {address.postalCode ? ` ${address.postalCode}` : ""}
                   <br />
                   Bangladesh
                   <br />
                   {address.phone}
                 </p>
               </div>
-              <div className="rounded-xl border border-border p-5">
-                <h2 className="font-semibold">Payment & delivery</h2>
-                <p className="mt-3 text-sm text-text-muted">
-                  {DEMO_MODE
-                    ? `${payment === "cod" ? "Cash on delivery" : "Online payment"} (simulated)`
-                    : "Payment is completed after creating the order."}
-                </p>
-                <p className="mt-2 text-sm text-text-muted">
-                  {DEMO_MODE
-                    ? "Sample delivery estimate: 3–5 working days."
-                    : "Delivery timing and any charges require seller confirmation."}
+
+              <div className="rounded-xl border border-border p-5 text-sm leading-relaxed text-text-muted">
+                <p>Payment is completed on the next screen through our payment partner.</p>
+                <p className="mt-2">
+                  Delivery charges and the final total are confirmed by the seller before dispatch.
                 </p>
               </div>
-              <p className="text-xs leading-relaxed text-text-muted">
-                {DEMO_MODE
-                  ? "Confirming finishes this demo only. No information leaves this page."
-                  : "Review your details and the refund policy before placing your order. No payment is taken at this step."}
-              </p>
+
               <button
-                onClick={confirm}
-                disabled={submitting}
+                onClick={placeOrder}
+                disabled={submitting || unavailable.length > 0}
                 className={buttonClasses({ size: "lg", className: "w-full" })}
               >
-                {submitting
-                  ? "Placing order…"
-                  : DEMO_MODE
-                    ? "Finish demo checkout"
-                    : "Place order"}
+                {submitting ? "Placing order…" : "Place order"}
                 <Icon name="check" size={18} />
               </button>
             </div>
           )}
         </section>
+
         <aside
           aria-label="Order summary"
           className="rounded-2xl border border-border bg-surface p-5 sm:p-6 lg:sticky lg:top-36 lg:col-span-2"
         >
-          <h2 className="mb-5 text-lg font-semibold">Your little find</h2>
-          <div className="flex items-start gap-4">
-            <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-border">
-              {product.imageUrls[0] && (
-                <Image
-                  src={product.imageUrls[0]}
-                  alt={product.name}
-                  fill
-                  sizes="80px"
-                  unoptimized={!product.imageUrls[0].startsWith("/")}
-                  className="object-cover"
-                />
-              )}
-            </div>
-            <div>
-              <p className="text-xs text-text-muted">
-                {product.store.storeName}
-              </p>
-              <p className="mt-1 text-sm font-semibold">{product.name}</p>
-              <p className="mt-2 text-xs text-text-muted">
-                Qty {qty} · {money(product.effectivePriceCents)} each
-              </p>
-              <Link
-                href={`/products/${product.slug}`}
-                className="inline-flex min-h-9 items-center text-xs underline underline-offset-4"
-              >
-                Edit quantity
-              </Link>
-            </div>
-          </div>
+          <h2 className="mb-5 text-lg font-semibold">Your order</h2>
+          <ul className="flex flex-col gap-5">
+            {items.map(({ product, quantity }) => (
+              <li key={product.id} className="flex items-start gap-4">
+                <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-border">
+                  {product.imageUrls[0] && (
+                    <Image
+                      src={product.imageUrls[0]}
+                      alt=""
+                      fill
+                      sizes="64px"
+                      unoptimized={!product.imageUrls[0].startsWith("/")}
+                      className="object-cover"
+                    />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-text-muted">{product.store.storeName}</p>
+                  <p className="text-sm font-semibold">{product.name}</p>
+                  <p className="mt-1 text-xs text-text-muted">
+                    Qty {quantity} · {formatMoney(product.effectivePriceCents, currency)} each
+                  </p>
+                  {!product.inStock && (
+                    <p className="mt-1 text-xs text-red-600">Out of stock</p>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+
           <dl className="mt-5 space-y-3 border-t border-border pt-5 text-sm">
             <div className="flex justify-between gap-3">
-              <dt className="text-text-muted">Subtotal</dt>
-              <dd>{money(subtotal)}</dd>
+              <dt className="text-text-muted">Items ({itemCount})</dt>
+              <dd>{formatMoney(subtotal, currency)}</dd>
             </div>
             <div className="flex justify-between gap-3">
-              <dt className="text-text-muted">
-                {DEMO_MODE ? "Sample delivery" : "Delivery"}
-              </dt>
-              <dd>{DEMO_MODE ? money(delivery) : "To be confirmed"}</dd>
+              <dt className="text-text-muted">Delivery</dt>
+              <dd>To be confirmed</dd>
             </div>
             <div className="flex justify-between gap-3 border-t border-border pt-4 font-semibold">
-              <dt>{DEMO_MODE ? "Sample total" : "Item total"}</dt>
-              <dd className="text-lg">{money(subtotal + delivery)}</dd>
+              <dt>Subtotal</dt>
+              <dd className="text-lg">{formatMoney(subtotal, currency)}</dd>
             </div>
           </dl>
-          <p className="mt-4 text-xs leading-relaxed text-text-muted">
-            {DEMO_MODE
-              ? "All amounts shown are illustrative, including delivery. No taxes or fees will actually be charged."
-              : "Includes the displayed product price. Any additional delivery charges require confirmation before payment."}
-          </p>
+
+          {source === "cart" && (
+            <Link href="/account/cart" className="mt-4 inline-flex min-h-11 items-center text-xs underline underline-offset-4">
+              Edit bag
+            </Link>
+          )}
+
           <div className="mt-5 flex items-center gap-2 border-t border-border pt-4 text-xs text-text-muted">
             <Icon name="shield" size={16} />
-            {DEMO_MODE
-              ? "No payment information needed"
-              : "Review before you pay"}
+            Review before you pay
           </div>
         </aside>
       </div>
@@ -578,22 +453,13 @@ function CheckoutContent() {
   );
 }
 
-function KeyedCheckoutContent() {
-  const params = useSearchParams();
-  return <CheckoutContent key={params.toString()} />;
-}
-
 export default function CheckoutPage() {
   return (
     <div className="min-h-screen bg-bg text-text">
       <Nav />
-      <main
-        id="main-content"
-        tabIndex={-1}
-        className="page-width py-8 md:py-12"
-      >
+      <main id="main-content" tabIndex={-1} className="page-width py-8 md:py-12">
         <Suspense fallback={<p role="status">Loading checkout…</p>}>
-          <KeyedCheckoutContent />
+          <CheckoutContent />
         </Suspense>
       </main>
       <Footer />
