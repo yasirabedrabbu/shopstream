@@ -74,5 +74,5 @@ export function demoDestination(role: SignupRole) {
   return role === "Buyer" ? "/account/overview" : "/workspace/overview";
 }
 export function liveDestination(role: string) {
-  return role === "ADMIN" ? "/admin/dashboard" : role === "VENDOR" ? "/vendor/dashboard" : "/";
+  return role === "ADMIN" ? "/platform/overview" : role === "VENDOR" ? "/vendor/dashboard" : "/";
 }

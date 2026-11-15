@@ -1,2 +1,5 @@
 import { Overview } from "@/components/platform/overview";
-export default function OverviewPage(){return <Overview/>;}
+
+export default function PlatformOverviewPage() {
+  return <Overview />;
+}

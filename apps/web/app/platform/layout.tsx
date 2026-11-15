@@ -1,6 +1,12 @@
-import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import { PlatformShell } from "@/components/platform/shell";
+import "./platform.css";
 
-// Platform admin used sample data only. It stays disabled until a live admin backend is connected.
-export default function PlatformLayout(): never {
-  notFound();
+export const metadata: Metadata = {
+  title: { default: "Platform overview · ShopStream", template: "%s · ShopStream Platform" },
+  description: "ShopStream platform administration.",
+};
+
+export default function PlatformLayout({ children }: { children: React.ReactNode }) {
+  return <PlatformShell>{children}</PlatformShell>;
 }

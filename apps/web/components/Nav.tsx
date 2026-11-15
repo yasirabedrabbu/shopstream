@@ -181,7 +181,7 @@ export function Nav() {
                   </Link>
                   {user.role !== "CUSTOMER" && (
                     <Link
-                      href={`/${user.role === "ADMIN" ? "admin" : "vendor"}/dashboard`}
+                      href={user.role === "ADMIN" ? "/platform/overview" : "/vendor/dashboard"}
                       className="flex min-h-11 items-center rounded-xl px-3 text-sm hover:bg-surface"
                     >
                       Dashboard
